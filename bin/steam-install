@@ -40,7 +40,7 @@ SHA256 = {
 }
 
 def verify_checksum(path)
-  if not `sha256 -q #{path}`.chomp == SHA256[File.basename(path).to_sym]
+  if `sha256 -q #{path}`.chomp != SHA256[File.basename(path).to_sym]
     raise "#{path} failed integrity check"
   end
 end
@@ -92,7 +92,7 @@ with_work_dir(ENV['HOME'] + '/.steam') do
     set_up_file("steam-runtime_#{STEAMRT_VERSION}.tar.xz") do
       puts 'Donwloading runtime...'
       system("fetch -o steam-runtime_#{STEAMRT_VERSION}.tar.xz" +
-        " http://repo.steamstatic.com/steamrt/steamrt-scout/snapshots/#{STEAMRT_VERSION}/steam-runtime.tar.xz")
+        " http://repo.steampowered.com/steamrt/steamrt-scout/snapshots/#{STEAMRT_VERSION}/steam-runtime.tar.xz")
     end
 
     verify_checksum("steam-runtime_#{STEAMRT_VERSION}.tar.xz")
