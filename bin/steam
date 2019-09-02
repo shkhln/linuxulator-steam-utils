@@ -7,8 +7,13 @@ def linux_run(cmd)
   `env PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
 end
 
+raise if not File.readable?(__dir__ + '/../lib32/steamfix.so')
+
 steam_root         = ENV['HOME'] + '/.steam/steam'
 steam_runtime_root = ENV['HOME'] + '/.steam/steam-runtime'
+
+raise if not File.exists?(steam_root)
+raise if not File.exists?(steam_runtime_root)
 
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
