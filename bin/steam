@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+#TODO: DBUS_SYSTEM_BUS_ADDRESS?
+
+def linux_run(cmd)
+  `env PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
+end
+
+steam_root         = ENV['HOME'] + '/.steam/steam'
+steam_runtime_root = ENV['HOME'] + '/.steam/steam-runtime'
+
+steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
+steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
+
+bin_path = [
+  __dir__ + '/../lxbin',
+  steam_runtime_bin_path,
+  '/compat/linux/bin'
+].compact.join(':')
+
+client_library_path = [
+  __dir__ + '/../lib32',
+  "#{steam_root}/ubuntu12_32",
+  "#{steam_root}/ubuntu12_32/panorama",
+  steam_runtime_lib_path
+].compact.join(':')
+
+games_library_path = [
+  #~ '.',
+  #~ __dir__ + '/../lib32',
+  #~ __dir__ + '/../lib64',
+  steam_runtime_lib_path
+].compact.join(':')
+
+preload = [
+  'steamfix.so',
+  'libSegFault.so',
+  ENV['STEAM_LD_PRELOAD']
+].compact.join(':')
+
+ENV['PATH']                       = bin_path
+ENV['SYSTEM_PATH']                = bin_path
+ENV['LD_LIBRARY_PATH']            = client_library_path
+ENV['STEAM_RUNTIME_LIBRARY_PATH'] = games_library_path
+ENV['SYSTEM_LD_LIBRARY_PATH']     = games_library_path
+ENV['LD_PRELOAD']                 = preload
+
+ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
+
+exec steam_root + '/ubuntu12_32/steam', *ARGV

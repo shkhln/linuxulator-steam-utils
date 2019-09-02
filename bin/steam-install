@@ -1,0 +1,106 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+raise 'Never run this script as root!' if `id -u`.chomp == '0'
+
+DUMB_PERSON_FLAG = '--allow-stealing-my-passwords,-browser-history-and-ssh-keys'
+skip_sanity_check = ARGV.include?(DUMB_PERSON_FLAG)
+
+if !skip_sanity_check && `id -G`.split(' ').include?('0')
+  STDERR.puts <<MSG
+
+Please, consider setting up a dedicated OS user account for Steam.
+Otherwise each and every Steam game will have unrestricted access to your files.
+If you really coulnd't care less, you can supress this message with
+#{DUMB_PERSON_FLAG} flag.
+
+MSG
+  exit(1)
+end
+
+def with_work_dir(dir)
+  pwd = Dir.pwd
+  Dir.chdir(dir)
+  yield
+  Dir.chdir(pwd)
+end
+
+def set_up_file(path)
+  if not File.exists?(path)
+    yield
+    if not File.exists?(path)
+      raise "Failed to create/download #{path}"
+    end
+  end
+end
+
+SHA256 = {
+  'steam_1.0.0.61.tar.gz': 'd66413cce9c9ad441f95c4377103b0c71bda4ac4570ecfc7dd2464fe4ef1bd30',
+  'steam-runtime_0.20190711.3.tar.xz': 'ae5b94638a339911054e8b3ac0dea8da615be93bc6ba7c59c82e495e62ac79f8'
+}
+
+def verify_checksum(path)
+  if not `sha256 -q #{path}`.chomp == SHA256[File.basename(path).to_sym]
+    raise "#{path} failed integrity check"
+  end
+end
+
+STEAM_DIST_NAME = 'steam_1.0.0.61.tar.gz'
+STEAMRT_VERSION = '0.20190711.3'
+
+system("mkdir -p ~/.steam")
+
+with_work_dir(ENV['HOME'] + '/.steam') do
+
+  set_up_file('steam/ubuntu12_32') do
+
+    set_up_file('steam_1.0.0.61.tar.gz') do
+      puts 'Downloading Steam...'
+      system("fetch http://repo.steampowered.com/steam/pool/steam/s/steam/#{STEAM_DIST_NAME}")
+    end
+
+    verify_checksum(STEAM_DIST_NAME)
+
+    system("mkdir -p steam")
+
+    puts 'Extracting bootstrap...'
+    system("tar -xf #{STEAM_DIST_NAME} --strip-components 1 --to-stdout steam/bootstraplinux_ubuntu12_32.tar.xz | tar -C steam -xf -")
+  end
+
+  for symlink, target in {
+    'bin'   => 'bin32',
+    'bin32' => 'steam/ubuntu12_32',
+    'bin64' => 'steam/ubuntu12_64',
+    'root'  => 'steam',
+    'sdk32' => 'steam/linux32',
+    'sdk64' => 'steam/linux64'
+  }
+    if not File.symlink?(symlink)
+      puts "Creating symlink #{symlink} -> #{target}"
+      system("ln -s #{target} #{symlink}")
+    end
+  end
+
+  #TODO: steam-runtime should probably be a regular package
+
+  set_up_file('steam-runtime') do
+
+    # Steam also downloads the same steam-runtime.tar.xz itself,
+    # so the runtime will be actually downloaded twice.
+    # Should we do something about it?
+
+    set_up_file("steam-runtime_#{STEAMRT_VERSION}.tar.xz") do
+      puts 'Donwloading runtime...'
+      system("fetch -o steam-runtime_#{STEAMRT_VERSION}.tar.xz" +
+        " http://repo.steamstatic.com/steamrt/steamrt-scout/snapshots/#{STEAMRT_VERSION}/steam-runtime.tar.xz")
+    end
+
+    verify_checksum("steam-runtime_#{STEAMRT_VERSION}.tar.xz")
+
+    puts 'Extracting runtime...'
+    system("tar -xf steam-runtime_#{STEAMRT_VERSION}.tar.xz")
+
+    system("env PATH=\"#{__dir__}/../lxbin:/compat/linux/bin\" /compat/linux/bin/bash steam-runtime/setup.sh")
+  end
+
+end # ~/.steam
