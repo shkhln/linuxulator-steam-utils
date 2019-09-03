@@ -400,12 +400,6 @@ FAKE(pa_xmemdup);
 FAKE(pa_xrealloc);
 FAKE(pa_xstrdup);
 FAKE(pa_xstrndup);
-FAKE(trace_pa_buffer_attr_as_string);
-FAKE(trace_pa_channel_map_as_string);
-FAKE(trace_pa_channel_position_t_as_string);
-FAKE(trace_pa_sample_format_t_as_string);
-FAKE(trace_pa_sample_spec_as_string);
-FAKE(trace_pa_volume_as_string);
 
 void* pa_threaded_mainloop_new() {
   return NULL;
