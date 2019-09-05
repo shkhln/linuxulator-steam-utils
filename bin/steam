@@ -51,6 +51,7 @@ ENV['STEAM_RUNTIME_LIBRARY_PATH'] = games_library_path
 ENV['SYSTEM_LD_LIBRARY_PATH']     = games_library_path
 ENV['LD_PRELOAD']                 = preload
 
+ENV['SDL_AUDIODRIVER'] = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
 
 exec steam_root + '/ubuntu12_32/steam', *ARGV
