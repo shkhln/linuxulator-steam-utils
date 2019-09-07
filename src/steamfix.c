@@ -70,7 +70,7 @@ int sigaction(int sig, const struct sigaction* restrict act, struct sigaction* r
   return libc_sigaction(sig, act, oact);
 }
 
-/* Rewrite xdg-open command */
+/* Let's rewrite a few commands as well... */
 
 static int (*libc_system)(const char*) = NULL;
 
@@ -82,11 +82,19 @@ int system(const char* command) {
     libc_system = dlsym(RTLD_NEXT, "system");
   }
 
+  /* such as xdg-open */
+
   if (strncmp(command, XDG_OPEN_CMD, sizeof(XDG_OPEN_CMD) - 1) == 0) {
     char buffer[1000];
     snprintf(buffer, sizeof(buffer),
       "env PATH=/usr/local/bin LD_LIBRARY_PATH=\"\" LD_PRELOAD=\"\" xdg-open %s", &command[sizeof(XDG_OPEN_CMD) - 1]);
     return libc_system(buffer);
+  }
+
+  /* or steamwebhelper, which currently crashes, so ignore it */
+
+  if (strstr(command, "steamwebhelper.sh")) {
+    return 1;
   }
 
   return libc_system(command);
@@ -97,7 +105,7 @@ int system(const char* command) {
 
 #include <sys/stat.h>
 
-static int (*libc_lxstat64)(int ver, const char* path, struct stat64* stat_buf) = NULL;
+static int (*libc_lxstat64)(int, const char*, struct stat64*) = NULL;
 
 int __lxstat64(int ver, const char* path, struct stat64* stat_buf) {
 
@@ -131,4 +139,25 @@ int scandir64(const char* dir, struct dirent64*** namelist,
   } else {
     return libc_scandir64(dir, namelist, sel, cmp);
   }
+}
+
+/* Correct uname because for whatever reason Linuxulator reports "i686" to 32-bit applications on amd64 */
+
+#include <unistd.h>
+#include <sys/utsname.h>
+
+static int (*libc_uname)(struct utsname*) = NULL;
+
+int uname(struct utsname* name) {
+
+  if (!libc_uname) {
+    libc_uname = dlsym(RTLD_NEXT, "uname");
+  }
+
+  int err = libc_uname(name);
+  if (err == 0 && access("/usr/lib64", F_OK) == 0) {
+    snprintf(name->machine, _UTSNAME_MACHINE_LENGTH, "x86_64");
+  }
+
+  return err;
 }
