@@ -18,6 +18,10 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) {
     libc_epoll_ctl = dlsym(RTLD_NEXT, "epoll_ctl");
   }
 
+  if (event) {
+    event->events |= EPOLLERR;
+  }
+
   int err = libc_epoll_ctl(epfd, op, fd, event);
 
   if (err == -1 && op == EPOLL_CTL_MOD && errno == ENOENT) {
@@ -25,9 +29,9 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) {
     err   = libc_epoll_ctl(epfd, EPOLL_CTL_ADD, fd, event);
   }
 
-  /*if (err == -1) {
+  if (err == -1) {
     perror(__func__);
-  }*/
+  }
 
   return err;
 }
