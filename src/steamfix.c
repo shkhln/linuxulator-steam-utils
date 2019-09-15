@@ -161,3 +161,55 @@ int uname(struct utsname* name) {
 
   return err;
 }
+
+/* Handle Steam restart */
+
+#include <stdlib.h>
+#include <unistd.h>
+
+static char program_path[PATH_MAX];
+
+__attribute__((constructor))
+static void program_path_init() {
+  ssize_t nchars = readlink("/proc/self/exe", program_path, sizeof(program_path));
+  assert(nchars > 0);
+  program_path[nchars] = '\0';
+}
+
+extern char** environ;
+
+static __attribute__((__noreturn__)) void restart() {
+
+  printf("Restarting Steam...\n");
+
+  char pidfile_path[PATH_MAX];
+  snprintf(pidfile_path, sizeof(pidfile_path), "%s/%s", getenv("HOME"), ".steam/steam.pid");
+
+  unlink(pidfile_path);
+
+  // should we reuse the arguments from the current process instead?
+  char* const argv[] = {"steam", NULL};
+
+  execve(program_path, argv, environ);
+
+  perror("execve");
+  abort();
+}
+
+static __attribute__((__noreturn__)) void (*libc_exit)(int) = NULL;
+
+void exit(int status) {
+
+  if (status == 42) {
+
+    restart();
+
+  } else {
+
+    if (!libc_exit) {
+      libc_exit = dlsym(RTLD_NEXT, "exit");
+    }
+
+    libc_exit(status);
+  }
+}
