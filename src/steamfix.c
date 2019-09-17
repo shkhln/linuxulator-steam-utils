@@ -168,19 +168,28 @@ int uname(struct utsname* name) {
 
 /* Handle Steam restart */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-static char program_path[PATH_MAX];
+static int    program_argc;
+static char** program_argv;
+static char   program_path[PATH_MAX];
 
 __attribute__((constructor))
-static void program_path_init() {
+static void restart_fix_init(int argc, char** argv, char** env) {
+
+  program_argc = argc;
+  program_argv = argv;
+
   ssize_t nchars = readlink("/proc/self/exe", program_path, sizeof(program_path));
   assert(nchars > 0);
   program_path[nchars] = '\0';
 }
 
 extern char** environ;
+
+static bool drop_urls_on_restart = false;
 
 static __attribute__((__noreturn__)) void restart() {
 
@@ -191,10 +200,24 @@ static __attribute__((__noreturn__)) void restart() {
 
   unlink(pidfile_path);
 
-  // should we reuse the arguments from the current process instead?
-  char* const argv[] = {"steam", NULL};
+  if (drop_urls_on_restart) {
 
-  execve(program_path, argv, environ);
+    char** argv = malloc(sizeof(char*) * (program_argc + 1));
+
+    int j = 0;
+    for (int i = 0; i < program_argc; i++) {
+      char* arg = program_argv[i];
+      if (strncmp(arg, "steam://", sizeof("steam://") - 1) != 0) {
+        argv[j] = arg; j++;
+      }
+    }
+    argv[j] = NULL;
+
+    execve(program_path, argv, environ);
+
+  } else {
+    execve(program_path, program_argv, environ);
+  }
 
   perror("execve");
   abort();
@@ -216,4 +239,19 @@ void exit(int status) {
 
     libc_exit(status);
   }
+}
+
+static int (*libc_fputs)(const char*, FILE*) = NULL;
+
+int fputs(const char* str, FILE* stream) {
+
+  if (!libc_fputs) {
+    libc_fputs = dlsym(RTLD_NEXT, "fputs");
+  }
+
+  if (stream == stderr && strncmp(str, "ExecuteSteamURL:", sizeof("ExecuteSteamURL:") - 1) == 0) {
+    drop_urls_on_restart = true;
+  }
+
+  return libc_fputs(str, stream);
 }
