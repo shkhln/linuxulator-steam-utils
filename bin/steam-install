@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+require 'fileutils'
+
 raise 'Never run this script as root!' if `id -u`.chomp == '0'
 
 DUMB_PERSON_FLAG = '--allow-stealing-my-passwords,-browser-history-and-ssh-keys'
@@ -36,7 +38,7 @@ end
 
 SHA256 = {
   'steam_1.0.0.61.tar.gz': 'd66413cce9c9ad441f95c4377103b0c71bda4ac4570ecfc7dd2464fe4ef1bd30',
-  'steam-runtime_0.20190711.3.tar.xz': 'ae5b94638a339911054e8b3ac0dea8da615be93bc6ba7c59c82e495e62ac79f8'
+  'steam-runtime_0.20190913.0.tar.xz': '34d86d71ac7e07fe139687884161ac66cb32c0ddf84df30bb3031d60866aedc6'
 }
 
 def verify_checksum(path)
@@ -46,9 +48,9 @@ def verify_checksum(path)
 end
 
 STEAM_DIST_NAME = 'steam_1.0.0.61.tar.gz'
-STEAMRT_VERSION = '0.20190711.3'
+STEAMRT_VERSION = '0.20190913.0'
 
-system("mkdir -p ~/.steam")
+FileUtils.mkdir_p(ENV['HOME'] + '/.steam')
 
 with_work_dir(ENV['HOME'] + '/.steam') do
 
@@ -61,7 +63,7 @@ with_work_dir(ENV['HOME'] + '/.steam') do
 
     verify_checksum(STEAM_DIST_NAME)
 
-    system("mkdir -p steam")
+    FileUtils.mkdir_p('steam')
 
     puts 'Extracting bootstrap...'
     system("tar -xf #{STEAM_DIST_NAME} --strip-components 1 --to-stdout steam/bootstraplinux_ubuntu12_32.tar.xz | tar -C steam -xf -")
@@ -77,11 +79,19 @@ with_work_dir(ENV['HOME'] + '/.steam') do
   }
     if not File.symlink?(symlink)
       puts "Creating symlink #{symlink} -> #{target}"
-      system("ln -s #{target} #{symlink}")
+      File.symlink(target, symlink)
     end
   end
 
   #TODO: steam-runtime should probably be a regular package
+
+  if File.exists?('steam-runtime/version.txt')
+    File.read('steam-runtime/version.txt') =~ /^steam-runtime_([^\s]+)/
+    if $1 != STEAMRT_VERSION
+      puts "Removing steam-runtime_#{$1}"
+      FileUtils.remove_dir('steam-runtime')
+    end
+  end
 
   set_up_file('steam-runtime') do
 
@@ -90,17 +100,24 @@ with_work_dir(ENV['HOME'] + '/.steam') do
     # Should we do something about it?
 
     set_up_file("steam-runtime_#{STEAMRT_VERSION}.tar.xz") do
-      puts 'Donwloading runtime...'
+      puts 'Donwloading steam-runtime...'
       system("fetch -o steam-runtime_#{STEAMRT_VERSION}.tar.xz" +
-        " http://repo.steampowered.com/steamrt/steamrt-scout/snapshots/#{STEAMRT_VERSION}/steam-runtime.tar.xz")
+        " http://repo.steampowered.com/steamrt-images-scout/snapshots/#{STEAMRT_VERSION}/steam-runtime.tar.xz")
     end
 
     verify_checksum("steam-runtime_#{STEAMRT_VERSION}.tar.xz")
 
-    puts 'Extracting runtime...'
+    puts "Extracting steam-runtime_#{STEAMRT_VERSION}..."
     system("tar -xf steam-runtime_#{STEAMRT_VERSION}.tar.xz")
+  end
 
-    system("env PATH=\"#{__dir__}/../lxbin:/compat/linux/bin\" /compat/linux/bin/bash steam-runtime/setup.sh")
+  if not (File.exists?('steam-runtime/pinned_libs_32') && File.exists?('steam-runtime/pinned_libs_64'))
+    system("/compat/linux/bin/env PATH=\"#{__dir__}/../lxbin:/compat/linux/bin\" steam-runtime/setup.sh")
+  end
+
+  # keep last 3 versions just in case
+  Dir['steam-runtime_*.tar.xz'].sort[0..-4].each do |file|
+    File.delete(file)
   end
 
 end # ~/.steam
