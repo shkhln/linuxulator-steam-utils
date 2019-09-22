@@ -26,6 +26,7 @@ bin_path = [
 
 client_library_path = [
   __dir__ + '/../lib32',
+  __dir__ + '/../lib64',
   "#{steam_root}/ubuntu12_32",
   "#{steam_root}/ubuntu12_32/panorama",
   steam_runtime_lib_path

@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Work around timeout on login issue */
@@ -42,7 +43,7 @@ void* udev_monitor_new_from_netlink(void* udev, const char* name) {
   return NULL;
 }
 
-void* udev_monitor_new_from_netlink_fd(void* udev, const char *name, int fd) {
+void* udev_monitor_new_from_netlink_fd(void* udev, const char* name, int fd) {
   assert(0);
 }
 
@@ -89,16 +90,53 @@ int system(const char* command) {
   /* such as xdg-open */
 
   if (strncmp(command, XDG_OPEN_CMD, sizeof(XDG_OPEN_CMD) - 1) == 0) {
-    char buffer[1000];
-    snprintf(buffer, sizeof(buffer),
-      "env PATH=/usr/local/bin LD_LIBRARY_PATH=\"\" LD_PRELOAD=\"\" xdg-open %s", &command[sizeof(XDG_OPEN_CMD) - 1]);
-    return libc_system(buffer);
+
+    const char* xdg_open_args = &command[sizeof(XDG_OPEN_CMD) - 1];
+
+    char* format_str = "PATH=/usr/bin:/usr/local/bin LD_LIBRARY_PATH=\"\" LD_PRELOAD=\"\" xdg-open %s";
+
+    int   buf_len = strlen(format_str) + strlen(xdg_open_args) + 1;
+    char* buf     = malloc(buf_len);
+
+    snprintf(buf, buf_len, format_str, xdg_open_args);
+
+    int err = libc_system(buf);
+    free(buf);
+
+    return err;
   }
 
-  /* or steamwebhelper, which currently crashes, so ignore it */
+  /* or steamwebhelper, which currently doesn't work, so it's disabled by default */
 
   if (strstr(command, "steamwebhelper.sh")) {
-    return 1;
+
+    char* browser_enabled = getenv("STEAM_BROWSER");
+    if (browser_enabled && strcmp(browser_enabled, "1") == 0) {
+
+      char* format_str =
+        "LD_PRELOAD=webfix.so"
+        " LD_LIBRARY_PATH=/compat/linux/usr/lib64/nss:${LD_LIBRARY_PATH}"
+        " %s"
+        " --no-sandbox"
+        " --no-zygote"
+        " --enable-logging=stderr"
+        " --v=3";
+
+      int   buf_len = strlen(format_str) + strlen(command) + 1;
+      char* buf     = malloc(buf_len);
+
+      snprintf(buf, buf_len, format_str, command);
+
+      fprintf(stderr, "[[%s]]\n", buf);
+
+      int err = libc_system(buf);
+      free(buf);
+
+      return err;
+
+    } else {
+      return 1;
+    }
   }
 
   return libc_system(command);
@@ -169,7 +207,6 @@ int uname(struct utsname* name) {
 /* Handle Steam restart */
 
 #include <stdbool.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 static int    program_argc;

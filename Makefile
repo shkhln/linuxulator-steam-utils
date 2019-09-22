@@ -2,8 +2,8 @@ BUILD_DIR ?= . # ${.CURDIR}
 PREFIX    ?= /opt
 
 PROJECT  = steam-utils
-CFLAGS   = -std=c99 -Wall -fPIC -shared --sysroot=/compat/linux
-LIBS    := lib32/steamfix.so lib32/libnm-glib.so.4 lib32/libpulse.so.0 # lib32/libpulse-simple.so.0 lib64/libpulse.so.0 lib64/libpulse-simple.so.0
+CFLAGS   = -std=c99 -Wall -Wextra -Wno-unused-parameter -fPIC -shared --sysroot=/compat/linux
+LIBS    := lib32/steamfix.so lib32/libnm-glib.so.4 lib32/libpulse.so.0 lib64/webfix.so
 LIBS    := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 
 build: $(LIBS)
@@ -12,7 +12,11 @@ build: $(LIBS)
 
 $(BUILD_DIR)/lib$(b)/steamfix.so: src/steamfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -o $(.TARGET) src/steamfix.c
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -o $(.TARGET) src/steamfix.c -ldl
+
+$(BUILD_DIR)/lib$(b)/webfix.so: src/webfix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -o $(.TARGET) src/webfix.c   -ldl
 
 $(BUILD_DIR)/lib$(b)/libnm-glib.so.4: src/fakenm.c
 	mkdir -p $(BUILD_DIR)/lib$(b)
@@ -21,10 +25,6 @@ $(BUILD_DIR)/lib$(b)/libnm-glib.so.4: src/fakenm.c
 $(BUILD_DIR)/lib$(b)/libpulse.so.0: src/fakepulse.c
 	mkdir -p $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -o $(.TARGET) src/fakepulse.c
-
-$(BUILD_DIR)/lib$(b)/libpulse-simple.so.0:
-	mkdir -p $(BUILD_DIR)/lib$(b)
-	touch $(.TARGET)
 
 .endfor
 
