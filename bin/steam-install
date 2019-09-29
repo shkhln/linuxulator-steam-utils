@@ -70,7 +70,6 @@ with_work_dir(ENV['HOME'] + '/.steam') do
   end
 
   for symlink, target in {
-    'bin'   => 'bin32',
     'bin32' => 'steam/ubuntu12_32',
     'bin64' => 'steam/ubuntu12_64',
     'root'  => 'steam',
