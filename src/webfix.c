@@ -63,3 +63,23 @@ int clock_gettime(clockid_t clock_id, struct timespec* tp) {
 
   return err;
 }
+
+/* This really should not be necessary with disabled sandbox... */
+
+#include <sys/types.h>
+#include <sys/socket.h>
+
+static int (*libc_setsockopt)(int, int, int, const void*, socklen_t) = NULL;
+
+int setsockopt(int s, int level, int optname, const void* optval, socklen_t optlen) {
+
+  if (!libc_setsockopt) {
+    libc_setsockopt = dlsym(RTLD_NEXT, "setsockopt");
+  }
+
+  if (optname == SO_PASSCRED) {
+    return 0;
+  }
+
+  return libc_setsockopt(s, level, optname, optval, optlen);
+}

@@ -15,6 +15,8 @@ steam_runtime_root = ENV['HOME'] + '/.steam/steam-runtime'
 raise if not File.exists?(steam_root)
 raise if not File.exists?(steam_runtime_root)
 
+system(__dir__ + '/../lxbin/patch-steam.rb')
+
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
 

@@ -93,7 +93,7 @@ int system(const char* command) {
 
     const char* xdg_open_args = &command[sizeof(XDG_OPEN_CMD) - 1];
 
-    char* format_str = "PATH=/usr/bin:/usr/local/bin LD_LIBRARY_PATH=\"\" LD_PRELOAD=\"\" xdg-open %s";
+    char* format_str = "PATH=/usr/bin:/usr/local/bin LD_LIBRARY_PATH='' LD_PRELOAD='' xdg-open %s";
 
     int   buf_len = strlen(format_str) + strlen(xdg_open_args) + 1;
     char* buf     = malloc(buf_len);
@@ -106,7 +106,7 @@ int system(const char* command) {
     return err;
   }
 
-  /* or steamwebhelper, which currently doesn't work, so it's disabled by default */
+  /* or steamwebhelper, which currently doesn't work all that well, so it's disabled by default */
 
   if (strstr(command, "steamwebhelper.sh")) {
 
@@ -116,16 +116,24 @@ int system(const char* command) {
       char* format_str =
         "LD_PRELOAD=webfix.so"
         " LD_LIBRARY_PATH=/compat/linux/usr/lib64/nss:${LD_LIBRARY_PATH}"
-        " %s"
+        " '%s.patched' %s"
         " --no-sandbox"
         " --no-zygote"
-        " --enable-logging=stderr"
-        " --v=3";
+        //" --enable-logging=stderr"
+        //" --v=0"
+      ;
 
       int   buf_len = strlen(format_str) + strlen(command) + 1;
       char* buf     = malloc(buf_len);
 
-      snprintf(buf, buf_len, format_str, command);
+      char* webhelper_path = strdup(command + 1);
+      char* webhelper_args = strstr(webhelper_path, "steamwebhelper.sh' ") + sizeof("steamwebhelper.sh' ") - 1;
+      assert(webhelper_args[-2] == '\'');
+      webhelper_args[-2] = '\0';
+
+      snprintf(buf, buf_len, format_str, webhelper_path, webhelper_args);
+
+      free(webhelper_path);
 
       fprintf(stderr, "[[%s]]\n", buf);
 
@@ -266,6 +274,7 @@ void exit(int status) {
 
   if (status == 42) {
 
+    system("patch-steam");
     restart();
 
   } else {
@@ -291,4 +300,36 @@ int fputs(const char* str, FILE* stream) {
   }
 
   return libc_fputs(str, stream);
+}
+
+/* We need to redirect those futex syscalls */
+
+static void* (*libc_dlmopen)(Lmid_t, const char*, int) = NULL;
+
+void* dlmopen(Lmid_t lmid, const char* path, int mode) {
+
+  if (!libc_dlmopen) {
+    libc_dlmopen = dlsym(RTLD_NEXT, "dlmopen");
+  }
+
+  void* p = NULL;
+
+  if (strstr(path, "chromehtml.so") != NULL) {
+
+    char* format_str = "%s.patched";
+
+    int   buf_len = strlen(format_str) + strlen(path) + 1;
+    char* buf     = malloc(buf_len);
+
+    snprintf(buf, buf_len, format_str, path);
+
+    p = libc_dlmopen(lmid, buf, mode);
+
+    free(buf);
+
+  } else {
+    p = libc_dlmopen(lmid, path, mode);
+  }
+
+  return p;
 }
