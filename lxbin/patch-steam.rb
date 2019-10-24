@@ -9,7 +9,7 @@ def patch_executable(path, out_path)
   def is_older (a, b); File.mtime(a)      <  File.mtime(b);      end
 
   if not (File.exists?(out_path) && same_size(path, out_path) && is_older(path, out_path))
-    IO.binwrite(path + '.patched', yield(IO.binread(path)))
+    IO.binwrite(out_path, yield(IO.binread(path)))
   end
 end
 
