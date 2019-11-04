@@ -106,12 +106,12 @@ int system(const char* command) {
     return err;
   }
 
-  /* or steamwebhelper, which currently doesn't work all that well, so it's disabled by default */
+  /* or steamwebhelper */
 
   if (strstr(command, "steamwebhelper.sh")) {
 
-    char* browser_enabled = getenv("STEAM_BROWSER");
-    if (browser_enabled && strcmp(browser_enabled, "1") == 0) {
+    char* browser_env = getenv("STEAM_BROWSER");
+    if (!(browser_env && strcmp(browser_env, "0") == 0)) {
 
       char* format_str =
         "LD_PRELOAD=webfix.so"

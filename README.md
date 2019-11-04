@@ -18,6 +18,7 @@ Roughly:
 
 ## Limitations
 
-1. No in-client browser, no controller input, no streaming, no VR.
+1. Sandbox is disabled for the web browser component.
+1. No controller input, no streaming, no VR.
 1. Due to inherent difficulty of running games on Linuxulator as well as many (most?) native Linux ports being broken garbage in general, only the Source engine games are explicitly supported. I simply can't be bothered to test anything else on a regular basis.
 1. Steam Play can't be implemented as long as the FreeBSD Ports Collection *lacks multilib support*, making it impossible to package Proton dependencies.

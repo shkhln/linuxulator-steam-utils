@@ -156,14 +156,18 @@ static int wake(uintptr_t addr, int timeout_ms) {
       return futex_err;
 
     } else {
+
+      close(inout[0]);
+      close(inout[1]);
+
       perror("posix_spawnp");
+
+      return 0;
     }
 
   } else {
     assert(0);
   }
-
-  return 0;
 }
 
 #endif
@@ -270,18 +274,18 @@ int munmap(void* addr, size_t len) {
 
   pthread_mutex_lock(&mapped_fds_mutex);
 
-  struct mpfd_entry* entry = NULL;
+  struct mpfd_entry *entry, *found = NULL;
   SLIST_FOREACH(entry, &mapped_fds, entries) {
-
     if (entry->addr == (uintptr_t)addr) {
-
       assert(entry->len == len);
-
-      SLIST_REMOVE(&mapped_fds, entry, mpfd_entry, entries);
-      free(entry);
-
+      found = entry;
       break;
     }
+  }
+
+  if (found != NULL) {
+    SLIST_REMOVE(&mapped_fds, entry, mpfd_entry, entries);
+    free(entry);
   }
 
   pthread_mutex_unlock(&mapped_fds_mutex);
