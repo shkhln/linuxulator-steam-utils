@@ -333,3 +333,41 @@ void* dlmopen(Lmid_t lmid, const char* path, int mode) {
 
   return p;
 }
+
+/* Apparently communication with CSGO process breaks when Steam receives an unexpected EAGAIN error, which prevents the game from starting */
+
+#include <sys/socket.h>
+
+static ssize_t (*libc_send)(int s, const void* msg, size_t len, int flags) = NULL;
+
+ssize_t send(int s, const void* msg, size_t len, int flags) {
+
+  if (!libc_send) {
+    libc_send = dlsym(RTLD_NEXT, "send");
+  }
+
+  //~ fprintf(stderr, "%s(%d, %p, %d, %d)\n", __func__, s, msg, len, flags);
+
+  int sleeped_ms = 0;
+
+  ssize_t nbytes = -1;
+  while (1) {
+    nbytes = libc_send(s, msg, len, flags);
+    if (nbytes == -1 && errno == EAGAIN) {
+      if (sleeped_ms > 50) {
+        break;
+      }
+      usleep(5000);
+      sleeped_ms += 5;
+    } else {
+      break;
+    }
+  }
+
+  //~ fprintf(stderr, "%s -> %d\n", __func__, nbytes);
+  //~ if (nbytes == -1) {
+    //~ perror(__func__);
+  //~ }
+
+  return nbytes;
+}
