@@ -13,7 +13,7 @@ CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter
 CFLAGS += -DSKIP_FUTEX_WORKAROUND
 .endif
 
-LIBS  = lib32/steamfix.so lib32/libnm-glib.so.4 lib32/libpulse.so.0 lib64/webfix.so
+LIBS  = lib32/steamfix.so lib32/libnm-glib.so.4 lib32/libpulse.so.0 lib64/libpulse.so.0 lib64/webfix.so
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 
 BINS  = lxbin/fhelper32 lxbin/fhelper64

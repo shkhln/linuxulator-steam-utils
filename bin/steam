@@ -40,7 +40,7 @@ client_library_path = [
 games_library_path = [
   #~ '.',
   #~ __dir__ + '/../lib32',
-  #~ __dir__ + '/../lib64',
+  __dir__ + '/../lib64',
   steam_runtime_lib_path
 ].compact.join(':')
 
