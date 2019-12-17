@@ -28,9 +28,9 @@ def with_work_dir(dir)
 end
 
 def set_up_file(path)
-  if not File.exists?(path)
+  if not File.exist?(path)
     yield
-    if not File.exists?(path)
+    if not File.exist?(path)
       raise "Failed to create/download #{path}"
     end
   end
@@ -38,7 +38,6 @@ end
 
 SHA256 = {
   'steam_1.0.0.61.tar.gz': 'd66413cce9c9ad441f95c4377103b0c71bda4ac4570ecfc7dd2464fe4ef1bd30',
-  'steam-runtime_0.20190913.0.tar.xz': '34d86d71ac7e07fe139687884161ac66cb32c0ddf84df30bb3031d60866aedc6'
 }
 
 def verify_checksum(path)
@@ -70,53 +69,16 @@ with_work_dir(ENV['HOME'] + '/.steam') do
   end
 
   for symlink, target in {
-    'bin32' => 'steam/ubuntu12_32',
-    'bin64' => 'steam/ubuntu12_64',
-    'root'  => 'steam',
-    'sdk32' => 'steam/linux32',
-    'sdk64' => 'steam/linux64'
+    'root'    => 'steam',
+    'bin32'   => 'steam/ubuntu12_32',
+    'bin64'   => 'steam/ubuntu12_64',
+    'sdk32'   => 'steam/linux32',
+    'sdk64'   => 'steam/linux64',
   }
     if not File.symlink?(symlink)
       puts "Creating symlink #{symlink} -> #{target}"
-      File.symlink(target, symlink)
+      FileUtils.ln_s(target, symlink)
     end
-  end
-
-  #TODO: steam-runtime should probably be a regular package
-
-  if File.exists?('steam-runtime/version.txt')
-    File.read('steam-runtime/version.txt') =~ /^steam-runtime_([^\s]+)/
-    if $1 != STEAMRT_VERSION
-      puts "Removing steam-runtime_#{$1}"
-      FileUtils.remove_dir('steam-runtime')
-    end
-  end
-
-  set_up_file('steam-runtime') do
-
-    # Steam also downloads the same steam-runtime.tar.xz itself,
-    # so the runtime will be actually downloaded twice.
-    # Should we do something about it?
-
-    set_up_file("steam-runtime_#{STEAMRT_VERSION}.tar.xz") do
-      puts 'Donwloading steam-runtime...'
-      system("fetch -o steam-runtime_#{STEAMRT_VERSION}.tar.xz" +
-        " http://repo.steampowered.com/steamrt-images-scout/snapshots/#{STEAMRT_VERSION}/steam-runtime.tar.xz")
-    end
-
-    verify_checksum("steam-runtime_#{STEAMRT_VERSION}.tar.xz")
-
-    puts "Extracting steam-runtime_#{STEAMRT_VERSION}..."
-    system("tar -xf steam-runtime_#{STEAMRT_VERSION}.tar.xz")
-  end
-
-  if not (File.exists?('steam-runtime/pinned_libs_32') && File.exists?('steam-runtime/pinned_libs_64'))
-    system("/compat/linux/bin/env PATH=\"#{__dir__}/../lxbin:/compat/linux/bin\" steam-runtime/setup.sh")
-  end
-
-  # keep last 3 versions just in case
-  Dir['steam-runtime_*.tar.xz'].sort[0..-4].each do |file|
-    File.delete(file)
   end
 
 end # ~/.steam
