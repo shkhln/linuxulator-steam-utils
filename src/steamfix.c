@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /* Work around timeout on login issue */
 
@@ -150,50 +151,8 @@ int system(const char* command) {
   return libc_system(command);
 }
 
-/* Lie to Steam about /home being a directory. The Steam client skips symlinks in Add Library Folder / Add a (non-Steam) Gamed dialogs and,
-  if it was started from /home/... path, it will get quite confused without this workaround. */
-
-#include <sys/stat.h>
-
-static int (*libc_lxstat64)(int, const char*, struct stat64*) = NULL;
-
-int __lxstat64(int ver, const char* path, struct stat64* stat_buf) {
-
-  if (!libc_lxstat64) {
-    libc_lxstat64 = dlsym(RTLD_NEXT, "__lxstat64");
-  }
-
-  if (strcmp(path, "//home") == 0) {
-    return libc_lxstat64(ver, "/usr/home", stat_buf);
-  } else {
-    return libc_lxstat64(ver, path, stat_buf);
-  }
-}
-
-/* Also trick Linuxulator into listing actual /usr content instead of /compat/linux/usr */
-
-#include <dirent.h>
-
-static int (*libc_scandir64)(const char*, struct dirent64***,
-  int (*)(const struct dirent64*), int (*)(const struct dirent64**, const struct dirent64**)) = NULL;
-
-int scandir64(const char* dir, struct dirent64*** namelist,
-  int (*sel)(const struct dirent64*), int (*cmp)(const struct dirent64**, const struct dirent64**))
-{
-  if (!libc_scandir64) {
-    libc_scandir64 = dlsym(RTLD_NEXT, "scandir64");
-  }
-
-  if (strcmp(dir, "/usr") == 0) {
-    return libc_scandir64("/usr/local/..", namelist, sel, cmp);
-  } else {
-    return libc_scandir64(dir, namelist, sel, cmp);
-  }
-}
-
 /* Correct uname because for whatever reason Linuxulator reports "i686" to 32-bit applications on amd64 */
 
-#include <unistd.h>
 #include <sys/utsname.h>
 
 static int (*libc_uname)(struct utsname*) = NULL;
@@ -215,7 +174,7 @@ int uname(struct utsname* name) {
 /* Handle Steam restart */
 
 #include <stdbool.h>
-#include <unistd.h>
+#include <linux/limits.h>
 
 static int    program_argc;
 static char** program_argv;
@@ -370,4 +329,78 @@ ssize_t send(int s, const void* msg, size_t len, int flags) {
   //~ }
 
   return nbytes;
+}
+
+/* Let's rewrite some paths... */
+
+static const char* redirect(const char* path) {
+
+  // Point Steam to a proper root certificate bundle
+  if (strcmp(path, "/etc/ssl/certs/ca-certificates.crt") == 0) {
+    return "/etc/ssl/cert.pem";
+  }
+
+  // Lie to Steam about /home being a directory.
+  // The Steam client skips symlinks in Add Library Folder / Add a (non-Steam) Gamed dialogs and,
+  // if it was started from /home/... path, it will get quite confused without this workaround.
+  if (strcmp(path, "//home") == 0) {
+    return "/usr/home";
+  }
+
+  // Also trick Linuxulator into listing actual /usr contents instead of /compat/linux/usr
+  if (strcmp(path, "/usr") == 0) {
+    return "/usr/local/..";
+  }
+
+  return path;
+}
+
+static int (*libc_access)(const char*, int) = NULL;
+
+int access(const char* path, int mode) {
+
+  if (!libc_access) {
+    libc_access = dlsym(RTLD_NEXT, "access");
+  }
+
+  return libc_access(redirect(path), mode);
+}
+
+static FILE* (*libc_fopen64)(const char*, const char*) = NULL;
+
+FILE* fopen64(const char* path, const char* mode) {
+
+  if (!libc_fopen64) {
+    libc_fopen64 = dlsym(RTLD_NEXT, "fopen64");
+  }
+
+  return libc_fopen64(redirect(path), mode);
+}
+
+#include <sys/stat.h>
+
+static int (*libc_lxstat64)(int, const char*, struct stat64*) = NULL;
+
+int __lxstat64(int ver, const char* path, struct stat64* stat_buf) {
+
+  if (!libc_lxstat64) {
+    libc_lxstat64 = dlsym(RTLD_NEXT, "__lxstat64");
+  }
+
+  return libc_lxstat64(ver, redirect(path), stat_buf);
+}
+
+#include <dirent.h>
+
+static int (*libc_scandir64)(const char*, struct dirent64***,
+  int (*)(const struct dirent64*), int (*)(const struct dirent64**, const struct dirent64**)) = NULL;
+
+int scandir64(const char* dir, struct dirent64*** namelist,
+  int (*sel)(const struct dirent64*), int (*cmp)(const struct dirent64**, const struct dirent64**))
+{
+  if (!libc_scandir64) {
+    libc_scandir64 = dlsym(RTLD_NEXT, "scandir64");
+  }
+
+  return libc_scandir64(redirect(dir), namelist, sel, cmp);
 }

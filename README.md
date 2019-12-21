@@ -6,7 +6,7 @@ A set of workarounds for running the Linux Steam client under the FreeBSD Linux 
 
 ### Dependencies
 
-At least *ruby* and *linux-c7-devtools*.
+At least *ca_root_nss*, *linux-c7-devtools*, *linux-c7-nss* and *ruby*.
 
 ### Setup
 
