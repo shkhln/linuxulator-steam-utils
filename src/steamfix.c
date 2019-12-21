@@ -94,7 +94,7 @@ int system(const char* command) {
 
     const char* xdg_open_args = &command[sizeof(XDG_OPEN_CMD) - 1];
 
-    char* format_str = "PATH=/usr/bin:/usr/local/bin LD_LIBRARY_PATH='' LD_PRELOAD='' xdg-open %s";
+    char* format_str = "LD_LIBRARY_PATH='' LD_PRELOAD='' PATH=${FREEBSD_PATH} xdg-open %s";
 
     int   buf_len = strlen(format_str) + strlen(xdg_open_args) + 1;
     char* buf     = malloc(buf_len);
@@ -133,7 +133,6 @@ int system(const char* command) {
       webhelper_args[-2] = '\0';
 
       snprintf(buf, buf_len, format_str, webhelper_path, webhelper_args);
-
       free(webhelper_path);
 
       fprintf(stderr, "[[%s]]\n", buf);

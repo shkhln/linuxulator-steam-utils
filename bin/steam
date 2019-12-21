@@ -51,6 +51,7 @@ preload = [
   ENV['STEAM_LD_PRELOAD']
 ].compact.join(':')
 
+ENV['FREEBSD_PATH']               = ENV['PATH']
 ENV['PATH']                       = bin_path
 ENV['SYSTEM_PATH']                = bin_path
 ENV['LD_LIBRARY_PATH']            = client_library_path
