@@ -13,30 +13,35 @@ CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter
 CFLAGS += -DSKIP_FUTEX_WORKAROUND
 .endif
 
-LIBS  = lib32/steamfix.so lib32/libnm-glib.so.4 lib32/libpulse.so.0 lib64/libpulse.so.0 lib64/webfix.so
-LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
+LIBS  = lib32/steamfix/steamfix.so    \
+        lib32/fakenm/libnm-glib.so.4  \
+        lib32/fakepulse/libpulse.so.0 \
+        lib64/fakepulse/libpulse.so.0 \
+        lib64/webfix/webfix.so
 
 BINS  = lxbin/fhelper32 lxbin/fhelper64
+
+LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 BINS := ${BINS:C|(.*)|$(BUILD_DIR)/\1|}
 
 build: $(LIBS) $(BINS)
 
 .for b in 32 64
 
-$(BUILD_DIR)/lib$(b)/steamfix.so: src/steamfix.c src/futexes.c
-	mkdir -p $(BUILD_DIR)/lib$(b)
+$(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/futexes.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/steamfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/futexes.c -pthread -ldl
 
-$(BUILD_DIR)/lib$(b)/webfix.so: src/webfix.c src/futexes.c
-	mkdir -p $(BUILD_DIR)/lib$(b)
+$(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c src/futexes.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c   src/futexes.c -pthread -ldl
 
-$(BUILD_DIR)/lib$(b)/libnm-glib.so.4: src/fakenm.c
-	mkdir -p $(BUILD_DIR)/lib$(b)
+$(BUILD_DIR)/lib$(b)/fakenm/libnm-glib.so.4: src/fakenm.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/fakenm
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakenm.c
 
-$(BUILD_DIR)/lib$(b)/libpulse.so.0: src/fakepulse.c
-	mkdir -p $(BUILD_DIR)/lib$(b)
+$(BUILD_DIR)/lib$(b)/fakepulse/libpulse.so.0: src/fakepulse.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/fakepulse
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakepulse.c
 
 $(BUILD_DIR)/lxbin/fhelper$(b): src/futex_helper.c
@@ -54,7 +59,7 @@ clean:
 
 install:
 	install -d $(PREFIX)/$(PROJECT)
-.for d in bin lxbin lib32 lib64
+.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib64/webfix
 	install -d $(PREFIX)/$(PROJECT)/$(d)
 .  if exists($d)
 	install $(d)/* $(PREFIX)/$(PROJECT)/$(d)

@@ -7,7 +7,7 @@ def linux_run(cmd)
   `env PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
 end
 
-raise if not File.readable?(__dir__ + '/../lib32/steamfix.so')
+raise if not File.readable?(__dir__ + '/../lib32/steamfix/steamfix.so')
 
 steam_root         = ENV['HOME'] + '/.steam/steam'
 steam_runtime_root = ENV['HOME'] + '/.steam/steam/ubuntu12_32/steam-runtime'
@@ -30,16 +30,18 @@ bin_path = [
 ].compact.join(':')
 
 client_library_path = [
-  __dir__ + '/../lib32',
-  __dir__ + '/../lib64',
+  __dir__ + '/../lib32/steamfix',
+  __dir__ + '/../lib32/fakenm',
+  __dir__ + '/../lib32/fakepulse',
+  __dir__ + '/../lib64/webfix',
   "#{steam_root}/ubuntu12_32",
   "#{steam_root}/ubuntu12_32/panorama",
   steam_runtime_lib_path
 ].compact.join(':')
 
 games_library_path = [
-  __dir__ + '/../lib32',
-  __dir__ + '/../lib64',
+  __dir__ + '/../lib32/fakepulse',
+  __dir__ + '/../lib64/fakepulse',
   steam_runtime_lib_path
 ].compact.join(':')
 
