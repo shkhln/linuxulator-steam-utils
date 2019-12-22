@@ -7,6 +7,11 @@ def linux_run(cmd)
   `env PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
 end
 
+def safe_system(*args)
+  ok = system(*args)
+  raise "Command failed: #{args.join(' ').inspect}" if not ok
+end
+
 raise if not File.readable?(__dir__ + '/../lib32/steamfix/steamfix.so')
 
 steam_root         = ENV['HOME'] + '/.steam/steam'
@@ -14,11 +19,6 @@ steam_runtime_root = ENV['HOME'] + '/.steam/steam/ubuntu12_32/steam-runtime'
 
 raise if not File.exists?(steam_root)
 raise if not File.exists?(steam_runtime_root)
-
-system(__dir__ + '/../lxbin/patch-steam.rb')
-
-#TODO: should also handle restarts
-system(__dir__ + '/../lxbin/upgrade-steam-runtime.rb')
 
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
@@ -61,5 +61,8 @@ ENV['LD_PRELOAD']                 = preload
 
 ENV['SDL_AUDIODRIVER'] = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
+
+safe_system(__dir__ + '/../lxbin/patch-steam')
+safe_system(__dir__ + '/../lxbin/upgrade-steam-runtime')
 
 exec steam_root + '/ubuntu12_32/steam', *ARGV

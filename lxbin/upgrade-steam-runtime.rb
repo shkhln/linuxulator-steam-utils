@@ -1,9 +1,14 @@
-#!/usr/bin/env ruby
+#!/usr/local/bin/ruby
 # encoding: UTF-8
 
 require 'fileutils'
 
 steam_root = ENV['HOME'] + '/.steam/steam'
+
+def safe_system(*args)
+  ok = system(*args)
+  raise "Command failed: #{args.join(' ').inspect}" if not ok
+end
 
 def with_work_dir(dir)
   pwd = Dir.pwd
@@ -19,13 +24,13 @@ with_work_dir(steam_root + '/ubuntu12_32') do
 
   if archive_md5 && runtime_md5 != archive_md5
 
-    system('cat steam-runtime.tar.xz.part* > steam-runtime.tar.xz')
+    safe_system('/bin/cat steam-runtime.tar.xz.part* > steam-runtime.tar.xz')
 
-    if `md5 -q steam-runtime.tar.xz`.chomp != archive_md5
+    if `/sbin/md5 -q steam-runtime.tar.xz`.chomp != archive_md5
       raise 'steam-runtime.tar.xz failed integrity check'
     end
 
-    version_txt = `tar -xf steam-runtime.tar.xz --to-stdout steam-runtime/version.txt`
+    version_txt = `/usr/bin/tar -xf steam-runtime.tar.xz --to-stdout steam-runtime/version.txt`
     version_txt =~ /_([\d\.]+)$/
     version = $1
 
@@ -35,7 +40,7 @@ with_work_dir(steam_root + '/ubuntu12_32') do
       puts 'Extracting steam-runtime...'
 
       FileUtils.mkdir('steam-runtime_' + version)
-      system("tar -C steam-runtime_#{version} -xf steam-runtime.tar.xz --strip-components 1")
+      safe_system("/usr/bin/tar -C steam-runtime_#{version} -xf steam-runtime.tar.xz --strip-components 1")
 
       FileUtils.cp('steam-runtime.checksum', "steam-runtime_#{version}/checksum")
     end
@@ -45,7 +50,7 @@ with_work_dir(steam_root + '/ubuntu12_32') do
   end
 
   if not (File.exists?('steam-runtime/pinned_libs_32') && File.exists?('steam-runtime/pinned_libs_64'))
-    system("/compat/linux/bin/env PATH=\"#{__dir__}:/compat/linux/bin\" steam-runtime/setup.sh")
+    safe_system("/compat/linux/bin/env PATH=\"#{__dir__}:/compat/linux/bin\" steam-runtime/setup.sh")
   end
 
   # keep previous 2 versions just in case

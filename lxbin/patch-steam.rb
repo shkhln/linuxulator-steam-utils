@@ -5,6 +5,11 @@ require 'fileutils'
 
 def patch_executable(path, out_path)
 
+  if not File.exist?(path)
+    STDERR.puts "#{$PROGRAM_NAME}: #{path} not found, nothing to patch"
+    return
+  end
+
   def same_size(a, b); File.lstat(a).size == File.lstat(b).size; end
   def is_older (a, b); File.mtime(a)      <  File.mtime(b);      end
 
@@ -27,5 +32,6 @@ patch_executable(steam_root + '/ubuntu12_64/steamwebhelper.sh', steam_root + '/u
   src.gsub(/\.\/steamwebhelper "\$@"/, 'exec ./steamwebhelper.patched "$@"')
 end
 
-FileUtils.chmod('+x', steam_root + '/ubuntu12_64/steamwebhelper.patched')
-FileUtils.chmod('+x', steam_root + '/ubuntu12_64/steamwebhelper.sh.patched')
+for f in ['ubuntu12_64/steamwebhelper.patched', 'ubuntu12_64/steamwebhelper.sh.patched']
+  FileUtils.chmod('+x', steam_root + '/' + f) if File.exist?(steam_root + '/' + f)
+end
