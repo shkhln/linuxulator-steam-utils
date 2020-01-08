@@ -40,7 +40,6 @@ FAKE(pa_channel_position_to_string);
 FAKE(pa_channels_valid);
 FAKE(pa_close);
 FAKE(pa_context_add_autoload);
-FAKE(pa_context_connect);
 FAKE(pa_context_disconnect);
 FAKE(pa_context_drain);
 FAKE(pa_context_errno);
@@ -93,7 +92,6 @@ FAKE(pa_context_move_sink_input_by_index);
 FAKE(pa_context_move_sink_input_by_name);
 FAKE(pa_context_move_source_output_by_index);
 FAKE(pa_context_move_source_output_by_name);
-FAKE(pa_context_new);
 FAKE(pa_context_new_with_proplist);
 FAKE(pa_context_play_sample);
 FAKE(pa_context_play_sample_with_proplist);
@@ -139,7 +137,6 @@ FAKE(pa_context_suspend_sink_by_name);
 FAKE(pa_context_suspend_source_by_index);
 FAKE(pa_context_suspend_source_by_name);
 FAKE(pa_context_unload_module);
-FAKE(pa_context_unref);
 FAKE(pa_cvolume_avg);
 FAKE(pa_cvolume_avg_mask);
 FAKE(pa_cvolume_channels_equal_to);
@@ -231,11 +228,8 @@ FAKE(pa_log_level_meta);
 FAKE(pa_mainloop_api_once);
 FAKE(pa_mainloop_api_once_impl);
 FAKE(pa_mainloop_dispatch);
-FAKE(pa_mainloop_free);
-FAKE(pa_mainloop_get_api);
 FAKE(pa_mainloop_get_retval);
 FAKE(pa_mainloop_iterate);
-FAKE(pa_mainloop_new);
 FAKE(pa_mainloop_poll);
 FAKE(pa_mainloop_prepare);
 FAKE(pa_mainloop_quit);
@@ -401,10 +395,34 @@ FAKE(pa_xrealloc);
 FAKE(pa_xstrdup);
 FAKE(pa_xstrndup);
 
+void* pa_mainloop_new() {
+  return NULL;
+}
+
 void* pa_threaded_mainloop_new() {
   return NULL;
 }
 
+void pa_mainloop_free(void* m) {
+  // do nothing
+}
+
 int pa_sample_spec_valid() {
   return 0;
+}
+
+void* pa_mainloop_get_api(void* m) {
+  return NULL;
+}
+
+void* pa_context_new(void* mainloop, const char* name) {
+  return NULL;
+}
+
+int pa_context_connect(void* c, const char* server, int flags, const void* api) {
+  return -1;
+}
+
+void pa_context_unref(void* c) {
+  // do nothing
 }
