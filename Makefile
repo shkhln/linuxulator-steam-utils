@@ -64,6 +64,8 @@ clean:
 
 install:
 	install -d $(PREFIX)/$(PROJECT)
+	install -d $(PREFIX)/$(PROJECT)/lib32
+	install -d $(PREFIX)/$(PROJECT)/lib64
 .for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib64/fakeudev lib64/webfix
 	install -d $(PREFIX)/$(PROJECT)/$(d)
 .  if exists($d)
