@@ -116,7 +116,6 @@ int system(const char* command) {
 
       char* format_str =
         "LD_PRELOAD=webfix.so"
-        " LD_LIBRARY_PATH=/compat/linux/usr/lib64/nss:${LD_LIBRARY_PATH}"
         " '%s.patched' %s"
         " --no-sandbox"
         " --no-zygote"

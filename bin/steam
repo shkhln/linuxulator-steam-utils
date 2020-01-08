@@ -34,6 +34,7 @@ client_library_path = [
   __dir__ + '/../lib32/fakenm',
   __dir__ + '/../lib32/fakepulse',
   __dir__ + '/../lib64/webfix',
+  '/compat/linux/usr/lib64/nss',
   "#{steam_root}/ubuntu12_32",
   "#{steam_root}/ubuntu12_32/panorama",
   steam_runtime_lib_path
@@ -43,6 +44,8 @@ games_library_path = [
   __dir__ + '/../lib32/fakepulse',
   __dir__ + '/../lib64/fakepulse',
   __dir__ + '/../lib64/fakeudev',
+  __dir__ + '/../lib64/webfix',
+  '/compat/linux/usr/lib64/nss',
   steam_runtime_lib_path
 ].compact.join(':')
 
