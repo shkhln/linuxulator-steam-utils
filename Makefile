@@ -17,7 +17,8 @@ LIBS  = lib32/steamfix/steamfix.so    \
         lib32/fakenm/libnm-glib.so.4  \
         lib32/fakepulse/libpulse.so.0 \
         lib64/fakepulse/libpulse.so.0 \
-        lib64/webfix/webfix.so
+        lib64/webfix/webfix.so        \
+        lib64/fakeudev/libudev.so.0
 
 BINS  = lxbin/fhelper32 lxbin/fhelper64
 
@@ -44,6 +45,10 @@ $(BUILD_DIR)/lib$(b)/fakepulse/libpulse.so.0: src/fakepulse.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakepulse
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakepulse.c
 
+$(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.0: src/fakeudev.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/fakeudev
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakeudev.c
+
 $(BUILD_DIR)/lxbin/fhelper$(b): src/futex_helper.c
 	mkdir -p $(BUILD_DIR)/lxbin
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -o $(.TARGET) src/futex_helper.c
@@ -59,7 +64,7 @@ clean:
 
 install:
 	install -d $(PREFIX)/$(PROJECT)
-.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib64/webfix
+.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib64/fakeudev lib64/webfix
 	install -d $(PREFIX)/$(PROJECT)/$(d)
 .  if exists($d)
 	install $(d)/* $(PREFIX)/$(PROJECT)/$(d)

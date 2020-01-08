@@ -42,6 +42,7 @@ client_library_path = [
 games_library_path = [
   __dir__ + '/../lib32/fakepulse',
   __dir__ + '/../lib64/fakepulse',
+  __dir__ + '/../lib64/fakeudev',
   steam_runtime_lib_path
 ].compact.join(':')
 
