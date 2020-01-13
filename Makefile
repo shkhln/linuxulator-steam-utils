@@ -82,3 +82,41 @@ deinstall:
 .if exists($(PREFIX)/$(PROJECT))
 	rm -r -I $(PREFIX)/$(PROJECT)
 .endif
+
+dependencies:
+	pkg install -r FreeBSD \
+		ca_root_nss \
+		lang/ruby26 \
+		linux-c7-alsa-lib \
+		linux-c7-atk \
+		linux-c7-cairo \
+		linux-c7-dbus-libs \
+		linux-c7-dbus-libs \
+		linux-c7-devtools \
+		linux-c7-elfutils-libelf \
+		linux-c7-elfutils-libs \
+		linux-c7-expat \
+		linux-c7-fontconfig \
+		linux-c7-freetype \
+		linux-c7-fribidi \
+		linux-c7-gdk-pixbuf2 \
+		linux-c7-graphite2 \
+		linux-c7-gtk2 \
+		linux-c7-harfbuzz \
+		linux-c7-libdrm \
+		linux-c7-libgcrypt \
+		linux-c7-libglvnd \
+		linux-c7-libgpg-error \
+		linux-c7-libpng \
+		linux-c7-libthai \
+		linux-c7-lz4 \
+		linux-c7-nspr \
+		linux-c7-nss \
+		linux-c7-nss \
+		linux-c7-openal-soft \
+		linux-c7-pango \
+		linux-c7-pixman \
+		linux-c7-systemd-libs \
+		linux-c7-xorg-libs \
+		linux-nvidia-libs \
+		linux_base-c7
