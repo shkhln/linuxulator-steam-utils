@@ -91,7 +91,6 @@ dependencies:
 		linux-c7-atk \
 		linux-c7-cairo \
 		linux-c7-dbus-libs \
-		linux-c7-dbus-libs \
 		linux-c7-devtools \
 		linux-c7-elfutils-libelf \
 		linux-c7-elfutils-libs \
@@ -112,11 +111,11 @@ dependencies:
 		linux-c7-lz4 \
 		linux-c7-nspr \
 		linux-c7-nss \
-		linux-c7-nss \
 		linux-c7-openal-soft \
 		linux-c7-pango \
 		linux-c7-pixman \
 		linux-c7-systemd-libs \
 		linux-c7-xorg-libs \
-		linux-nvidia-libs \
 		linux_base-c7
+	#TODO: Nvidia's legacy drivers
+	sysctl -q hw.nvidia.version > /dev/null && pkg install -r FreeBSD linux-nvidia-libs
