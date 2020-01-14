@@ -9,8 +9,14 @@ PREFIX    ?= /opt
 
 CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter
 
-.if $(OSVERSION) > 1300053
+# r353724, r353725
+.if $(OSVERSION) >= 1300054
 CFLAGS += -DSKIP_FUTEX_WORKAROUND
+.endif
+
+# r355065-r355068; r355372
+.if $(OSVERSION) >= 1300062 || ($(OSVERSION) >= 1201504 && $(OSVERSION) < 1300000)
+CFLAGS += -DSKIP_EPOLLONESHOT_WORKAROUND
 .endif
 
 LIBS  = lib32/steamfix/steamfix.so    \

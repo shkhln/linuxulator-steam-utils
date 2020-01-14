@@ -8,6 +8,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef SKIP_EPOLLONESHOT_WORKAROUND
+
 /* Work around timeout on login issue */
 
 #include <sys/epoll.h>
@@ -37,6 +39,8 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) {
 
   return err;
 }
+
+#endif
 
 /* Silence obnoxious "libudev: udev_monitor_new_from_netlink_fd: error getting socket: Address family not supported by protocol" warning */
 
