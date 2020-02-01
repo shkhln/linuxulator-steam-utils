@@ -3,6 +3,27 @@
 
 #TODO: DBUS_SYSTEM_BUS_ADDRESS?
 
+def check_requirements
+
+  reqs = []
+
+  reqs << '32-bit Linux emulation support' if `sysctl -nq kern.features.linux`  .to_i != 1
+  reqs << '64-bit Linux emulation support' if `sysctl -nq kern.features.linux64`.to_i != 1
+
+  mounted_filesystems = `mount -p`
+
+  for fs, path in {
+    'linprocfs' => '/compat/linux/proc',
+    'linsysfs'  => '/compat/linux/sys',
+    'tmpfs'     => '/compat/linux/dev/shm'
+  }
+    reqs << "#{fs} mounted at #{path}" if not mounted_filesystems =~ /#{Regexp.escape(path)}\s+#{fs}/
+  end
+
+  reqs << 'write access to /compat/linux/dev/shm' if not File.writable?('/compat/linux/dev/shm')
+  reqs
+end
+
 def linux_run(cmd)
   `env PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
 end
@@ -10,6 +31,15 @@ end
 def safe_system(*args)
   ok = system(*args)
   raise "Command failed: #{args.join(' ').inspect}" if not ok
+end
+
+requirements = check_requirements()
+if not requirements.empty?
+  STDERR.puts 'Please, make sure the following requirements are satisfied:'
+  for req in requirements
+    STDERR.puts "  * #{req}"
+  end
+  exit 1
 end
 
 raise if not File.readable?(__dir__ + '/../lib32/steamfix/steamfix.so')
