@@ -42,13 +42,23 @@ if not requirements.empty?
   exit 1
 end
 
-raise if not File.readable?(__dir__ + '/../lib32/steamfix/steamfix.so')
+if not File.readable?(__dir__ + '/../lib32/steamfix/steamfix.so')
+  STDERR.puts "Can't find steamfix.so"
+  exit 1
+end
 
 steam_root         = ENV['HOME'] + '/.steam/steam'
 steam_runtime_root = ENV['HOME'] + '/.steam/steam/ubuntu12_32/steam-runtime'
 
-raise if not File.exists?(steam_root)
-raise if not File.exists?(steam_runtime_root)
+if not File.exists?(steam_root)
+  STDERR.puts "Steam doesn't appear to be installed for user #{ENV['USER']}. Perhaps you forgot to run steam-install?"
+  exit 1
+end
+
+if not File.exists?(steam_runtime_root)
+  STDERR.puts "Can't find steam-runtime"
+  exit 1
+end
 
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
