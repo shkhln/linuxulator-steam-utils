@@ -7,33 +7,30 @@
 
 #define FAKE(name) void name() { fprintf(stderr, "fakeudev: %s\n", #name); exit(1); }
 
+FAKE(udev_device_get_action);
 FAKE(udev_device_get_devnode);
 FAKE(udev_device_get_parent);
 FAKE(udev_device_get_parent_with_subsystem_devtype);
 FAKE(udev_device_get_property_value);
+FAKE(udev_device_get_subsystem);
 FAKE(udev_device_get_sysattr_value);
 FAKE(udev_device_get_sysname);
 FAKE(udev_device_get_syspath);
 FAKE(udev_device_new_from_devnum);
 FAKE(udev_device_new_from_subsystem_sysname);
 FAKE(udev_device_new_from_syspath);
-FAKE(udev_enumerate_add_match_subsystem);
-FAKE(udev_enumerate_get_list_entry);
-FAKE(udev_enumerate_new);
-FAKE(udev_enumerate_scan_devices);
-FAKE(udev_enumerate_unref);
+FAKE(udev_device_unref);
 FAKE(udev_list_entry_get_next);
 FAKE(udev_list_entry_get_name);
 FAKE(udev_set_log_fn);
 FAKE(udev_set_log_priority);
 
-struct udev {};
+struct udev         {};
 struct udev_monitor {};
-struct udev_device {};
+struct udev_device  {};
 
 static struct udev         dev;
 static struct udev_monitor monitor;
-static struct udev_device  device;
 
 struct udev* udev_new(void) {
   return &dev;
@@ -71,17 +68,25 @@ void udev_monitor_unref(struct udev_monitor *udev_monitor) {
 }
 
 struct udev_device* udev_monitor_receive_device(struct udev_monitor* udev_monitor) {
-  return &device;
+  return NULL;
 }
 
-const char* udev_device_get_action(struct udev_device* udev_device) {
-  return "whatever";
+struct udev_enumerate* udev_enumerate_new(struct udev* udev) {
+  return NULL;
 }
 
-const char* udev_device_get_subsystem(struct udev_device* udev_device) {
-  return "whatever";
+struct udev_list_entry* udev_enumerate_get_list_entry(struct udev_enumerate* udev_enumerate) {
+  return NULL;
 }
 
-struct udev_device* udev_device_unref(struct udev_device* udev_device) {
+int udev_enumerate_add_match_subsystem(struct udev_enumerate* udev_enumerate, const char* subsystem) {
+  return -1;
+}
+
+int udev_enumerate_scan_devices(struct udev_enumerate* udev_enumerate) {
+  return -1; // ?
+}
+
+struct udev_enumerate* udev_enumerate_unref(struct udev_enumerate* udev_enumerate) {
   return NULL;
 }
