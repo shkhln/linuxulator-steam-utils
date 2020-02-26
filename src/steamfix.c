@@ -84,7 +84,8 @@ int sigaction(int sig, const struct sigaction* restrict act, struct sigaction* r
 
 static int (*libc_system)(const char*) = NULL;
 
-#define XDG_OPEN_CMD "LD_LIBRARY_PATH=\"$SYSTEM_LD_LIBRARY_PATH\" PATH=\"$SYSTEM_PATH\" '/usr/bin/xdg-open' "
+#define SYSTEM_ENV   "LD_LIBRARY_PATH=\"$SYSTEM_LD_LIBRARY_PATH\" PATH=\"$SYSTEM_PATH\""
+#define XDG_OPEN_CMD "'/usr/bin/xdg-open'"
 
 int system(const char* command) {
 
@@ -94,9 +95,12 @@ int system(const char* command) {
 
   /* such as xdg-open */
 
-  if (strncmp(command, XDG_OPEN_CMD, sizeof(XDG_OPEN_CMD) - 1) == 0) {
+  if (strncmp(command, SYSTEM_ENV, sizeof(SYSTEM_ENV) - 1) == 0 && (
+        strncmp(command + sizeof(SYSTEM_ENV) - 1, " "  XDG_OPEN_CMD " ", sizeof(" "  XDG_OPEN_CMD " ") - 1) == 0 ||
+        strncmp(command + sizeof(SYSTEM_ENV) - 1, "  " XDG_OPEN_CMD " ", sizeof("  " XDG_OPEN_CMD " ") - 1) == 0)
+  ) {
 
-    const char* xdg_open_args = &command[sizeof(XDG_OPEN_CMD) - 1];
+    const char* xdg_open_args = strstr(command, XDG_OPEN_CMD " ") + sizeof(XDG_OPEN_CMD " ") - 1;
 
     char* format_str = "LD_LIBRARY_PATH='' LD_PRELOAD='' PATH=${FREEBSD_PATH} xdg-open %s";
 
