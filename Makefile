@@ -89,16 +89,15 @@ deinstall:
 	rm -r -I $(PREFIX)/$(PROJECT)
 .endif
 
+NVIDIA_DEPS != \
+	case `sysctl -q hw.nvidia.version | sed -n "s/hw.nvidia.version: NVIDIA UNIX x86_64 Kernel Module  \([0-9]*\).*/\1/p"` in \
+	  '')  echo '' ;;                   \
+	  340) echo linux-nvidia-libs-340;; \
+	  390) echo linux-nvidia-libs-390;; \
+	  *)   echo linux-nvidia-libs;;     \
+	esac
+
+DEPS = ruby ca_root_nss linux-c7-dbus-libs linux-c7-devtools linux-c7-dri linux-c7-gtk2 linux-c7-nss linux-c7-openal-soft
+
 dependencies:
-	pkg install -r FreeBSD \
-		ca_root_nss \
-		lang/ruby26 \
-		linux-c7-dbus-libs \
-		linux-c7-devtools \
-		linux-c7-gtk2 \
-		linux-c7-libdrm \
-		linux-c7-libglvnd \
-		linux-c7-nss \
-		linux-c7-openal-soft
-	#TODO: Nvidia's legacy drivers
-	sysctl -q hw.nvidia.version > /dev/null && pkg install -r FreeBSD linux-nvidia-libs
+	pkg install -r FreeBSD ${DEPS} ${NVIDIA_DEPS}
