@@ -127,6 +127,7 @@ int system(const char* command) {
         " '%s.patched' %s"
         " --no-sandbox"
         " --no-zygote"
+        " --in-process-gpu" // YMMV
         //" --enable-logging=stderr"
         //" --v=0"
       ;
