@@ -1,2 +1,2 @@
 #!/bin/sh
-./steam -no-browser
+/opt/steam-utils/bin/steam -no-browser
