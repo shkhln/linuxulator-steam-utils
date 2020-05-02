@@ -23,8 +23,9 @@ LIBS  = lib32/steamfix/steamfix.so    \
         lib32/fakenm/libnm-glib.so.4  \
         lib32/fakepulse/libpulse.so.0 \
         lib64/fakepulse/libpulse.so.0 \
-        lib64/webfix/webfix.so        \
-        lib64/fakeudev/libudev.so.0
+        lib32/fakeudev/libudev.so.0   \
+        lib64/fakeudev/libudev.so.0   \
+        lib64/webfix/webfix.so
 
 BINS  = lxbin/fhelper32 lxbin/fhelper64
 
@@ -72,7 +73,7 @@ install:
 	install -d $(PREFIX)/$(PROJECT)
 	install -d $(PREFIX)/$(PROJECT)/lib32
 	install -d $(PREFIX)/$(PROJECT)/lib64
-.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib64/fakeudev lib64/webfix
+.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib32/fakeudev lib64/fakeudev lib64/webfix
 	install -d $(PREFIX)/$(PROJECT)/$(d)
 .  if exists($d)
 	install $(d)/* $(PREFIX)/$(PROJECT)/$(d)

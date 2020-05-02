@@ -73,6 +73,7 @@ client_library_path = [
   __dir__ + '/../lib32/steamfix',
   __dir__ + '/../lib32/fakenm',
   __dir__ + '/../lib32/fakepulse',
+  __dir__ + '/../lib32/fakeudev',
   __dir__ + '/../lib64/webfix',
   '/compat/linux/usr/lib64/nss',
   "#{steam_root}/ubuntu12_32",
@@ -83,6 +84,7 @@ client_library_path = [
 games_library_path = [
   __dir__ + '/../lib32/fakepulse',
   __dir__ + '/../lib64/fakepulse',
+  __dir__ + '/../lib32/fakeudev',
   __dir__ + '/../lib64/fakeudev',
   __dir__ + '/../lib64/webfix',
   '/compat/linux/usr/lib64/nss',

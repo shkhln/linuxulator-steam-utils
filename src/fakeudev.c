@@ -1,16 +1,39 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+#if 0
+
+#include <sys/syscall.h>
+
+extern char* program_invocation_short_name;
+
+#define __HEAD(head, ...) head
+#define __TAIL(head, ...) __VA_ARGS__
+
+#define LOG(...) fprintf(stderr, "fakeudev: [%.50s][%d:%ld] " __HEAD(__VA_ARGS__) "\n", program_invocation_short_name, getpid(), syscall(SYS_gettid), __TAIL(__VA_ARGS__))
+
+#define LOG_ENTRY(fmt, ...) __builtin_choose_expr(__builtin_strcmp("" fmt, "") == 0, LOG("%s()",       __func__), LOG("%s("    fmt ")", __func__, ## __VA_ARGS__))
+#define LOG_EXIT( fmt, ...) __builtin_choose_expr(__builtin_strcmp("" fmt, "") == 0, LOG("%s -> void", __func__), LOG("%s -> " fmt,     __func__, ## __VA_ARGS__))
+
+#else
+
+#define LOG(...)
+#define LOG_ENTRY(fmt, ...)
+#define LOG_EXIT( fmt, ...)
+
+#endif
 
 #define FAKE(name) void name() { fprintf(stderr, "fakeudev: %s\n", #name); exit(1); }
 
 FAKE(udev_device_get_action);
 FAKE(udev_device_get_devnode);
-FAKE(udev_device_get_parent);
+FAKE(udev_device_get_devnum);
 FAKE(udev_device_get_parent_with_subsystem_devtype);
+FAKE(udev_device_get_parent);
 FAKE(udev_device_get_property_value);
 FAKE(udev_device_get_subsystem);
 FAKE(udev_device_get_sysattr_value);
@@ -19,74 +42,107 @@ FAKE(udev_device_get_syspath);
 FAKE(udev_device_new_from_devnum);
 FAKE(udev_device_new_from_subsystem_sysname);
 FAKE(udev_device_new_from_syspath);
+FAKE(udev_device_ref);
 FAKE(udev_device_unref);
-FAKE(udev_list_entry_get_next);
 FAKE(udev_list_entry_get_name);
+FAKE(udev_list_entry_get_next);
 FAKE(udev_set_log_fn);
 FAKE(udev_set_log_priority);
 
-struct udev         {};
-struct udev_monitor {};
-struct udev_device  {};
+struct udev           {};
+struct udev_monitor   {};
+struct udev_device    {};
+struct udev_enumerate {};
 
-static struct udev         dev;
-static struct udev_monitor monitor;
+static struct udev           dev;
+static struct udev_monitor   monitor;
+static struct udev_enumerate enumerator;
 
-struct udev* udev_new(void) {
+struct udev* udev_new() {
+  LOG_ENTRY();
   return &dev;
 }
 
-struct udev* udev_unref(struct udev *udev) {
+struct udev* udev_unref(struct udev* udev) {
+  LOG_ENTRY("%p", udev);
   return NULL;
 }
 
 struct udev_monitor* udev_monitor_new_from_netlink(void* udev, const char* name) {
+  LOG_ENTRY("%p, \"%s\"", udev, name);
   return &monitor;
 }
 
 void* udev_monitor_new_from_netlink_fd(void* udev, const char* name, int fd) {
+  LOG_ENTRY("%p, \"%s\", %d", udev, name, fd);
   assert(0);
 }
 
 int udev_monitor_enable_receiving(struct udev_monitor* udev_monitor) {
+  LOG_ENTRY("%p", udev_monitor);
   return 0;
 }
 
 int udev_monitor_filter_add_match_subsystem_devtype(struct udev_monitor* udev_monitor, const char* subsystem, const char* devtype) {
+  LOG_ENTRY("%p, \"%s\", \"%s\"", udev_monitor, subsystem, devtype);
   return 0;
 }
 
+static int monitor_fd = -1;
+
+__attribute__((constructor))
+static void init_monitor_fd() {
+
+  int inout[2];
+  {
+    int err = pipe(inout);
+    assert(err == 0);
+  }
+
+  monitor_fd = inout[1];
+}
+
 int udev_monitor_get_fd(struct udev_monitor* udev_monitor) {
-  // some paths cause CEF to hang for whatever reason, this one doesn't and it's always conveniently available
-  int fd = open("/proc/self/cmdline", O_RDONLY);
-  assert(fd != -1);
-  return fd;
+  LOG_ENTRY("%p", udev_monitor);
+  return monitor_fd;
 }
 
 void udev_monitor_unref(struct udev_monitor *udev_monitor) {
+  LOG_ENTRY("%p", udev_monitor);
   // do nothing
 }
 
 struct udev_device* udev_monitor_receive_device(struct udev_monitor* udev_monitor) {
+  LOG_ENTRY("%p", udev_monitor);
   return NULL;
 }
 
 struct udev_enumerate* udev_enumerate_new(struct udev* udev) {
-  return NULL;
+  LOG_ENTRY("%p", udev);
+  return &enumerator;
 }
 
 struct udev_list_entry* udev_enumerate_get_list_entry(struct udev_enumerate* udev_enumerate) {
+  LOG_ENTRY("%p", udev_enumerate);
   return NULL;
 }
 
 int udev_enumerate_add_match_subsystem(struct udev_enumerate* udev_enumerate, const char* subsystem) {
+  LOG_ENTRY("%p, \"%s\"", udev_enumerate, subsystem);
+  return -1;
+}
+
+int udev_enumerate_add_match_property(struct udev_enumerate* udev_enumerate, const char* property, const char* value) {
+  LOG_ENTRY("%p, \"%s\", \"%s\"", udev_enumerate, property, value);
   return -1;
 }
 
 int udev_enumerate_scan_devices(struct udev_enumerate* udev_enumerate) {
-  return -1; // ?
+  LOG_ENTRY("%p", udev_enumerate);
+  return -1;
 }
 
 struct udev_enumerate* udev_enumerate_unref(struct udev_enumerate* udev_enumerate) {
+  LOG_ENTRY("%p", udev_enumerate);
   return NULL;
 }

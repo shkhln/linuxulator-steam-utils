@@ -42,16 +42,6 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) {
 
 #endif
 
-/* Silence obnoxious "libudev: udev_monitor_new_from_netlink_fd: error getting socket: Address family not supported by protocol" warning */
-
-void* udev_monitor_new_from_netlink(void* udev, const char* name) {
-  return NULL;
-}
-
-void* udev_monitor_new_from_netlink_fd(void* udev, const char* name, int fd) {
-  assert(0);
-}
-
 /* Do not allow Breakpad to override libSegFault handlers */
 
 #include <execinfo.h>
