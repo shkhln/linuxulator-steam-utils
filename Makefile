@@ -38,11 +38,11 @@ build: $(LIBS) $(BINS)
 
 $(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/futexes.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/steamfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/futexes.c -pthread -ldl
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/futexes.c -pthread -ldl -lm
 
 $(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c src/futexes.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c   src/futexes.c -pthread -ldl
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c   src/futexes.c -pthread -ldl -lm
 
 $(BUILD_DIR)/lib$(b)/fakenm/libnm-glib.so.4: src/fakenm.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakenm
