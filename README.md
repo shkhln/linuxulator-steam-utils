@@ -30,4 +30,4 @@ Roughly:
 
 ## What about actual games?
 
-See [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
+See the [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
