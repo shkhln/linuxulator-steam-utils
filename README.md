@@ -27,3 +27,7 @@ Roughly:
 1. Valve Anti-Cheat doesn't seem to work properly.
 1. Due to inherent difficulty of running games on Linuxulator as well as many (most?) native Linux ports being broken garbage in general, only the Source engine games are explicitly supported. I simply can't be bothered to test anything else on a regular basis.
 1. Steam Play can't be implemented as long as the FreeBSD Ports Collection *lacks multilib support*, making it impossible to package Proton dependencies.
+
+## What about actual games?
+
+See [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
