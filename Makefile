@@ -27,6 +27,11 @@ LIBS  = lib32/steamfix/steamfix.so    \
         lib64/fakeudev/libudev.so.0   \
         lib64/webfix/webfix.so
 
+# r358483
+.if $(OSVERSION) < 1300082
+LIBS += lib32/fmodfix/fmodfix.so lib64/fmodfix/fmodfix.so
+.endif
+
 BINS  = lxbin/fhelper32 lxbin/fhelper64
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
@@ -43,6 +48,10 @@ $(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/futexes.c
 $(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c src/futexes.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c   src/futexes.c -pthread -ldl -lm
+
+$(BUILD_DIR)/lib$(b)/fmodfix/fmodfix.so: src/fmodfix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/fmodfix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fmodfix.c
 
 $(BUILD_DIR)/lib$(b)/fakenm/libnm-glib.so.4: src/fakenm.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakenm
@@ -73,13 +82,14 @@ install:
 	install -d $(PREFIX)/$(PROJECT)
 	install -d $(PREFIX)/$(PROJECT)/lib32
 	install -d $(PREFIX)/$(PROJECT)/lib64
-.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib32/fakeudev lib64/fakeudev lib64/webfix
-	install -d $(PREFIX)/$(PROJECT)/$(d)
+.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib32/fakeudev lib64/fakeudev lib32/fmodfix lib64/fmodfix lib64/webfix
 .  if exists($d)
+	install -d $(PREFIX)/$(PROJECT)/$(d)
 	install $(d)/* $(PREFIX)/$(PROJECT)/$(d)
 .  endif
 .  if $(BUILD_DIR) != "."
 .    if exists($BUILD_DIR/$d)
+	install -d $(PREFIX)/$(PROJECT)/$(d)
 	install $(BUILD_DIR)/$(d)/* $(PREFIX)/$(PROJECT)/$(d)
 .    endif
 .  endif

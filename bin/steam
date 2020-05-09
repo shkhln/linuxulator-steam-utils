@@ -86,6 +86,8 @@ games_library_path = [
   __dir__ + '/../lib64/fakepulse',
   __dir__ + '/../lib32/fakeudev',
   __dir__ + '/../lib64/fakeudev',
+  __dir__ + '/../lib32/fmodfix',
+  __dir__ + '/../lib64/fmodfix',
   __dir__ + '/../lib64/webfix',
   '/compat/linux/usr/lib64/nss',
   steam_runtime_lib_path
