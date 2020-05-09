@@ -32,6 +32,8 @@ extern char* program_invocation_short_name;
 FAKE(udev_device_get_action);
 FAKE(udev_device_get_devnode);
 FAKE(udev_device_get_devnum);
+FAKE(udev_device_get_devpath);
+FAKE(udev_device_get_sysnum);
 FAKE(udev_device_get_parent_with_subsystem_devtype);
 FAKE(udev_device_get_parent);
 FAKE(udev_device_get_property_value);
