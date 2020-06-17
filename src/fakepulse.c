@@ -234,7 +234,6 @@ FAKE(pa_mainloop_poll);
 FAKE(pa_mainloop_prepare);
 FAKE(pa_mainloop_quit);
 FAKE(pa_mainloop_run);
-FAKE(pa_mainloop_set_poll_func);
 FAKE(pa_mainloop_wakeup);
 FAKE(pa_msleep);
 FAKE(pa_open_cloexec);
@@ -387,8 +386,6 @@ FAKE(pa_utf8_to_locale);
 FAKE(pa_utf8_valid);
 FAKE(pa_volume_snprint);
 FAKE(pa_volume_snprint_verbose);
-FAKE(pa_xfree);
-FAKE(pa_xmalloc);
 FAKE(pa_xmalloc0);
 FAKE(pa_xmemdup);
 FAKE(pa_xrealloc);
@@ -403,16 +400,20 @@ void* pa_threaded_mainloop_new() {
   return NULL;
 }
 
+void* pa_mainloop_get_api(void* m) {
+  return NULL;
+}
+
+void pa_mainloop_set_poll_func(void* m, void* poll_func, void* userdata) {
+  // do nothing
+}
+
 void pa_mainloop_free(void* m) {
   // do nothing
 }
 
 int pa_sample_spec_valid() {
   return 0;
-}
-
-void* pa_mainloop_get_api(void* m) {
-  return NULL;
 }
 
 void* pa_context_new(void* mainloop, const char* name) {
@@ -424,5 +425,13 @@ int pa_context_connect(void* c, const char* server, int flags, const void* api) 
 }
 
 void pa_context_unref(void* c) {
+  // do nothing
+}
+
+void* pa_xmalloc(size_t l) {
+  return NULL;
+}
+
+void pa_xfree(void* p) {
   // do nothing
 }
