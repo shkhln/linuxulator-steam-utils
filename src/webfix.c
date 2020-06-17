@@ -151,6 +151,7 @@ int clock_gettime(clockid_t clock_id, struct timespec* tp) {
       break;
     case CLOCK_MONOTONIC_RAW:
       err = libc_clock_gettime(CLOCK_MONOTONIC, tp); // ?
+      break;
     default:
       err = libc_clock_gettime(clock_id, tp);
   }
