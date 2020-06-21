@@ -1,0 +1,17 @@
+#!/compat/linux/bin/sh
+
+set_proton_env() {
+
+  export LD_PRELOAD=`echo ${LD_PRELOAD}:protonfix.so | sed -e 's/steamfix.so//g' -e 's/\:\:/\:/g' -e 's/^\://'`
+
+  export PROTON_NO_ESYNC=1
+  export PROTON_NO_FSYNC=1
+
+  export DXVK_HUD=${DXVK_HUD-frametimes,version,devinfo,fps}
+}
+
+case "$1" in
+  *"/proton") set_proton_env;;
+esac
+
+exec /compat/linux/bin/python3 "$@"
