@@ -114,7 +114,7 @@ NVIDIA_DEPS != \
 	  *)   echo linux-nvidia-libs;;     \
 	esac
 
-DEPS = ruby ca_root_nss linux-c7-alsa-plugins-oss linux-c7-dbus-libs linux-c7-devtools linux-c7-dri linux-c7-gtk2 linux-c7-nss linux-c7-openal-soft
+DEPS = ruby ca_root_nss liberation-fonts-ttf linux-c7-alsa-plugins-oss linux-c7-dbus-libs linux-c7-devtools linux-c7-dri linux-c7-gtk2 linux-c7-nss linux-c7-openal-soft
 
 dependencies:
 	pkg install -r FreeBSD ${DEPS} ${NVIDIA_DEPS}
