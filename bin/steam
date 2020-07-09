@@ -15,7 +15,8 @@ def check_requirements
   for fs, path in {
     'linprocfs' => '/compat/linux/proc',
     'linsysfs'  => '/compat/linux/sys',
-    'tmpfs'     => '/compat/linux/dev/shm'
+    'tmpfs'     => '/compat/linux/dev/shm',
+    'fdescfs'   => '/dev/fd'
   }
     reqs << "#{fs} mounted at #{path}" if not mounted_filesystems =~ /#{Regexp.escape(path)}\s+#{fs}/
   end
