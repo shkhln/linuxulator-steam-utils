@@ -75,6 +75,8 @@ client_library_path = [
   __dir__ + '/../lib32/fakenm',
   __dir__ + '/../lib32/fakepulse',
   __dir__ + '/../lib32/fakeudev',
+  __dir__ + '/../lib32/protonfix',
+  __dir__ + '/../lib64/protonfix',
   __dir__ + '/../lib64/webfix',
   '/compat/linux/usr/lib64/nss',
   "#{steam_root}/ubuntu12_32",
