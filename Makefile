@@ -88,7 +88,7 @@ install:
 	install -d $(PREFIX)/$(PROJECT)
 	install -d $(PREFIX)/$(PROJECT)/lib32
 	install -d $(PREFIX)/$(PROJECT)/lib64
-.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib32/fakeudev lib64/fakeudev lib32/fmodfix lib64/fmodfix lib64/webfix lib64/protonfix
+.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib32/fakeudev lib64/fakeudev lib32/fmodfix lib64/fmodfix lib64/webfix lib32/protonfix lib64/protonfix
 .  if exists($d)
 	install -d $(PREFIX)/$(PROJECT)/$(d)
 	install $(d)/* $(PREFIX)/$(PROJECT)/$(d)
