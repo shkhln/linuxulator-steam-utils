@@ -80,3 +80,31 @@ int scandir64(const char* dir, struct dirent64*** namelist,
 
   return libc_scandir64(redirect(dir), namelist, sel, cmp);
 }
+
+/*
+  Some games (Torchlight 2, Infinity Engine "Enhanced Edition" ports) invoke mkdir with a sequence of absolute paths
+  expecting either success or an EEXIST error, while Linuxulator returns EACCES for /home and /usr/home:
+
+    linux_mkdir("/home")            --> /compat/linux             exists        --> mkdir("/compat/linux/home") --> EACCES
+    linux_mkdir("/home/<user>")     --> /compat/linux/home        doesn't exist --> mkdir("/home/<user>")       --> EEXIST
+    linux_mkdir("/home/<user>/foo") --> /compat/linux/home/<user> doesn't exist --> mkdir("/home/<user>/foo")   --> OK | EEXIST
+*/
+
+#include <errno.h>
+#include <sys/stat.h>
+
+static int (*libc_mkdir)(const char*, mode_t) = NULL;
+
+int mkdir(const char* path, mode_t mode) {
+
+  if (!libc_mkdir) {
+    libc_mkdir = dlsym(RTLD_NEXT, "mkdir");
+  }
+
+  int err = libc_mkdir(path, mode);
+  if (err == -1 && errno == EACCES && (strcmp(path, "/home") == 0 || strcmp(path, "/usr/home") == 0)) {
+    errno = EEXIST;
+  }
+
+  return err;
+}
