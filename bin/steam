@@ -91,6 +91,8 @@ games_library_path = [
   __dir__ + '/../lib64/fakeudev',
   __dir__ + '/../lib32/fmodfix',
   __dir__ + '/../lib64/fmodfix',
+  __dir__ + '/../lib32/pathfix',
+  __dir__ + '/../lib64/pathfix',
   __dir__ + '/../lib32/protonfix',
   __dir__ + '/../lib64/protonfix',
   __dir__ + '/../lib64/webfix',

@@ -25,6 +25,8 @@ LIBS  = lib32/steamfix/steamfix.so    \
         lib64/fakepulse/libpulse.so.0 \
         lib32/fakeudev/libudev.so.0   \
         lib64/fakeudev/libudev.so.0   \
+        lib32/pathfix/pathfix.so      \
+        lib64/pathfix/pathfix.so      \
         lib32/protonfix/protonfix.so  \
         lib64/protonfix/protonfix.so  \
         lib64/webfix/webfix.so
@@ -43,21 +45,9 @@ build: $(LIBS) $(BINS)
 
 .for b in 32 64
 
-$(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/epoll.c src/futexes.c
+$(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/epoll.c src/futexes.c src/pathfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/steamfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/epoll.c src/futexes.c -pthread -ldl -lm
-
-$(BUILD_DIR)/lib$(b)/protonfix/protonfix.so: src/protonfix.c src/epoll.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/protonfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/protonfix.c src/epoll.c -pthread -ldl
-
-$(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c src/futexes.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c src/futexes.c -pthread -ldl -lm
-
-$(BUILD_DIR)/lib$(b)/fmodfix/fmodfix.so: src/fmodfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/fmodfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fmodfix.c
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/epoll.c src/futexes.c src/pathfix.c -pthread -ldl -lm
 
 $(BUILD_DIR)/lib$(b)/fakenm/libnm-glib.so.4: src/fakenm.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakenm
@@ -70,6 +60,22 @@ $(BUILD_DIR)/lib$(b)/fakepulse/libpulse.so.0: src/fakepulse.c
 $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.0: src/fakeudev.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakeudev
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakeudev.c
+
+$(BUILD_DIR)/lib$(b)/fmodfix/fmodfix.so: src/fmodfix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/fmodfix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fmodfix.c
+
+$(BUILD_DIR)/lib$(b)/pathfix/pathfix.so: src/pathfix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/pathfix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/pathfix.c -ldl
+
+$(BUILD_DIR)/lib$(b)/protonfix/protonfix.so: src/protonfix.c src/epoll.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/protonfix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/protonfix.c src/epoll.c -pthread -ldl
+
+$(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c src/futexes.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c src/futexes.c -pthread -ldl -lm
 
 $(BUILD_DIR)/lxbin/fhelper$(b): src/futex_helper.c
 	mkdir -p $(BUILD_DIR)/lxbin
@@ -86,20 +92,16 @@ clean:
 
 install:
 	install -d $(PREFIX)/$(PROJECT)
+	install -d $(PREFIX)/$(PROJECT)/bin
 	install -d $(PREFIX)/$(PROJECT)/lib32
 	install -d $(PREFIX)/$(PROJECT)/lib64
-.for d in bin lxbin lib32/steamfix lib32/fakenm lib32/fakepulse lib64/fakepulse lib32/fakeudev lib64/fakeudev lib32/fmodfix lib64/fmodfix lib64/webfix lib32/protonfix lib64/protonfix
-.  if exists($d)
-	install -d $(PREFIX)/$(PROJECT)/$(d)
-	install $(d)/* $(PREFIX)/$(PROJECT)/$(d)
-.  endif
-.  if $(BUILD_DIR) != "."
-.    if exists($BUILD_DIR/$d)
-	install -d $(PREFIX)/$(PROJECT)/$(d)
-	install $(BUILD_DIR)/$(d)/* $(PREFIX)/$(PROJECT)/$(d)
-.    endif
-.  endif
+	install -d $(PREFIX)/$(PROJECT)/lxbin
+.for f in $(LIBS) $(BINS)
+	install -d `dirname $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}`
+	install $(f) $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}
 .endfor
+	install bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
+	install lxbin/dbus-launch lxbin/file* lxbin/patch-steam* lxbin/python3 lxbin/upgrade-steam-runtime* $(PREFIX)/$(PROJECT)/lxbin
 
 deinstall:
 .if exists($(PREFIX)/$(PROJECT))
