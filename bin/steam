@@ -120,4 +120,7 @@ ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
 safe_system(__dir__ + '/../lxbin/patch-steam')
 safe_system(__dir__ + '/../lxbin/upgrade-steam-runtime')
 
+# https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=248225
+Process.setrlimit(:STACK, 8192 * 1024)
+
 exec steam_root + '/ubuntu12_32/steam', *ARGV
