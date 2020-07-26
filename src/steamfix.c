@@ -75,8 +75,8 @@ int system(const char* command) {
 
   if (strstr(command, "steamwebhelper.sh")) {
 
-    char* browser_env = getenv("STEAM_BROWSER");
-    if (!(browser_env && strcmp(browser_env, "0") == 0)) {
+    char* browser_env = getenv("LSU_BROWSER");
+    if (!browser_env || strcmp(browser_env, "1") == 0) {
 
       char* format_str =
         "LD_PRELOAD=webfix.so"
