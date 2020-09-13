@@ -40,6 +40,8 @@ int cef_initialize(void* args, void* settings, void* application, void* windows_
   return orig_cef_initialize(args, settings, application, windows_sandbox_info);
 }
 
+#ifndef SKIP_PROC_SELF_TASK_WORKAROUND
+
 // PCHECK(0 == fstat_ret) @ https://cs.chromium.org/chromium/src/sandbox/linux/services/thread_helpers.cc?l=41&rcl=90c6c958243e775074d81e19c204f196d8e76990
 // CHECK_LE(3UL, task_stat.st_nlink) @ https://cs.chromium.org/chromium/src/sandbox/linux/services/thread_helpers.cc?l=44&rcl=90c6c958243e775074d81e19c204f196d8e76990
 
@@ -127,6 +129,10 @@ int close(int fd) {
   return libc_close(fd);
 }
 
+#endif
+
+#ifndef SKIP_CLOCK_GETTIME_WORKAROUND
+
 // CHECK(clock_gettime(clk_id, &ts) == 0) @ https://cs.chromium.org/chromium/src/base/time/time_now_posix.cc?l=52&rcl=b6ad4da425c33a31e4e08b67ce070a0c52082358
 
 #include <time.h>
@@ -162,6 +168,8 @@ int clock_gettime(clockid_t clock_id, struct timespec* tp) {
 
   return err;
 }
+
+#endif
 
 /* SO_PASSCRED workaround */
 
