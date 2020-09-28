@@ -298,3 +298,9 @@ ssize_t send(int s, const void* msg, size_t len, int flags) {
 
   return nbytes;
 }
+
+/* Steam doesn't have the ability to detach anything, but this action must succeed, otherwise Steam won't see any devices */
+
+int libusb_detach_kernel_driver(void* dev, int interface) {
+  return 0;
+}
