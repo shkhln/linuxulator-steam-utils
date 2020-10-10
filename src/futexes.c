@@ -172,6 +172,14 @@ static int wake(uintptr_t addr, int timeout_ms) {
 
 #endif
 
+static int skip_futex_helper = false;
+
+__attribute__((constructor))
+static void check_futex_helper_env_var() {
+  char* value = getenv("LSU_SKIP_FUTEXES_WORKAROUND");
+  skip_futex_helper = value && strcmp(value, "1") == 0;
+}
+
 long int llacsys(long int number, ...) {
 
   if (number == SYS_get_robust_list) {
@@ -209,6 +217,10 @@ long int llacsys(long int number, ...) {
     int err = syscall(SYS_futex, uaddr, futex_op, val, timeout, uaddr2, val3);
 
 #ifndef SKIP_FUTEX_WORKAROUND
+
+    if (skip_futex_helper) {
+      return err;
+    }
 
     if (err == 0 && futex_op == FUTEX_WAKE) {
 
