@@ -5,6 +5,12 @@ require 'fileutils'
 
 raise 'Never run this script as root!' if `id -u`.chomp == '0'
 
+STEAM_DIST_NAME = 'steam_1.0.0.61.tar.gz'
+
+SHA256 = {
+  'steam_1.0.0.61.tar.gz': 'd66413cce9c9ad441f95c4377103b0c71bda4ac4570ecfc7dd2464fe4ef1bd30'
+}
+
 DUMB_PERSON_FLAG = '--allow-stealing-my-passwords,-browser-history-and-ssh-keys'
 skip_sanity_check = ARGV.include?(DUMB_PERSON_FLAG)
 
@@ -20,25 +26,14 @@ MSG
   exit(1)
 end
 
-def with_work_dir(dir)
-  pwd = Dir.pwd
-  Dir.chdir(dir)
-  yield
-  Dir.chdir(pwd)
-end
-
 def set_up_file(path)
   if not File.exist?(path)
-    yield
+    yield path
     if not File.exist?(path)
       raise "Failed to create/download #{path}"
     end
   end
 end
-
-SHA256 = {
-  'steam_1.0.0.61.tar.gz': 'd66413cce9c9ad441f95c4377103b0c71bda4ac4570ecfc7dd2464fe4ef1bd30',
-}
 
 def verify_checksum(path)
   if `sha256 -q #{path}`.chomp != SHA256[File.basename(path).to_sym]
@@ -46,12 +41,10 @@ def verify_checksum(path)
   end
 end
 
-STEAM_DIST_NAME = 'steam_1.0.0.61.tar.gz'
-STEAMRT_VERSION = '0.20190913.0'
+steam_root = File.join(ENV['HOME'], '.steam')
+FileUtils.mkdir_p(steam_root)
 
-FileUtils.mkdir_p(ENV['HOME'] + '/.steam')
-
-with_work_dir(ENV['HOME'] + '/.steam') do
+Dir.chdir(steam_root) do
 
   set_up_file('steam/ubuntu12_32') do
 
