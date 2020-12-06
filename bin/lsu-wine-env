@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'fileutils'
+
+raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
+
+I386_PKG_ROOT   = ENV['LSU_i386_PKG_ROOT']   || File.join(ENV['HOME'], '.i386-wine-pkg')
+WINE_PKG_PREFIX = ENV['LSU_WINE_PKG_PREFIX'] || '/usr/local/wine-proton'
+
+def move_if_exists(src, dest)
+  FileUtils.mv(src, dest) if File.exist?(src)
+end
+
+def check_wine_versions
+
+  wine32_version=`wine --version`.chomp
+
+  begin
+    wine64_version=`wine64 --version`.chomp
+  rescue Errno::ENOENT
+    raise "`wine64` is required"
+  end
+
+  if wine32_version != wine64_version
+    raise "`wine` [#{wine32_version}] and `wine64` [#{wine64_version}] versions should match each other"
+  end
+end
+
+def exec_with_wine_env(args)
+
+  def wine32(path)
+    File.join(I386_PKG_ROOT, WINE_PKG_PREFIX, path)
+  end
+
+  def wine64(path)
+    File.join(WINE_PKG_PREFIX, path)
+  end
+
+  raise "`wine` is required" if not File.exist?(wine32('bin/wine'))
+
+  ENV['PATH'] = [wine64('bin'), ENV['PATH'], wine32('bin')].compact.join(':')
+
+  # just in case
+  raise if `which wine`.chomp   != wine32('bin/wine')
+  raise if `which wine64`.chomp != wine64('bin/wine64')
+
+  move_if_exists(wine32('bin/wineserver'), wine32('bin/wineserver32'))
+
+  check_wine_versions
+
+  ENV['WINESERVER'] = wine64('bin/wineserver')
+
+  ENV['LIBGL_DRIVERS_PATH'] = [
+    ENV['LIBGL_DRIVERS_PATH'],
+    '/usr/local/lib/dri',
+    '/usr/local/lib32/dri',
+    File.join(I386_PKG_ROOT, 'usr/local/lib/dri')
+  ].compact.join(':')
+
+  ENV['LD_32_LIBRARY_PATH'] = [
+    ENV['LD_32_LIBRARY_PATH'],
+    wine32('lib/wine'),
+    '/usr/local/lib32',
+    File.join(I386_PKG_ROOT, 'usr/local/lib')
+  ].compact.join(':')
+
+  ENV['LD_32_LIBRARY_PATH_RPATH'] = 'y'
+
+  exec([args[0]] * 2, *args[1..-1])
+end
+
+if ARGV.length == 0
+  STDERR.puts "#{File.basename($PROGRAM_NAME)} <application> [application args]"
+  exit(1)
+end
+
+exec_with_wine_env(ARGV)
