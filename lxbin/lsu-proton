@@ -15,6 +15,9 @@ else
   wrapper=with-glibc-shim
 fi
 
+export LD_32_LIBRARY_PATH="/usr/local/lib32/gcc10:/usr/local/lib32/gcc9:$PROTON_LIB32"
+export LD_LIBRARY_PATH="$PROTON_LIB64"
+
 dir="$(dirname "$(realpath "$0")")"
 
 echo $wrapper "$dir/../bin/lsu-wine-env" "$@"

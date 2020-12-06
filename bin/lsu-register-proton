@@ -79,6 +79,8 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
       str = <<~E
         #!/bin/sh
         dir="$(dirname "$(realpath "$0")")"
+        export PROTON_LIB32="$dir/proton/dist/lib"
+        export PROTON_LIB64="$dir/proton/dist/lib64"
         exec lsu-proton "$dir/proton/proton" "$@"
       E
 
