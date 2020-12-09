@@ -39,7 +39,9 @@ def exec_with_wine_env(args)
 
   raise "`wine` is required" if not File.exist?(wine32('bin/wine'))
 
-  ENV['PATH'] = [wine64('bin'), ENV['PATH'], wine32('bin')].compact.join(':')
+  path = ENV['PATH'].split(':')
+  path.insert(path.find_index('/usr/local/bin'), wine64('bin'), wine32('bin'))
+  ENV['PATH'] = path.uniq.join(':')
 
   # just in case
   raise if `which wine`.chomp   != wine32('bin/wine')
