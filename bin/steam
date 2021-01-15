@@ -68,10 +68,6 @@ end
 # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=248225
 Process.setrlimit(:STACK, 8192 * 1024)
 
-if `uname -K`.chomp.to_i >= 1202000
-  ENV['LSU_SKIP_FUTEXES_WORKAROUND'] = '1'
-end
-
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
 
@@ -130,7 +126,6 @@ ENV['LD_PRELOAD']                 = preload
 ENV['SDL_AUDIODRIVER'] = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
 
-safe_system(__dir__ + '/../lxbin/patch-steam')
 safe_system(__dir__ + '/../lxbin/upgrade-steam-runtime')
 
 exec steam_root + '/ubuntu12_32/steam', *ARGV

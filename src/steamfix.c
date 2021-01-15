@@ -80,7 +80,7 @@ int system(const char* command) {
 
       char* format_str =
         "LD_PRELOAD=webfix.so"
-        " '%s.patched' %s"
+        " '%s' %s"
         " --no-sandbox"
         " --no-zygote"
         " --in-process-gpu" // YMMV
@@ -112,26 +112,6 @@ int system(const char* command) {
   }
 
   return libc_system(command);
-}
-
-/* Correct uname because for whatever reason Linuxulator reports "i686" to 32-bit applications on amd64 */
-
-#include <sys/utsname.h>
-
-static int (*libc_uname)(struct utsname*) = NULL;
-
-int uname(struct utsname* name) {
-
-  if (!libc_uname) {
-    libc_uname = dlsym(RTLD_NEXT, "uname");
-  }
-
-  int err = libc_uname(name);
-  if (err == 0 && access("/usr/lib64", F_OK) == 0) {
-    snprintf(name->machine, _UTSNAME_MACHINE_LENGTH, "x86_64");
-  }
-
-  return err;
 }
 
 /* Handle Steam restart */
@@ -196,7 +176,7 @@ void exit(int status) {
 
   if (status == 42) {
 
-    if (system("patch-steam") != 0 || system("upgrade-steam-runtime") != 0) {
+    if (system("upgrade-steam-runtime") != 0) {
       libc_exit(EXIT_FAILURE);
     }
 
@@ -225,38 +205,6 @@ int fputs(const char* str, FILE* stream) {
   }
 
   return libc_fputs(str, stream);
-}
-
-/* We need to redirect those futex syscalls */
-
-static void* (*libc_dlmopen)(Lmid_t, const char*, int) = NULL;
-
-void* dlmopen(Lmid_t lmid, const char* path, int mode) {
-
-  if (!libc_dlmopen) {
-    libc_dlmopen = dlsym(RTLD_NEXT, "dlmopen");
-  }
-
-  void* p = NULL;
-
-  if (strstr(path, "chromehtml.so") != NULL) {
-
-    char* format_str = "%s.patched";
-
-    int   buf_len = strlen(format_str) + strlen(path) + 1;
-    char* buf     = malloc(buf_len);
-
-    snprintf(buf, buf_len, format_str, path);
-
-    p = libc_dlmopen(lmid, buf, mode);
-
-    free(buf);
-
-  } else {
-    p = libc_dlmopen(lmid, path, mode);
-  }
-
-  return p;
 }
 
 /* Apparently communication with CSGO process breaks when Steam receives an unexpected EAGAIN error, which prevents the game from starting */
