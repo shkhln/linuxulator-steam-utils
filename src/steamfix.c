@@ -252,3 +252,20 @@ ssize_t send(int s, const void* msg, size_t len, int flags) {
 int libusb_detach_kernel_driver(void* dev, int interface) {
   return 0;
 }
+
+/* Steam repeatedly tries to set SO_SNDBUF to 0 (what for?), spamming the console with warnings when this doesn't work */
+
+static int (*libc_setsockopt)(int s, int level, int optname, const void *optval, socklen_t optlen) = NULL;
+
+int setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen) {
+
+  if (!libc_setsockopt) {
+    libc_setsockopt = dlsym(RTLD_NEXT, "setsockopt");
+  }
+
+  if (level == SOL_SOCKET && optname == SO_SNDBUF && optlen == sizeof(int) && optval && *(int*)optval == 0) {
+    return 0;
+  }
+
+  return libc_setsockopt(s, level, optname, optval, optlen);
+}
