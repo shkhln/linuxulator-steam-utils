@@ -75,7 +75,7 @@ install:
 	install $(f) $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}
 .endfor
 	install bin/lsu-* bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
-	install lxbin/dbus-launch lxbin/file* lxbin/lsu-* lxbin/python3 lxbin/upgrade-steam-runtime* $(PREFIX)/$(PROJECT)/lxbin
+	install lxbin/dbus-launch lxbin/file* lxbin/lsu-* lxbin/python3 lxbin/upgrade-steam-runtime* lxbin/xrandr $(PREFIX)/$(PROJECT)/lxbin
 
 deinstall:
 .if exists($(PREFIX)/$(PROJECT))
