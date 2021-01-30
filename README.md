@@ -34,7 +34,7 @@ There is semi-experimental support for [emulators/wine-proton](https://www.fresh
 Note that this is quite different from both official Linux Proton builds and vanilla Wine,
 thus any bugs encountered with it can *not* be directly reported to either project's issue tracker.
 
-1. Run `sudo pkg install wine-proton libc6-shim` and `lsu-pkg32 install wine-proton mesa-dri`.
+1. Run `sudo pkg install wine-proton libc6-shim python3` and `lsu-pkg32 install wine-proton mesa-dri`.
 1. Install Proton 5.13 with `steam "steam://install/1420170"`.
 1. Run `lsu-register-proton` to copy files from the Proton 5.13 distribution and register emulators/wine-proton as a compatibility tool.
 1. Restart Steam.
