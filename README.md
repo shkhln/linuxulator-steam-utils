@@ -33,9 +33,10 @@ Note that this is quite different from both official Linux Proton builds and van
 thus any bugs encountered with it can *not* be directly reported to either project's issue tracker.
 
 Setup:
-1. Run `sudo pkg install wine-proton libc6-shim` and `lsu-pkg32 install mesa-dri wine-proton`.
-1. Install Proton 5.13 with `steam "steam://install/1420170"`, exit Steam.
+1. Run `sudo pkg install wine-proton libc6-shim` and `lsu-pkg32 install wine-proton mesa-dri`.
+1. Install Proton 5.13 with `steam "steam://install/1420170"`.
 1. Run `lsu-register-proton` to copy files from the Proton 5.13 distribution and register emulators/wine-proton as a compatibility tool.
+1. Restart Steam.
 
 ## What about actual games?
 
