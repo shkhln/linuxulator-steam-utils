@@ -15,7 +15,6 @@ repository.
 ### Setup
 
 Roughly:
-
 1. `git clone <this repo>`, run `make` and `sudo make install`. The files will be copied to */opt/steam-utils*.
 1. Create a dedicated FreeBSD non-wheel user account for Steam. Switch to it.
 1. Run `/opt/steam-utils/bin/steam-install` to download the Steam bootstrap executable, then `/opt/steam-utils/bin/steam` to download updates and start Steam.
@@ -24,9 +23,19 @@ Roughly:
 
 1. Sandbox is disabled for the web browser component.
 1. No controller input, no streaming, no VR.
-1. Valve Anti-Cheat doesn't seem to work properly.
-1. Due to inherent difficulty of running games on Linuxulator as well as many (most?) native Linux ports being broken garbage in general, only the Source engine games are explicitly supported. I simply can't be bothered to test anything else on a regular basis.
-1. Steam Play can't be implemented as long as the FreeBSD Ports Collection *lacks multilib support*, making it impossible to package Proton dependencies.
+1. Valve Anti-Cheat doesn't work with FreeBSD < 13, other than that it's largely untested.
+1. No Linux Proton at the moment.
+
+## Proton
+
+There is semi-experimental support for [emulators/wine-proton](https://www.freshports.org/emulators/wine-proton/) (native Wine with Proton's patchset).
+Note that this is quite different from both official Linux Proton builds and vanilla Wine,
+thus any bugs encountered with it can *not* be directly reported to either project's issue tracker.
+
+Setup:
+1. Run `sudo pkg install wine-proton libc6-shim` and `lsu-pkg32 install mesa-dri wine-proton`.
+1. Install Proton 5.13 with `steam "steam://install/1420170"`, exit Steam.
+1. Run `lsu-register-proton` to copy files from the Proton 5.13 distribution and register emulators/wine-proton as a compatibility tool.
 
 ## What about actual games?
 
