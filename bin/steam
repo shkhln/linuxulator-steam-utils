@@ -30,8 +30,7 @@ def linux_run(cmd)
 end
 
 def safe_system(*args)
-  ok = system(*args)
-  raise "Command failed: #{args.join(' ').inspect}" if not ok
+  raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
 end
 
 requirements = check_requirements()

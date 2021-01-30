@@ -6,18 +6,10 @@ require 'fileutils'
 steam_root = ENV['HOME'] + '/.steam/steam'
 
 def safe_system(*args)
-  ok = system(*args)
-  raise "Command failed: #{args.join(' ').inspect}" if not ok
+  raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
 end
 
-def with_work_dir(dir)
-  pwd = Dir.pwd
-  Dir.chdir(dir)
-  yield
-  Dir.chdir(pwd)
-end
-
-with_work_dir(steam_root + '/ubuntu12_32') do
+Dir.chdir(steam_root + '/ubuntu12_32') do
 
   runtime_md5 = File.exist?('steam-runtime/checksum') ? File.read('steam-runtime/checksum').split(' ').first : nil
   archive_md5 = File.exist?('steam-runtime.checksum') ? File.read('steam-runtime.checksum').split(' ').first : nil
