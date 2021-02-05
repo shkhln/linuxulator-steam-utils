@@ -221,28 +221,11 @@ ssize_t send(int s, const void* msg, size_t len, int flags) {
     libc_send = dlsym(RTLD_NEXT, "send");
   }
 
-  //~ fprintf(stderr, "%s(%d, %p, %d, %d)\n", __func__, s, msg, len, flags);
+  ssize_t nbytes = libc_send(s, msg, len, flags);
 
-  int sleeped_ms = 0;
-
-  ssize_t nbytes = -1;
-  while (1) {
-    nbytes = libc_send(s, msg, len, flags);
-    if (nbytes == -1 && errno == EAGAIN && !(flags & MSG_DONTWAIT) && !(fcntl(s, F_GETFL) & O_NONBLOCK)) {
-      if (sleeped_ms > 50) {
-        break;
-      }
-      usleep(5000);
-      sleeped_ms += 5;
-    } else {
-      break;
-    }
+  if (nbytes == -1 && errno == EAGAIN && flags == MSG_NOSIGNAL && !(fcntl(s, F_GETFL) & O_NONBLOCK)) {
+    nbytes = libc_send(s, msg, len, 0x00020000);
   }
-
-  //~ fprintf(stderr, "%s -> %d\n", __func__, nbytes);
-  //~ if (nbytes == -1) {
-    //~ perror(__func__);
-  //~ }
 
   return nbytes;
 }
