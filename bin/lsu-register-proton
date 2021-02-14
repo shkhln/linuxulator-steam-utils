@@ -113,13 +113,15 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
 
         safe_system('tar', '-C', 'dist', '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
           'lib/libsteam_api.so',
+          'lib*/libopenxr_loader.so.*',
           'lib*/wine/dxvk',
           'lib*/wine/fakedlls/vrclient*.dll',
           'lib*/wine/fakedlls/dxgi.dll',
-          'lib*/wine/vkd3d-proton',
-          'lib*/wine/*steam*',
           'lib*/wine/d3d9.dll',
           'lib*/wine/d3d1*.dll',
+          'lib*/wine/*steam*',
+          'lib*/wine/vkd3d-proton',
+          'lib*/wine/wineopenxr.dll.so',
           'share/default_pfx',
           'share/fonts',
           'version')
