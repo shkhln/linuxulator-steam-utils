@@ -73,6 +73,8 @@ def set_setup_state(state)
   end
 end
 
+FileUtils.mkdir_p(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d'))
+
 Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
 
   set_up_file('FreeBSD_Proton') do
