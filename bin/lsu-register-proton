@@ -23,7 +23,6 @@ def set_up_file(path)
 end
 
 def find_steamapp_dir(name)
-
   library_folders = [File.join(ENV['HOME'], '.steam/steam')]
 
   vdf = File.read(File.join(ENV['HOME'], '.steam/steam/steamapps/libraryfolders.vdf'))
@@ -122,6 +121,7 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
           'lib*/wine/d3d9.dll',
           'lib*/wine/d3d1*.dll',
           'share/default_pfx',
+          'share/fonts',
           'version')
       end
 
