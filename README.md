@@ -38,3 +38,4 @@ thus any issues encountered with it can *not* be directly reported to either pro
 1. Install Proton 5.13 with `steam "steam://install/1420170"`.
 1. Run `lsu-register-proton` to copy files from the Proton 5.13 distribution and register emulators/wine-proton as a compatibility tool.
 1. Restart Steam.
+1. Select emulators/wine-proton in `Properties` -> `Compatibility` (per game) or `Settings` -> `Steam Play` (globally).
