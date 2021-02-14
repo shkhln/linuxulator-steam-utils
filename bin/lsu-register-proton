@@ -9,6 +9,10 @@ raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 I386_PKG_ROOT  = ENV['LSU_i386_PKG_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
 PROTON_VERSION = '5.13'
 
+def safe_system(*args)
+  raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
+end
+
 def set_up_file(path)
   if not File.exist?(path)
     yield path
@@ -18,7 +22,7 @@ def set_up_file(path)
   end
 end
 
-def find_proton_dir
+def find_steamapp_dir(name)
 
   library_folders = [File.join(ENV['HOME'], '.steam/steam')]
 
@@ -29,7 +33,44 @@ def find_proton_dir
     library_folders << value if key =~ /^\d+$/
   end
 
-  library_folders.map{|dir| File.join(dir, "steamapps/common/Proton #{PROTON_VERSION}")}.find{|dir| File.exist?(dir)}
+  library_folders.map{|dir| File.join(dir, 'steamapps/common', name)}.find{|dir| File.exist?(dir)}
+end
+
+PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
+raise "Can't find Proton #{PROTON_VERSION} directory!" if not PROTON_DIR
+
+STEAMRT_DIR = find_steamapp_dir("SteamLinuxRuntime_soldier")
+raise "Can't find Steam Runtime directory!" if not STEAMRT_DIR
+
+$setup_steps = []
+$setup_state = nil
+def set_setup_state(state)
+  if state != $setup_state
+    case state
+      when :proton
+        puts "Found Proton #{PROTON_VERSION} at #{PROTON_DIR}"
+        puts "Copying files from Proton #{PROTON_VERSION}..."
+      when :steamrt
+        puts "Found Steam Linux Runtime at #{STEAMRT_DIR}"
+        puts "Copying files from Steam Runtime..."
+      when :symlinks
+        puts "Creating symlinks..."
+      when :manifest
+        puts "Registering emulators/wine-proton as a compatibility tool..."
+      when :done
+        if $setup_steps.empty?
+          puts "Nothing to do"
+        else
+          puts "Done"
+        end
+    end
+    if not $setup_steps.include?(state)
+      $setup_steps << state
+    else
+      raise "#{$setup_steps.inspect} + #{state.inspect}"
+    end
+    $setup_state = state
+  end
 end
 
 Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
@@ -40,7 +81,122 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
 
   Dir.chdir('FreeBSD_Proton') do
 
+    set_up_file("proton_#{PROTON_VERSION}") do |target|
+      FileUtils.mkdir_p(target)
+    end
+
+    safe_system("ln -sf -h proton_#{PROTON_VERSION} proton")
+
+    Dir.chdir("proton_#{PROTON_VERSION}") do
+
+      for file in %w(filelock.py user_settings.sample.py LICENSE LICENSE.OFL proton_3.7_tracked_files version)
+        set_up_file(file) do
+          set_setup_state(:proton)
+          FileUtils.cp(File.join(PROTON_DIR, file), '.')
+        end
+      end
+
+      set_up_file('proton') do
+        set_setup_state(:proton)
+        FileUtils.cp(File.join(PROTON_DIR, 'proton'), '.')
+        safe_system('sed', '-i.bak', '-E',
+          '-e', 's/, stderr=self\.log_file, stdout=self\.log_file//',                   # hijacking stderr/stdout is a bit rude
+          '-e', 's/if (self|g_proton)\.need_tarball_extraction\(\)/if False/',
+          '-e', 's/ld_path_var = "LD_LIBRARY_PATH"/ld_path_var = "__LD_LIBRARY_PATH"/', # Proton doesn't know anything about LD_ vs LD_32_ distinction
+          'proton')
+      end
+
+      set_up_file('dist') do
+        set_setup_state(:proton)
+        FileUtils.mkdir_p('dist')
+
+        safe_system('tar', '-C', 'dist', '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
+          'lib/libsteam_api.so',
+          'lib*/wine/dxvk',
+          'lib*/wine/fakedlls/vrclient*.dll',
+          'lib*/wine/fakedlls/dxgi.dll',
+          'lib*/wine/vkd3d-proton',
+          'lib*/wine/*steam*',
+          'lib*/wine/d3d9.dll',
+          'lib*/wine/d3d1*.dll',
+          'share/default_pfx',
+          'version')
+      end
+
+      steamrt_libdir = 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime/files/lib/i386-linux-gnu'
+
+      set_up_file('dist/lib/libgcc_s.so.1') do |target|
+        set_setup_state(:steamrt)
+        FileUtils.cp(File.join(STEAMRT_DIR, steamrt_libdir, 'libgcc_s.so.1'), target)
+      end
+
+      set_up_file('dist/lib/libstdc++.so.6') do
+        set_setup_state(:steamrt)
+        FileUtils.cp_r(Dir[File.join(STEAMRT_DIR, steamrt_libdir, 'libstdc++.so.6*')], 'dist/lib', dereference_root: false)
+      end
+
+      set_up_file('dist/bin') do |target|
+        set_setup_state(:symlinks)
+        FileUtils.mkdir_p(target)
+      end
+
+      set_up_file('dist/bin/wine') do |target|
+        set_setup_state(:symlinks)
+        FileUtils.ln_sf(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine'), target)
+      end
+
+      set_up_file('dist/bin/wine64') do |target|
+        set_setup_state(:symlinks)
+        FileUtils.ln_sf('/usr/local/wine-proton/bin/wine64', target)
+      end
+
+      set_up_file('dist/bin/wineserver') do |target|
+        set_setup_state(:symlinks)
+        FileUtils.ln_sf('/usr/local/wine-proton/bin/wineserver', target)
+      end
+
+      set_up_file('dist/lib/gstreamer-1.0') do |target|
+        set_setup_state(:symlinks)
+        safe_system('ln', '-sf', '-h', File.join(I386_PKG_ROOT, 'usr/local/lib/gstreamer-1.0'), target)
+      end
+
+      set_up_file('dist/lib64/gstreamer-1.0') do |target|
+        set_setup_state(:symlinks)
+        safe_system('ln', '-sf', '-h', '/usr/local/lib/gstreamer-1.0', target)
+      end
+    end
+
+    set_up_file('run.sh') do
+      set_setup_state(:manifest)
+
+      str = <<~E
+        #!/bin/sh
+        dir="$(dirname "$(realpath "$0")")"
+        export PROTON_LIB32="$dir/proton/dist/lib"
+        export PROTON_LIB64="$dir/proton/dist/lib64"
+        exec lsu-proton "$dir/proton/proton" "$@"
+      E
+
+      File.write('run.sh', str)
+      File.chmod(0700, 'run.sh')
+    end
+
+    set_up_file('toolmanifest.vdf') do
+      set_setup_state(:manifest)
+
+      str = <<~E
+        "manifest"
+        {
+          "version" "2"
+          "commandline" "/run.sh %verb%"
+        }
+      E
+
+      File.write('toolmanifest.vdf', str)
+    end
+
     set_up_file('compatibilitytool.vdf') do
+      set_setup_state(:manifest)
 
       str = <<~E
         "compatibilitytools"
@@ -61,98 +217,7 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
       File.write('compatibilitytool.vdf', str)
     end
 
-    set_up_file('toolmanifest.vdf') do
-
-      str = <<~E
-        "manifest"
-        {
-          "version" "2"
-          "commandline" "/run.sh %verb%"
-        }
-      E
-
-      File.write('toolmanifest.vdf', str)
-    end
-
-    set_up_file('run.sh') do
-
-      str = <<~E
-        #!/bin/sh
-        dir="$(dirname "$(realpath "$0")")"
-        export PROTON_LIB32="$dir/proton/dist/lib"
-        export PROTON_LIB64="$dir/proton/dist/lib64"
-        exec lsu-proton "$dir/proton/proton" "$@"
-      E
-
-      File.write('run.sh', str)
-      File.chmod(0700, 'run.sh')
-    end
-
-    proton_dir = find_proton_dir()
-    raise "Can't find Proton #{PROTON_VERSION} directory" if not proton_dir
-
-    set_up_file("proton_#{PROTON_VERSION}") do |target|
-      FileUtils.mkdir_p(target)
-    end
-
-    system("ln -sf -h proton_#{PROTON_VERSION} proton")
-
-    Dir.chdir("proton_#{PROTON_VERSION}") do
-
-      for file in %w(filelock.py user_settings.sample.py LICENSE LICENSE.OFL proton_3.7_tracked_files version)
-        set_up_file(file) do
-          FileUtils.cp(File.join(proton_dir, file), '.')
-        end
-      end
-
-      set_up_file('proton') do
-        FileUtils.cp(File.join(proton_dir, 'proton'), '.')
-        system('sed', '-i.bak', '-e', 's/g_proton.wine_bin, "steam"/g_proton.wine_bin/', 'proton') #TODO: this shouldn't be necessary
-      end
-
-      set_up_file('dist') do
-
-        FileUtils.mkdir_p('dist')
-
-        system('tar', '-C', 'dist', '-xf', File.join(proton_dir, 'proton_dist.tar'),
-          'lib/libsteam_api.so',
-          'lib*/wine/dxvk',
-          'lib*/wine/fakedlls/vrclient*.dll',
-          'lib*/wine/fakedlls/dxgi*.dll',
-          'lib*/wine/vkd3d-proton',
-          'lib*/wine/*steam*',
-          'lib*/wine/d3d9.dll',
-          'lib*/wine/d3d1*.dll',
-          'share/default_pfx',
-          'version')
-
-        FileUtils.cp('version', 'dist/version') # "1605016168 proton-5.13-2" vs "1605016168 proton-5.13-2-rc3"
-      end
-
-      set_up_file('dist/bin') do |target|
-        FileUtils.mkdir_p(target)
-      end
-
-      set_up_file('dist/bin/wine') do |target|
-        FileUtils.ln_sf(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine'), target)
-      end
-
-      set_up_file('dist/bin/wine64') do |target|
-        FileUtils.ln_sf('/usr/local/wine-proton/bin/wine64', target)
-      end
-
-      set_up_file('dist/bin/wineserver') do |target|
-        FileUtils.ln_sf('/usr/local/wine-proton/bin/wineserver', target)
-      end
-
-      set_up_file('dist/lib/gstreamer-1.0') do |target|
-        system('ln', '-sf', '-h', File.join(I386_PKG_ROOT, 'usr/local/lib/gstreamer-1.0'), target)
-      end
-
-      set_up_file('dist/lib64/gstreamer-1.0') do |target|
-        system('ln', '-sf', '-h', '/usr/local/lib/gstreamer-1.0', target)
-      end
-    end
-
   end # FreeBSD_Proton
 end # compatibilitytools.d
+
+set_setup_state(:done)

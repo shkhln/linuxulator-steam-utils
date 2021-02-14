@@ -1,22 +1,26 @@
 #!/compat/linux/bin/sh
-export LD_LIBRARY_PATH=""
+export LD_32_LIBRARY_PATH="$PROTON_LIB32"
+export LD_LIBRARY_PATH="$PROTON_LIB64"
 export LD_PRELOAD=""
 export PATH=${FREEBSD_PATH}
 
-export DISABLE_VK_LAYER_VALVE_steam_overlay_1=1
 export DXVK_HUD=${DXVK_HUD-frametimes,version,devinfo,fps}
+export WINEDEBUG=${WINEDEBUG-warn+module,+steamclient,+steam}
+
 export PROTON_DLL_COPY="" # ?
 
-/sbin/sysctl -q hw.nvidia.version > /dev/null
-if [ $? -eq 0 ]
+if [ -z "$LSU_SHIM_WRAPPER" ]
 then
-  wrapper=nv-sglrun
+  /sbin/sysctl -q hw.nvidia.version > /dev/null
+  if [ $? -eq 0 ]
+  then
+    wrapper=nv-sglrun
+  else
+    wrapper=with-glibc-shim
+  fi
 else
-  wrapper=with-glibc-shim
+  wrapper="$LSU_SHIM_WRAPPER"
 fi
-
-export LD_32_LIBRARY_PATH="/usr/local/lib32/gcc10:/usr/local/lib32/gcc9:$PROTON_LIB32"
-export LD_LIBRARY_PATH="$PROTON_LIB64"
 
 dir="$(dirname "$(realpath "$0")")"
 
