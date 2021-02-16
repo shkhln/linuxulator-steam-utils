@@ -36,10 +36,18 @@ def find_steamapp_dir(name)
 end
 
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
-raise "Can't find Proton #{PROTON_VERSION} directory!" if not PROTON_DIR
+if not PROTON_DIR
+  STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
+  STDERR.puts "Try `steam \"steam://install/1420170\"` if it's not installed."
+  exit(1)
+end
 
 STEAMRT_DIR = find_steamapp_dir("SteamLinuxRuntime_soldier")
-raise "Can't find Steam Runtime directory!" if not STEAMRT_DIR
+if not STEAMRT_DIR
+  STDERR.puts "Can't find the Steam Runtime directory!"
+  STDERR.puts "Try `steam \"steam://install/1391110\"` if it's not installed."
+  exit(1)
+end
 
 $setup_steps = []
 $setup_state = nil
