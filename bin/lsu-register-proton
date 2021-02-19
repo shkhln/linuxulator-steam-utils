@@ -22,6 +22,15 @@ def set_up_file(path)
   end
 end
 
+def set_up_files(*paths)
+  if paths.any?{|p| !File.exist?(p)}
+    yield paths
+    for p in paths
+      raise "Failed to create/download #{p}" if not File.exist?(p)
+    end
+  end
+end
+
 def find_steamapp_dir(name)
   library_folders = [File.join(ENV['HOME'], '.steam/steam')]
 
@@ -117,9 +126,8 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
 
       set_up_file('dist') do
         set_setup_state(:proton)
-        FileUtils.mkdir_p('dist')
-
-        safe_system('tar', '-C', 'dist', '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
+        FileUtils.mkdir_p('dist.tmp')
+        safe_system('tar', '-C', 'dist.tmp', '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
           'lib/libsteam_api.so',
           'lib*/libopenxr_loader.so.*',
           'lib*/wine/dxvk',
@@ -133,18 +141,13 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
           'share/default_pfx',
           'share/fonts',
           'version')
+        FileUtils.mv('dist.tmp', 'dist')
       end
 
-      steamrt_libdir = 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime/files/lib/i386-linux-gnu'
-
-      set_up_file('dist/lib/libgcc_s.so.1') do |target|
+      set_up_files('dist/lib/libgcc_s.so.1', 'dist/lib/libstdc++.so.6') do
         set_setup_state(:steamrt)
-        FileUtils.cp(File.join(STEAMRT_DIR, steamrt_libdir, 'libgcc_s.so.1'), target)
-      end
-
-      set_up_file('dist/lib/libstdc++.so.6') do
-        set_setup_state(:steamrt)
-        FileUtils.cp_r(Dir[File.join(STEAMRT_DIR, steamrt_libdir, 'libstdc++.so.6*')], 'dist/lib', dereference_root: false)
+        safe_system('tar', '-C', 'dist/lib', '-xf', File.join(STEAMRT_DIR, 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime.tar.gz'),
+          '--strip-components', '3', 'files/lib/i386-linux-gnu/libgcc_s.so.1', 'files/lib/i386-linux-gnu/libstdc++.so.6*')
       end
 
       set_up_file('dist/bin') do |target|
