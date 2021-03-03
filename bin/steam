@@ -103,7 +103,8 @@ games_library_path = [
   __dir__ + '/../lib64/pathfix',
   __dir__ + '/../lib32/protonfix',
   __dir__ + '/../lib64/protonfix',
-  __dir__ + '/../lib64/unityfix',
+  __dir__ + '/../lib32/monofix',
+  __dir__ + '/../lib64/monofix',
   __dir__ + '/../lib64/webfix',
   '/compat/linux/usr/lib64/nss',
   steam_runtime_lib_path

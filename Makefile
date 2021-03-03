@@ -19,7 +19,8 @@ LIBS  = lib32/steamfix/steamfix.so    \
         lib64/pathfix/pathfix.so      \
         lib32/protonfix/protonfix.so  \
         lib64/protonfix/protonfix.so  \
-        lib64/unityfix/unityfix.so    \
+        lib32/monofix/monofix.so      \
+        lib64/monofix/monofix.so      \
         lib64/webfix/webfix.so
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
@@ -56,9 +57,9 @@ $(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c -pthread -ldl -lm
 
-$(BUILD_DIR)/lib$(b)/unityfix/unityfix.so: src/unityfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/unityfix
-	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/unityfix.c -pthread -ldl
+$(BUILD_DIR)/lib$(b)/monofix/monofix.so: src/monofix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/monofix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/monofix.c -pthread -ldl
 
 .endfor
 

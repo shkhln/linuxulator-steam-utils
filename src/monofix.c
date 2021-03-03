@@ -18,7 +18,7 @@ int mprotect(void *addr, size_t len, int prot) {
     libc_mprotect = dlsym(RTLD_NEXT, "mprotect");
   }
 
-  if (prot == PROT_NONE && (uintptr_t)addr > (uintptr_t)0x7f0000000000) {
+  if (prot == PROT_NONE /*&& (uintptr_t)addr > (uintptr_t)0x7f0000000000*/) {
 
     void* buffer[2];
     int nframes = backtrace(buffer, 2);
