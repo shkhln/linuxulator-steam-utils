@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <execinfo.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -34,4 +35,22 @@ int mprotect(void *addr, size_t len, int prot) {
   }
 
   return libc_mprotect(addr, len, prot);
+}
+
+/* https://github.com/mono/eglib/blob/37edc457aead8c3d4a39a929d0ecf6f25790b544/src/gfile-posix.c#L173 */
+
+static char* (*libc_getcwd)(char*, size_t) = NULL;
+
+char* getcwd(char* buf, size_t size) {
+
+  if (!libc_getcwd) {
+    libc_getcwd = dlsym(RTLD_NEXT, "getcwd");
+  }
+
+  char* s = libc_getcwd(buf, size);
+  if (s == NULL && errno == ENOMEM) {
+    errno = ERANGE;
+  }
+
+  return s;
 }
