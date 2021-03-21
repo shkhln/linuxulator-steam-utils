@@ -8,6 +8,27 @@
 #include <string.h>
 #include <unistd.h>
 
+/*
+  Prevent LD_PRELOAD="steamfix.so:libSegFault.so" from leaking into spawned processes
+  (largely to avoid those "object cannot be preloaded" ld.so complaints)
+*/
+
+static char* ld_preload = NULL;
+
+__attribute__((constructor))
+static void clear_ld_preload() {
+
+  char* keep = getenv("LSU_KEEP_LD_PRELOAD");
+  if (keep && strcmp(keep, "1") == 0)
+    return;
+
+  char* s = getenv("LD_PRELOAD");
+  if (s) {
+    ld_preload = strdup(s);
+    unsetenv("LD_PRELOAD");
+  }
+}
+
 /* Do not allow Breakpad to override libSegFault handlers */
 
 #include <execinfo.h>
@@ -146,6 +167,10 @@ static __attribute__((__noreturn__)) void restart() {
   snprintf(pidfile_path, sizeof(pidfile_path), "%s/%s", getenv("HOME"), ".steam/steam.pid");
 
   unlink(pidfile_path);
+
+  if (ld_preload) {
+    setenv("LD_PRELOAD", ld_preload, 1);
+  }
 
   if (drop_urls_on_restart) {
 
