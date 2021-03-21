@@ -120,6 +120,7 @@ ENV['FREEBSD_PATH']               = ENV['PATH']
 ENV['PATH']                       = bin_path
 ENV['SYSTEM_PATH']                = bin_path
 ENV['LD_LIBRARY_PATH']            = client_library_path
+ENV['STEAM_RUNTIME']              = steam_runtime_root
 ENV['STEAM_RUNTIME_LIBRARY_PATH'] = games_library_path
 ENV['SYSTEM_LD_LIBRARY_PATH']     = games_library_path
 ENV['LD_PRELOAD']                 = preload
