@@ -100,10 +100,14 @@ int system(const char* command) {
     if (!browser_env || strcmp(browser_env, "1") == 0) {
 
       char* format_str =
+#if __FreeBSD_version < 1300139
         "LD_PRELOAD=webfix.so"
+#endif
         " '%s' %s"
         " --no-sandbox"
+#if __FreeBSD_version < 1300139
         " --no-zygote"
+#endif
         " --in-process-gpu" // YMMV
         //" --enable-logging=stderr"
         //" --v=0"

@@ -40,6 +40,8 @@ int cef_initialize(void* args, void* settings, void* application, void* windows_
   return orig_cef_initialize(args, settings, application, windows_sandbox_info);
 }
 
+#if __FreeBSD_version < 1300139
+
 /* SO_PASSCRED workaround */
 
 #include <execinfo.h>
@@ -137,3 +139,5 @@ ssize_t sendmsg(int s, const struct msghdr* msg, int flags) {
 
   return nbytes;
 }
+
+#endif // __FreeBSD_version < 1300139
