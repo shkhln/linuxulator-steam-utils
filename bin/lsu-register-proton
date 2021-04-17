@@ -121,6 +121,8 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
           '-e', 's/, stderr=self\.log_file, stdout=self\.log_file//',                   # hijacking stderr/stdout is a bit rude
           '-e', 's/if (self|g_proton)\.need_tarball_extraction\(\)/if False/',
           '-e', 's/ld_path_var = "LD_LIBRARY_PATH"/ld_path_var = "__LD_LIBRARY_PATH"/', # Proton doesn't know anything about LD_ vs LD_32_ distinction
+          '-e', 's/self\.wine_bin = self\.bin_dir \+ "wine"/self.wine_bin = "wine"/',
+          '-e', 's/self\.wineserver_bin = self\.bin_dir \+ "wineserver"/self.wineserver_bin = "wineserver"/',
           'proton')
       end
 
@@ -148,26 +150,6 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         set_setup_state(:steamrt)
         safe_system('tar', '-C', 'dist/lib', '-xf', File.join(STEAMRT_DIR, 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime.tar.gz'),
           '--strip-components', '3', 'files/lib/i386-linux-gnu/libgcc_s.so.1', 'files/lib/i386-linux-gnu/libstdc++.so.6*')
-      end
-
-      set_up_file('dist/bin') do |target|
-        set_setup_state(:symlinks)
-        FileUtils.mkdir_p(target)
-      end
-
-      set_up_file('dist/bin/wine') do |target|
-        set_setup_state(:symlinks)
-        FileUtils.ln_sf(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine'), target)
-      end
-
-      set_up_file('dist/bin/wine64') do |target|
-        set_setup_state(:symlinks)
-        FileUtils.ln_sf('/usr/local/wine-proton/bin/wine64', target)
-      end
-
-      set_up_file('dist/bin/wineserver') do |target|
-        set_setup_state(:symlinks)
-        FileUtils.ln_sf('/usr/local/wine-proton/bin/wineserver', target)
       end
 
       set_up_file('dist/lib/gstreamer-1.0') do |target|
