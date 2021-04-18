@@ -114,16 +114,25 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         end
       end
 
-      set_up_file('proton') do
+      set_up_file('proton') do |target|
         set_setup_state(:proton)
-        FileUtils.cp(File.join(PROTON_DIR, 'proton'), '.')
-        safe_system('sed', '-i.bak', '-E',
-          '-e', 's/, stderr=self\.log_file, stdout=self\.log_file//',                   # hijacking stderr/stdout is a bit rude
-          '-e', 's/if (self|g_proton)\.need_tarball_extraction\(\)/if False/',
-          '-e', 's/ld_path_var = "LD_LIBRARY_PATH"/ld_path_var = "__LD_LIBRARY_PATH"/', # Proton doesn't know anything about LD_ vs LD_32_ distinction
-          '-e', 's/self\.wine_bin = self\.bin_dir \+ "wine"/self.wine_bin = "wine"/',
-          '-e', 's/self\.wineserver_bin = self\.bin_dir \+ "wineserver"/self.wineserver_bin = "wineserver"/',
-          'proton')
+        FileUtils.cp(File.join(PROTON_DIR, 'proton'), "#{target}.bak")
+
+        str = File.read("#{target}.bak")
+
+        # hijacking stderr/stdout is a bit rude
+        raise if not str.gsub!(', stderr=self.log_file, stdout=self.log_file',      '')
+
+        raise if not str.gsub!(/if (self|g_proton)\.need_tarball_extraction\(\)/,   'if False')
+
+        # Proton doesn't know anything about LD_ vs LD_32_ distinction
+        raise if not str.gsub!('ld_path_var = "LD_LIBRARY_PATH"',                   'ld_path_var = "__LD_LIBRARY_PATH"')
+
+        raise if not str.gsub!('self.wine_bin = self.bin_dir + "wine"',             'self.wine_bin = "wine"')
+        raise if not str.gsub!('self.wineserver_bin = self.bin_dir + "wineserver"', 'self.wineserver_bin = "wineserver"')
+
+        File.write(target, str)
+        File.chmod(0700, target)
       end
 
       set_up_file('dist') do
