@@ -7,7 +7,7 @@ require 'json'
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
 I386_PKG_ROOT  = ENV['LSU_i386_PKG_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
-PROTON_VERSION = '5.13'
+PROTON_VERSION = '6.3'
 
 def safe_system(*args)
   raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
@@ -47,7 +47,7 @@ end
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
 if not PROTON_DIR
   STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
-  STDERR.puts "Try `steam \"steam://install/1420170\"` if it's not installed."
+  STDERR.puts "Try `steam \"steam://install/1580130\"` if it's not installed."
   exit(1)
 end
 
@@ -150,8 +150,7 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
           'lib*/wine/vkd3d-proton',
           'lib*/wine/wineopenxr.dll.so',
           'share/default_pfx',
-          'share/fonts',
-          'version')
+          'share/fonts')
         FileUtils.mv('dist.tmp', 'dist')
       end
 
