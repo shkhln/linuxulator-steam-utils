@@ -5,41 +5,13 @@ require 'fileutils'
 
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
-I386_PKG_ROOT   = ENV['LSU_i386_PKG_ROOT']   || File.join(ENV['HOME'], '.i386-wine-pkg')
-WINE_PKG_PREFIX = ENV['LSU_WINE_PKG_PREFIX'] || '/usr/local/wine-proton'
-
-def move_if_exists(src, dest)
-  FileUtils.mv(src, dest) if File.exist?(src)
-end
-
-def check_wine_versions
-
-  wine32_version=`wine --version`.chomp
-
-  begin
-    wine64_version=`wine64 --version`.chomp
-  rescue Errno::ENOENT
-    raise "`wine64` is required"
-  end
-
-  if wine32_version != wine64_version
-    raise "`wine` [#{wine32_version}] and `wine64` [#{wine64_version}] versions should match each other"
-  end
-end
+WINE_PKG_PREFIX = '/usr/local/wine-proton'
 
 def exec_with_wine_env(args)
 
-  def wine32(path)
-    File.join(I386_PKG_ROOT, WINE_PKG_PREFIX, path)
-  end
+  raise "wine-proton doesn't appear to be installed" if not File.exist?(File.join(WINE_PKG_PREFIX, 'bin/wine'))
 
-  def wine64(path)
-    File.join(WINE_PKG_PREFIX, path)
-  end
-
-  path = ENV['PATH'].split(':')
-  path.insert(path.find_index('/usr/local/bin'), wine64('bin'), wine32('bin'))
-  ENV['PATH'] = path.uniq.join(':')
+  ENV['PATH'] = [File.join(WINE_PKG_PREFIX, 'bin'), ENV['PATH'].split(':')].join(':')
 
   # for some reason Wine 6.3 doesn't want to load these libraries from LD_LIBRARY_PATH
   if ENV['PROTON_LIB32']
@@ -51,38 +23,7 @@ def exec_with_wine_env(args)
     end
   end
 
-  if File.exist?(wine64('bin/wine'))
-    ENV['WINE_i386_ROOT'] = I386_PKG_ROOT
-    exec([args[0]] * 2, *args[1..-1])
-  end
-
-  raise "`wine` is required" if not File.exist?(wine32('bin/wine'))
-
-  # just in case
-  raise if `which wine`.chomp   != wine32('bin/wine')
-  raise if `which wine64`.chomp != wine64('bin/wine64')
-
-  move_if_exists(wine32('bin/wineserver'), wine32('bin/wineserver32'))
-
-  check_wine_versions
-
-  ENV['WINESERVER'] = wine64('bin/wineserver')
-
-  ENV['LIBGL_DRIVERS_PATH'] = [
-    ENV['LIBGL_DRIVERS_PATH'],
-    '/usr/local/lib/dri',
-    '/usr/local/lib32/dri',
-    File.join(I386_PKG_ROOT, 'usr/local/lib/dri')
-  ].compact.join(':')
-
-  ENV['LD_32_LIBRARY_PATH'] = [
-    ENV['LD_32_LIBRARY_PATH'],
-    wine32('lib/wine'),
-    '/usr/local/lib32',
-    File.join(I386_PKG_ROOT, 'usr/local/lib')
-  ].compact.join(':')
-
-  ENV['LD_32_LIBRARY_PATH_RPATH'] = 'y'
+  ENV['WINE_i386_ROOT'] = ENV['LSU_i386_PKG_ROOT'] if ENV['LSU_i386_PKG_ROOT']
 
   exec([args[0]] * 2, *args[1..-1])
 end
