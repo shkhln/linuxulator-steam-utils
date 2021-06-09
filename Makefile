@@ -10,6 +10,7 @@ PREFIX    ?= /opt
 CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION}
 
 LIBS  = lib32/steamfix/steamfix.so    \
+        lib32/fakenm/libnm.so.0       \
         lib32/fakenm/libnm-glib.so.4  \
         lib32/fakepulse/libpulse.so.0 \
         lib64/fakepulse/libpulse.so.0 \
@@ -33,9 +34,12 @@ $(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/pathfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/steamfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/pathfix.c -pthread -ldl -lm
 
-$(BUILD_DIR)/lib$(b)/fakenm/libnm-glib.so.4: src/fakenm.c
+$(BUILD_DIR)/lib$(b)/fakenm/libnm.so.0: src/fakenm.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakenm
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakenm.c
+
+$(BUILD_DIR)/lib$(b)/fakenm/libnm-glib.so.4: $(BUILD_DIR)/lib$(b)/fakenm/libnm.so.0
+	ln -s libnm.so.0 $(.TARGET)
 
 $(BUILD_DIR)/lib$(b)/fakepulse/libpulse.so.0: src/fakepulse.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakepulse
