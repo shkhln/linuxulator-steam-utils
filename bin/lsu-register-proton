@@ -53,12 +53,12 @@ if not PROTON_DIR
   exit(1)
 end
 
-STEAMRT_DIR = find_steamapp_dir("SteamLinuxRuntime_soldier")
-if not STEAMRT_DIR
-  STDERR.puts "Can't find the Steam Runtime directory!"
-  STDERR.puts "Try `steam \"steam://install/1391110\"` if it's not installed."
-  exit(1)
-end
+#STEAMRT_DIR = find_steamapp_dir("SteamLinuxRuntime_soldier")
+#if not STEAMRT_DIR
+#  STDERR.puts "Can't find the Steam Runtime directory!"
+#  STDERR.puts "Try `steam \"steam://install/1391110\"` if it's not installed."
+#  exit(1)
+#end
 
 $setup_steps = []
 $setup_state = nil
@@ -156,11 +156,11 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         FileUtils.mv('dist.tmp', 'dist')
       end
 
-      set_up_files('dist/lib/libgcc_s.so.1', 'dist/lib/libstdc++.so.6') do
-        set_setup_state(:steamrt)
-        safe_system('tar', '-C', 'dist/lib', '-xf', File.join(STEAMRT_DIR, 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime.tar.gz'),
-          '--strip-components', '3', 'files/lib/i386-linux-gnu/libgcc_s.so.1', 'files/lib/i386-linux-gnu/libstdc++.so.6*')
-      end
+      #set_up_files('dist/lib/libgcc_s.so.1', 'dist/lib/libstdc++.so.6') do
+      #  set_setup_state(:steamrt)
+      #  safe_system('tar', '-C', 'dist/lib', '-xf', File.join(STEAMRT_DIR, 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime.tar.gz'),
+      #    '--strip-components', '3', 'files/lib/i386-linux-gnu/libgcc_s.so.1', 'files/lib/i386-linux-gnu/libstdc++.so.6*')
+      #end
 
       set_up_file('dist/lib/gstreamer-1.0') do |target|
         set_setup_state(:symlinks)

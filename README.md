@@ -35,7 +35,7 @@ Note that this port is quite different from both official Linux Proton builds an
 thus any issues encountered with it can *not* be directly reported to either project's bug tracker.
 
 1. Run `sudo pkg install wine-proton libc6-shim python3` and `lsu-pkg32 install wine-proton mesa-dri`.
-1. In Steam install Proton 6.3 (appid 1580130) and Steam Linux Runtime - Soldier (appid 1391110).
+1. In Steam install Proton 6.3 (appid 1580130).
 1. Run `lsu-register-proton` to copy files from the Proton 5.13 distribution and register emulators/wine-proton as a compatibility tool.
 1. Restart Steam.
 1. Select emulators/wine-proton in `Properties` -> `Compatibility` (per game) or `Settings` -> `Steam Play` (globally).

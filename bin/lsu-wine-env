@@ -14,14 +14,15 @@ def exec_with_wine_env(args)
   ENV['PATH'] = [File.join(WINE_PKG_PREFIX, 'bin'), ENV['PATH'].split(':')].join(':')
 
   # for some reason Wine 6.3 doesn't want to load these libraries from LD_LIBRARY_PATH
-  if ENV['PROTON_LIB32']
-    for lib in ['libgcc_s.so.1', 'libstdc++.so.6']
-      path = File.join(ENV['PROTON_LIB32'], lib)
-      if File.exist?(path)
-        ENV['LD_32_LIBMAP'] = "#{lib} #{path}\n#{ENV['LD_32_LIBMAP']}"
-      end
-    end
-  end
+  #if ENV['PROTON_LIB32']
+  #  for lib in ['libgcc_s.so.1', 'libstdc++.so.6']
+  #    path = File.join(ENV['PROTON_LIB32'], lib)
+  #    if File.exist?(path)
+  #      ENV['LD_32_LIBMAP'] = "#{lib} #{path}\n#{ENV['LD_32_LIBMAP']}"
+  #    end
+  #  end
+  #end
+  ENV['LD_32_LIBMAP'] = "libgcc_s.so.1 /usr/lib32/libgcc_s.so.1\n#{ENV['LD_32_LIBMAP']}"
 
   ENV['WINE_i386_ROOT'] = ENV['LSU_i386_PKG_ROOT'] if ENV['LSU_i386_PKG_ROOT']
 
