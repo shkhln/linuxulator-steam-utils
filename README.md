@@ -34,8 +34,11 @@ There is semi-experimental support for [emulators/wine-proton](https://www.fresh
 Note that this port is quite different from both official Linux Proton builds and vanilla Wine,
 thus any issues encountered with it can *not* be directly reported to either project's bug tracker.
 
-1. Run `sudo pkg install wine-proton libc6-shim python3` and `lsu-pkg32 install wine-proton mesa-dri`.
+1. Run `sudo pkg install wine-proton libc6-shim python3`.
+1. Run `/usr/local/wine-proton/bin/pkg32.sh install wine-proton mesa-dri`.
 1. In Steam install Proton 6.3 (appid 1580130).
-1. Run `lsu-register-proton` to copy files from the Proton 5.13 distribution and register emulators/wine-proton as a compatibility tool.
+1. Run `lsu-register-proton` to copy files from the Proton distribution and register emulators/wine-proton as a compatibility tool.
 1. Restart Steam.
-1. Select emulators/wine-proton in `Properties` -> `Compatibility` (per game) or `Settings` -> `Steam Play` (globally).
+
+To enable emulators/wine-proton right click a game title in Steam,
+click Properties, click Compatibility, select emulators/wine-proton.
