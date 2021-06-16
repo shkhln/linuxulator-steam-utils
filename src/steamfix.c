@@ -296,8 +296,9 @@ int execvp(const char* path, char* const argv[]) {
 
     char* arg = argv[i];
 
-    // "%s/../ubuntu12_32/reaper SteamLaunch AppId=%u -- %s"
-    char* reaper_str = strstr(argv[i], "../ubuntu12_32/reaper");
+    // beta:    "%s/reaper SteamLaunch AppId=%u -- %s"
+    // release: "%s/../ubuntu12_32/reaper SteamLaunch AppId=%u -- %s"
+    char* reaper_str = strstr(argv[i], "/reaper SteamLaunch");
     if (reaper_str != NULL) {
 
       char* e = strstr(reaper_str, "--");
