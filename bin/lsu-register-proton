@@ -133,6 +133,8 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         raise if not str.gsub!('self.wine_bin = self.bin_dir + "wine"',             'self.wine_bin = "wine"')
         raise if not str.gsub!('self.wineserver_bin = self.bin_dir + "wineserver"', 'self.wineserver_bin = "wineserver"')
 
+        raise if not str.gsub!('= find_nvidia_wine_dll_dir()',                      '= None')
+
         File.write(target, str)
         File.chmod(0700, target)
       end
