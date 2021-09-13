@@ -71,7 +71,7 @@ end
 Process.setrlimit(:STACK, 8192 * 1024)
 
 # linked against glibc 2.18
-FileUtils.rm(File.join(steam_root, 'ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6'))
+FileUtils.rm_rf(File.join(steam_root, 'ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6'))
 
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
