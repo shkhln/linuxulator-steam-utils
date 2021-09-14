@@ -85,7 +85,7 @@ install:
 	install $(f) $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}
 .endfor
 	install bin/lsu-* bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
-	install lxbin/curl-config lxbin/dbus-launch lxbin/file* lxbin/lsu-* lxbin/python3 lxbin/upgrade-steam-runtime* lxbin/xrandr $(PREFIX)/$(PROJECT)/lxbin
+	install lxbin/curl-config lxbin/dbus-launch lxbin/file* lxbin/gtar lxbin/lsu-* lxbin/python3 lxbin/upgrade-steam-runtime* lxbin/xrandr lxbin/zenity $(PREFIX)/$(PROJECT)/lxbin
 
 deinstall:
 .if exists($(PREFIX)/$(PROJECT))
@@ -100,7 +100,18 @@ NVIDIA_DEPS != \
 	  *)   echo linux-nvidia-libs;;     \
 	esac
 
-DEPS = ruby ca_root_nss liberation-fonts-ttf linux_libusb linux-c7-alsa-plugins-oss linux-c7-dbus-libs linux-c7-devtools linux-c7-dri linux-c7-gtk2 linux-c7-nss
+DEPS = ruby                      \
+       ca_root_nss               \
+       gtar                      \
+       liberation-fonts-ttf      \
+       linux_libusb              \
+       linux-c7-alsa-plugins-oss \
+       linux-c7-dbus-libs        \
+       linux-c7-devtools         \
+       linux-c7-dri              \
+       linux-c7-gtk2             \
+       linux-c7-nss              \
+       zenity
 
 dependencies:
 	pkg install -r FreeBSD ${DEPS} ${NVIDIA_DEPS}
