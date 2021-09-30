@@ -35,12 +35,18 @@ def find_steamapp_dir(name)
   library_folders = [File.join(ENV['HOME'], '.steam/steam')]
 
   vdf = File.read(File.join(ENV['HOME'], '.steam/steam/steamapps/libraryfolders.vdf'))
-    .gsub(/"(?=\t+")/, '":').gsub(/"(?=\n\{)/, '":').gsub(/"(?=\n\t+")/, '",')
+    .gsub(/"(?=\t+")/, '":').gsub(/"(?=\s+\{)/, '":').gsub(/"(?=\n\t+")/, '",')
 
   data = JSON.parse("{#{vdf}}")
 
   for key, value in (data['LibraryFolders'] || data['libraryfolders'])
-    library_folders << value if key =~ /^\d+$/
+    if key =~ /^\d+$/
+      if value.is_a?(Hash)
+        library_folders << value['path']
+      else
+        library_folders << value
+      end
+    end
   end
 
   library_folders.map{|dir| File.join(dir, 'steamapps/common', name)}.find{|dir| File.exist?(dir)}
