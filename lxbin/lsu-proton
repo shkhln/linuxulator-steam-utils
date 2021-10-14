@@ -11,13 +11,7 @@ export PROTON_DLL_COPY="" # ?
 
 if [ -z "$LSU_SHIM_WRAPPER" ]
 then
-  /sbin/sysctl -q hw.nvidia.version > /dev/null
-  if [ $? -eq 0 ]
-  then
-    wrapper=nv-sglrun
-  else
-    wrapper=with-glibc-shim
-  fi
+  wrapper=with-glibc-shim
 else
   wrapper="$LSU_SHIM_WRAPPER"
 fi
