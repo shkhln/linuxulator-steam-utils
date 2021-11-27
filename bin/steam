@@ -29,7 +29,7 @@ def check_requirements
 end
 
 def linux_run(cmd)
-  `env PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
+  `env LD_LIBRARY_PATH='' PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
 end
 
 def safe_system(*args)
