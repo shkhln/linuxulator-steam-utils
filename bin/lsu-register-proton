@@ -35,7 +35,7 @@ def find_steamapp_dir(name)
   library_folders = [File.join(ENV['HOME'], '.steam/steam')]
 
   vdf = File.read(File.join(ENV['HOME'], '.steam/steam/steamapps/libraryfolders.vdf'))
-    .gsub(/"(?=\t+")/, '":').gsub(/"(?=\s+\{)/, '":').gsub(/"(?=\n\t+")/, '",')
+    .gsub(/"(?=\t+")/, '":').gsub(/"(?=\s+\{)/, '":').gsub(/"(?=\n\t+")/, '",').gsub(/\}(?=\n\t+")/, '},')
 
   data = JSON.parse("{#{vdf}}")
 
@@ -156,11 +156,15 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
           'lib*/wine/fakedlls/dxgi.dll',
           'lib*/wine/d3d9.dll',
           'lib*/wine/d3d1*.dll',
+          'lib*/wine/nvapi',
+          'lib*/wine/nvcuda.dll',
           'lib*/wine/*steam*',
           'lib*/wine/vkd3d-proton',
           'lib*/wine/wineopenxr.dll.so',
+          'lib*/vkd3d',
           'share/default_pfx',
-          'share/fonts')
+          'share/fonts',
+          'share/wine/fonts')
         FileUtils.mv('dist.tmp', 'dist')
       end
 
