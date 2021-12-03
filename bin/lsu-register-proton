@@ -137,6 +137,7 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         raise if not str.gsub!('ld_path_var = "LD_LIBRARY_PATH"',                   'ld_path_var = "__LD_LIBRARY_PATH"')
 
         raise if not str.gsub!('self.wine_bin = self.bin_dir + "wine"',             'self.wine_bin = "wine"')
+        raise if not str.gsub!('self.wine64_bin = self.bin_dir + "wine64"',         'self.wine64_bin = "wine64"')
         raise if not str.gsub!('self.wineserver_bin = self.bin_dir + "wineserver"', 'self.wineserver_bin = "wineserver"')
 
         raise if not str.gsub!('= find_nvidia_wine_dll_dir()',                      '= None')
@@ -149,7 +150,7 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         set_setup_state(:proton)
         FileUtils.mkdir_p('dist.tmp')
         safe_system('tar', '-C', 'dist.tmp', '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
-          'lib/libsteam_api.so',
+          'lib*/libsteam_api.so',
           'lib*/libopenxr_loader.so.*',
           'lib*/wine/dxvk',
           'lib*/wine/fakedlls/vrclient*.dll',
