@@ -59,6 +59,24 @@ int sigaction(int sig, const struct sigaction* restrict act, struct sigaction* r
 
 /* Let's rewrite a few commands as well... */
 
+// ubuntu12_32/reaper depends on unimplemented PR_SET_CHILD_SUBREAPER
+void purge_reaper(const char* command) {
+  char* reaper_str = strstr(command, "/reaper SteamLaunch");
+  if (reaper_str != NULL) {
+
+    char* e = strstr(reaper_str, "--");
+    assert(e != NULL);
+
+    for (char* p = reaper_str; p >= command && *p != ' '; p--) {
+      *p = ' ';
+    }
+
+    for (char* p = reaper_str; p <= e + 1; p++) {
+      *p = ' ';
+    }
+  }
+}
+
 static int (*libc_system)(const char*) = NULL;
 
 #define SYSTEM_ENV   "LD_LIBRARY_PATH=\"$SYSTEM_LD_LIBRARY_PATH\" PATH=\"$SYSTEM_PATH\""
@@ -136,7 +154,24 @@ int system(const char* command) {
     }
   }
 
+  purge_reaper(command);
+
   return libc_system(command);
+}
+
+static int (*libc_execvp)(const char*, char* const []) = NULL;
+
+int execvp(const char* path, char* const argv[]) {
+
+  if (!libc_execvp) {
+    libc_execvp = dlsym(RTLD_NEXT, "execvp");
+  }
+
+  for (int i = 0; argv[i] != NULL; i++) {
+    purge_reaper(argv[i]);
+  }
+
+  return libc_execvp(path, argv);
 }
 
 /* Handle Steam restart */
@@ -280,39 +315,4 @@ int setsockopt(int s, int level, int optname, const void *optval, socklen_t optl
   }
 
   return libc_setsockopt(s, level, optname, optval, optlen);
-}
-
-/* ubuntu12_32/reaper depends on unimplemented PR_SET_CHILD_SUBREAPER, so just get rid of it */
-
-static int (*libc_execvp)(const char*, char* const []) = NULL;
-
-int execvp(const char* path, char* const argv[]) {
-
-  if (!libc_execvp) {
-    libc_execvp = dlsym(RTLD_NEXT, "execvp");
-  }
-
-  for (int i = 0; argv[i] != NULL; i++) {
-
-    char* arg = argv[i];
-
-    // beta:    "%s/reaper SteamLaunch AppId=%u -- %s"
-    // release: "%s/../ubuntu12_32/reaper SteamLaunch AppId=%u -- %s"
-    char* reaper_str = strstr(argv[i], "/reaper SteamLaunch");
-    if (reaper_str != NULL) {
-
-      char* e = strstr(reaper_str, "--");
-      assert(e != NULL);
-
-      for (char* p = reaper_str; p >= arg && *p != ' '; p--) {
-        *p = ' ';
-      }
-
-      for (char* p = reaper_str; p <= e + 1; p++) {
-        *p = ' ';
-      }
-    }
-  }
-
-  return libc_execvp(path, argv);
 }
