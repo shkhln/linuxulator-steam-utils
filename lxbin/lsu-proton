@@ -1,22 +1,16 @@
 #!/compat/linux/bin/sh
-export LD_32_LIBRARY_PATH="$PROTON_LIB32"
-export LD_LIBRARY_PATH="$PROTON_LIB64"
+export LD_32_LIBRARY_PATH=$PROTON_LIB32
+export LD_LIBRARY_PATH=$PROTON_LIB64
 export LD_PRELOAD=""
-export PATH=${FREEBSD_PATH}
+export PATH=$FREEBSD_PATH
 
 export DXVK_HUD=${DXVK_HUD-frametimes,version,devinfo,fps}
 export WINEDEBUG=${WINEDEBUG-warn+module}
 
 export PROTON_DLL_COPY="" # ?
 
-if [ -z "$LSU_SHIM_WRAPPER" ]
-then
-  wrapper=with-glibc-shim
-else
-  wrapper="$LSU_SHIM_WRAPPER"
-fi
+__dir__="$(dirname "$(realpath "$0")")"
+wrapper=${LSU_SHIM_WRAPPER-with-glibc-shim}
 
-dir="$(dirname "$(realpath "$0")")"
-
-echo $wrapper "$dir/../bin/lsu-wine-env" "$@"
-exec $wrapper "$dir/../bin/lsu-wine-env" "$@"
+echo $wrapper "$__dir__/../bin/lsu-wine-env" "$@"
+exec $wrapper "$__dir__/../bin/lsu-wine-env" "$@"
