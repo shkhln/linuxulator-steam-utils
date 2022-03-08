@@ -10,6 +10,17 @@
 //~ FAKE(pa_simple_new);
 //~ FAKE(pa_simple_read);
 //~ FAKE(pa_simple_write);
+//~ FAKE(pa_threaded_mainloop_start);
+//~ FAKE(pa_threaded_mainloop_lock);
+//~ FAKE(pa_threaded_mainloop_get_api);
+//~ FAKE(pa_proplist_new);
+//~ FAKE(pa_proplist_set);
+//~ FAKE(pa_proplist_sets);
+//~ FAKE(pa_context_new_with_proplist);
+//~ FAKE(pa_proplist_free);
+//~ FAKE(pa_context_set_state_callback);
+//~ FAKE(pa_context_errno);
+//~ FAKE(pa_threaded_mainloop_unlock);
 
 FAKE(pa_apply_volume_multiplier);
 FAKE(pa_ascii_filter);
@@ -42,7 +53,6 @@ FAKE(pa_close);
 FAKE(pa_context_add_autoload);
 FAKE(pa_context_disconnect);
 FAKE(pa_context_drain);
-FAKE(pa_context_errno);
 FAKE(pa_context_exit_daemon);
 FAKE(pa_context_get_autoload_info_by_index);
 FAKE(pa_context_get_autoload_info_by_name);
@@ -92,7 +102,6 @@ FAKE(pa_context_move_sink_input_by_index);
 FAKE(pa_context_move_sink_input_by_name);
 FAKE(pa_context_move_source_output_by_index);
 FAKE(pa_context_move_source_output_by_name);
-FAKE(pa_context_new_with_proplist);
 FAKE(pa_context_play_sample);
 FAKE(pa_context_play_sample_with_proplist);
 FAKE(pa_context_proplist_remove);
@@ -128,7 +137,6 @@ FAKE(pa_context_set_source_port_by_name);
 FAKE(pa_context_set_source_volume_by_index);
 FAKE(pa_context_set_source_volume_by_index_impl);
 FAKE(pa_context_set_source_volume_by_name);
-FAKE(pa_context_set_state_callback);
 FAKE(pa_context_set_subscribe_callback);
 FAKE(pa_context_stat);
 FAKE(pa_context_subscribe);
@@ -251,18 +259,14 @@ FAKE(pa_proplist_clear);
 FAKE(pa_proplist_contains);
 FAKE(pa_proplist_copy);
 FAKE(pa_proplist_equal);
-FAKE(pa_proplist_free);
 FAKE(pa_proplist_from_string);
 FAKE(pa_proplist_get);
 FAKE(pa_proplist_gets);
 FAKE(pa_proplist_isempty);
 FAKE(pa_proplist_iterate);
 FAKE(pa_proplist_key_valid);
-FAKE(pa_proplist_new);
-FAKE(pa_proplist_set);
 FAKE(pa_proplist_setf);
 FAKE(pa_proplist_setp);
-FAKE(pa_proplist_sets);
 FAKE(pa_proplist_size);
 FAKE(pa_proplist_to_string);
 FAKE(pa_proplist_to_string_sep);
@@ -363,15 +367,11 @@ FAKE(pa_sw_volume_to_dB);
 FAKE(pa_sw_volume_to_linear);
 FAKE(pa_threaded_mainloop_accept);
 FAKE(pa_threaded_mainloop_free);
-FAKE(pa_threaded_mainloop_get_api);
 FAKE(pa_threaded_mainloop_get_retval);
 FAKE(pa_threaded_mainloop_in_thread);
-FAKE(pa_threaded_mainloop_lock);
 FAKE(pa_threaded_mainloop_set_name);
 FAKE(pa_threaded_mainloop_signal);
-FAKE(pa_threaded_mainloop_start);
 FAKE(pa_threaded_mainloop_stop);
-FAKE(pa_threaded_mainloop_unlock);
 FAKE(pa_threaded_mainloop_wait);
 FAKE(pa_timeval_add);
 FAKE(pa_timeval_age);
@@ -434,4 +434,49 @@ void* pa_xmalloc(size_t l) {
 
 void pa_xfree(void* p) {
   // do nothing
+}
+
+int pa_threaded_mainloop_start(void* mainloop)
+{
+    return -1;
+}
+void pa_threaded_mainloop_lock(void* mainloop)
+{
+    // do nothing
+}
+void* pa_threaded_mainloop_get_api()
+{
+    return NULL;
+}
+void* pa_proplist_new(void)
+{
+    return NULL;
+}
+int pa_proplist_set(void* proplist, const char* key,const void* data, size_t nbytes)
+{
+    return -1;
+}
+int pa_proplist_sets(void* proplist, const char* key, const char* value)
+{
+    return -1;
+}
+void* pa_context_new_with_proplist(void* mainloop,const char* name, const void* proplist)
+{
+    return NULL;
+}
+void pa_proplist_free(void* proplist)
+{
+    // do nothing
+}
+void pa_context_set_state_callback(void* c, void* cb, void* userdata)
+{
+    //do nothing
+}
+int pa_context_errno(const void* c)
+{
+    return -1;
+}
+void pa_threaded_mainloop_unlock (void* mainloop)
+{
+    // do nothing
 }
