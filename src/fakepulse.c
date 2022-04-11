@@ -3,25 +3,6 @@
 
 #define FAKE(name) void name() { fprintf(stderr, "fakepulse: %s\n", #name); assert(0); }
 
-//~ FAKE(pa_simple_drain);
-//~ FAKE(pa_simple_flush);
-//~ FAKE(pa_simple_free);
-//~ FAKE(pa_simple_get_latency);
-//~ FAKE(pa_simple_new);
-//~ FAKE(pa_simple_read);
-//~ FAKE(pa_simple_write);
-//~ FAKE(pa_threaded_mainloop_start);
-//~ FAKE(pa_threaded_mainloop_lock);
-//~ FAKE(pa_threaded_mainloop_get_api);
-//~ FAKE(pa_proplist_new);
-//~ FAKE(pa_proplist_set);
-//~ FAKE(pa_proplist_sets);
-//~ FAKE(pa_context_new_with_proplist);
-//~ FAKE(pa_proplist_free);
-//~ FAKE(pa_context_set_state_callback);
-//~ FAKE(pa_context_errno);
-//~ FAKE(pa_threaded_mainloop_unlock);
-
 FAKE(pa_apply_volume_multiplier);
 FAKE(pa_ascii_filter);
 FAKE(pa_ascii_valid);
@@ -436,47 +417,46 @@ void pa_xfree(void* p) {
   // do nothing
 }
 
-int pa_threaded_mainloop_start(void* mainloop)
-{
-    return -1;
+int pa_threaded_mainloop_start(void* mainloop) {
+  return -1;
 }
-void pa_threaded_mainloop_lock(void* mainloop)
-{
-    // do nothing
+
+void pa_threaded_mainloop_lock(void* mainloop) {
+  // do nothing
 }
-void* pa_threaded_mainloop_get_api()
-{
-    return NULL;
+
+void* pa_threaded_mainloop_get_api() {
+  return NULL;
 }
-void* pa_proplist_new(void)
-{
-    return NULL;
+
+void* pa_proplist_new(void) {
+  return NULL;
 }
-int pa_proplist_set(void* proplist, const char* key,const void* data, size_t nbytes)
-{
-    return -1;
+
+int pa_proplist_set(void* proplist, const char* key,const void* data, size_t nbytes) {
+  return -1;
 }
-int pa_proplist_sets(void* proplist, const char* key, const char* value)
-{
-    return -1;
+
+int pa_proplist_sets(void* proplist, const char* key, const char* value) {
+  return -1;
 }
-void* pa_context_new_with_proplist(void* mainloop,const char* name, const void* proplist)
-{
-    return NULL;
+
+void* pa_context_new_with_proplist(void* mainloop,const char* name, const void* proplist) {
+  return NULL;
 }
-void pa_proplist_free(void* proplist)
-{
-    // do nothing
+
+void pa_proplist_free(void* proplist) {
+  // do nothing
 }
-void pa_context_set_state_callback(void* c, void* cb, void* userdata)
-{
-    //do nothing
+
+void pa_context_set_state_callback(void* c, void* cb, void* userdata) {
+  //do nothing
 }
-int pa_context_errno(const void* c)
-{
-    return -1;
+
+int pa_context_errno(const void* c) {
+  return -1;
 }
-void pa_threaded_mainloop_unlock (void* mainloop)
-{
-    // do nothing
+
+void pa_threaded_mainloop_unlock (void* mainloop) {
+  // do nothing
 }
