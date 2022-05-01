@@ -6,8 +6,8 @@ require 'json'
 
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
-I386_PKG_ROOT  = ENV['LSU_i386_PKG_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
-PROTON_VERSION = '6.3'
+I386_PKG_ROOT  = ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
+PROTON_VERSION = '7.0'
 
 def safe_system(*args)
   raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
@@ -55,16 +55,15 @@ end
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
 if not PROTON_DIR
   STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
-  STDERR.puts "Try `steam \"steam://install/1580130\"` if it's not installed."
+  STDERR.puts "Try `steam \"steam://install/1887720\"` if it's not installed."
   exit(1)
 end
 
-#STEAMRT_DIR = find_steamapp_dir("SteamLinuxRuntime_soldier")
-#if not STEAMRT_DIR
-#  STDERR.puts "Can't find the Steam Runtime directory!"
-#  STDERR.puts "Try `steam \"steam://install/1391110\"` if it's not installed."
-#  exit(1)
-#end
+if not File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton'))
+  STDERR.puts "#{File.join(I386_PKG_ROOT, 'usr/local/wine-proton')} doesn't exist!"
+  STDERR.puts "Install emulators/wine-proton first."
+  exit(1)
+end
 
 $setup_steps = []
 $setup_state = nil
@@ -150,30 +149,38 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
         set_setup_state(:proton)
         FileUtils.mkdir_p('dist.tmp')
         safe_system('tar', '-C', 'dist.tmp', '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
-          'lib*/libsteam_api.so',
           'lib*/libopenxr_loader.so.*',
-          'lib*/wine/dxvk',
-          'lib*/wine/fakedlls/vrclient*.dll',
-          'lib*/wine/fakedlls/dxgi.dll',
-          'lib*/wine/d3d9.dll',
-          'lib*/wine/d3d1*.dll',
-          'lib*/wine/nvapi',
-          'lib*/wine/nvcuda.dll',
-          'lib*/wine/*steam*',
-          'lib*/wine/vkd3d-proton',
-          'lib*/wine/wineopenxr.dll.so',
+          'lib*/libsteam_api.so',
           'lib*/vkd3d',
+          'lib*/wine/*/*steam*',
+          'lib*/wine/*/vrclient*',
+          'lib*/wine/*/wineopenxr.dll.so',
+          'lib*/wine/dxvk',
+          'lib*/wine/nvapi',
+          'lib*/wine/vkd3d-proton',
           'share/default_pfx',
           'share/fonts',
           'share/wine/fonts')
         FileUtils.mv('dist.tmp', 'dist')
       end
 
-      #set_up_files('dist/lib/libgcc_s.so.1', 'dist/lib/libstdc++.so.6') do
-      #  set_setup_state(:steamrt)
-      #  safe_system('tar', '-C', 'dist/lib', '-xf', File.join(STEAMRT_DIR, 'com.valvesoftware.SteamRuntime.Platform-amd64,i386-soldier-runtime.tar.gz'),
-      #    '--strip-components', '3', 'files/lib/i386-linux-gnu/libgcc_s.so.1', 'files/lib/i386-linux-gnu/libstdc++.so.6*')
-      #end
+      Dir.chdir('dist/lib/wine/i386-windows') do
+        for file in Dir[File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows/*.{cpl,dll,drv,exe}')]
+          if not File.exist?(File.basename(file))
+            set_setup_state(:symlinks)
+            safe_system('ln', '-s', file)
+          end
+        end
+      end
+
+      Dir.chdir('dist/lib64/wine/x86_64-windows') do
+        for file in Dir['/usr/local/wine-proton/lib/wine/x86_64-windows/*.{cpl,dll,drv,exe}']
+          if not File.exist?(File.basename(file))
+            set_setup_state(:symlinks)
+            safe_system('ln', '-s', file)
+          end
+        end
+      end
 
       set_up_file('dist/lib/gstreamer-1.0') do |target|
         set_setup_state(:symlinks)
