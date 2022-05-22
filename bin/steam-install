@@ -58,7 +58,7 @@ Dir.chdir(steam_root) do
     FileUtils.mkdir_p('steam')
 
     puts 'Extracting bootstrap...'
-    system("tar -xf #{STEAM_DIST_NAME} --strip-components 1 --to-stdout steam/bootstraplinux_ubuntu12_32.tar.xz | tar -C steam -xf -")
+    system("tar -xf #{STEAM_DIST_NAME} --strip-components 1 --to-stdout steam-launcher/bootstraplinux_ubuntu12_32.tar.xz | tar -C steam -xf -")
   end
 
   for symlink, target in {
