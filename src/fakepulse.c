@@ -16,7 +16,6 @@ FAKE(pa_channel_map_equal);
 FAKE(pa_channel_map_has_position);
 FAKE(pa_channel_map_init);
 FAKE(pa_channel_map_init_auto);
-FAKE(pa_channel_map_init_extend);
 FAKE(pa_channel_map_init_mono);
 FAKE(pa_channel_map_init_stereo);
 FAKE(pa_channel_map_mask);
@@ -459,4 +458,7 @@ int pa_context_errno(const void* c) {
 
 void pa_threaded_mainloop_unlock (void* mainloop) {
   // do nothing
+}
+void* pa_channel_map_init_extend (void* channel_map, unsigned channels, int def){
+    return NULL;
 }
