@@ -160,7 +160,8 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
           'lib*/wine/vkd3d-proton',
           'share/default_pfx',
           'share/fonts',
-          'share/wine/fonts')
+          'share/wine/fonts',
+          'share/wine/wine.inf')
         FileUtils.mv('dist.tmp', 'dist')
       end
 
