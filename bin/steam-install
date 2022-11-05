@@ -50,7 +50,7 @@ Dir.chdir(steam_root) do
 
     set_up_file('steam_1.0.0.74.tar.gz') do
       puts 'Downloading Steam...'
-      system("fetch http://repo.steampowered.com/steam/pool/steam/s/steam/#{STEAM_DIST_NAME}")
+      system("fetch http://repo.steampowered.com/steam/pool/steam/s/steam/#{STEAM_DIST_NAME} || fetch http://repo.steampowered.com/steam/archive/stable/#{STEAM_DIST_NAME}")
     end
 
     verify_checksum(STEAM_DIST_NAME)
