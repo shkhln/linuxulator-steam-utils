@@ -5,10 +5,10 @@ require 'fileutils'
 
 raise 'Never run this script as root!' if `id -u`.chomp == '0'
 
-STEAM_DIST_NAME = 'steam_1.0.0.74.tar.gz'
+STEAM_DIST_NAME = 'steam_1.0.0.75.tar.gz'
 
 SHA256 = {
-  'steam_1.0.0.74.tar.gz': 'b0ed3b8378f541e8dab68d8b589d85ad6dc0cdf302701cf8e87130eda2b1a234'
+  'steam_1.0.0.75.tar.gz': 'e52565a5e33b9a4184c5bdc222978b7fea958efd32641d5d5967774d751236a7'
 }
 
 DUMB_PERSON_FLAG = '--allow-stealing-my-passwords,-browser-history-and-ssh-keys'
@@ -48,7 +48,7 @@ Dir.chdir(steam_root) do
 
   set_up_file('steam/ubuntu12_32') do
 
-    set_up_file('steam_1.0.0.74.tar.gz') do
+    set_up_file(STEAM_DIST_NAME) do
       puts 'Downloading Steam...'
       system("fetch http://repo.steampowered.com/steam/pool/steam/s/steam/#{STEAM_DIST_NAME} || fetch http://repo.steampowered.com/steam/archive/stable/#{STEAM_DIST_NAME}")
     end
