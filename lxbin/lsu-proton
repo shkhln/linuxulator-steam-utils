@@ -7,8 +7,6 @@ export PATH=$FREEBSD_PATH
 export DXVK_HUD=${DXVK_HUD-frametimes,version,devinfo,fps}
 export WINEDEBUG=${WINEDEBUG-warn+module}
 
-export PROTON_DLL_COPY="" # ?
-
 __dir__="$(dirname "$(realpath "$0")")"
 wrapper=${LSU_SHIM_WRAPPER-with-glibc-shim}
 
