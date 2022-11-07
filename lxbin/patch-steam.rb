@@ -20,7 +20,7 @@ end
 
 steam_root = ENV['HOME'] + '/.steam/steam'
 
-for f in ['ubuntu12_32/chromehtml.so', 'ubuntu12_32/steamclient.so']
+for f in ['ubuntu12_32/chromehtml.so', 'ubuntu12_32/steamclient.so', 'ubuntu12_32/steamui.so']
   patch_executable(steam_root + '/' + f, steam_root + '/' + f + '.patched') do |obj|
     obj.gsub!(Regexp.new("\0syscall\0".force_encoding('BINARY'), Regexp::FIXEDENCODING), "\0llacsys\0".force_encoding('BINARY'))
     obj.gsub!(Regexp.new("\0syscall@" .force_encoding('BINARY'), Regexp::FIXEDENCODING), "\0llacsys@" .force_encoding('BINARY'))

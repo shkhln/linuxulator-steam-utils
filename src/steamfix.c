@@ -333,7 +333,7 @@ void* dlmopen(Lmid_t lmid, const char* path, int mode) {
 
   void* p = NULL;
 
-  if (strstr(path, "chromehtml.so") != NULL || strstr(path, "steamclient.so") != NULL) {
+  if (strstr(path, "chromehtml.so") != NULL || strstr(path, "steamclient.so") != NULL || strstr(path, "steamui.so") != NULL) {
 
     char* format_str = "%s.patched";
 
