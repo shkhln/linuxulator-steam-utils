@@ -59,11 +59,30 @@ if not PROTON_DIR
   exit(1)
 end
 
-if not File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton'))
-  STDERR.puts "#{File.join(I386_PKG_ROOT, 'usr/local/wine-proton')} doesn't exist!"
-  STDERR.puts "Install emulators/wine-proton first."
-  exit(1)
+for winedir in ['/usr/local/wine-proton', File.join(I386_PKG_ROOT, 'usr/local/wine-proton')]
+
+  if not File.exist?(winedir)
+    STDERR.puts "#{winedir} doesn't exist!"
+    STDERR.puts "Install emulators/wine-proton first."
+    exit(1)
+  end
+
+  wine = if File.exist?(File.join(winedir, 'bin/wine64'))
+    File.join(winedir, 'bin/wine64')
+  else
+    File.join(winedir, 'bin/wine')
+  end
+
+  version = `#{wine} --version`.chomp
+  if version != "wine-#{PROTON_VERSION}"
+    STDERR.puts "Expected Wine version \"wine-#{PROTON_VERSION}\", got \"#{version}\" from #{wine}."
+    exit(1)
+  end
 end
+
+# we expect a PE Wine build
+raise if not File.exist?('/usr/local/wine-proton/lib/wine/x86_64-windows')
+raise if not File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows'))
 
 $setup_steps = []
 $setup_state = nil
