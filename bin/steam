@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
-require 'fileutils'
-
 #TODO: DBUS_SYSTEM_BUS_ADDRESS?
 
 def check_requirements
@@ -69,9 +67,6 @@ end
 
 # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=248225
 Process.setrlimit(:STACK, 8192 * 1024)
-
-# linked against glibc 2.18
-FileUtils.rm_rf(File.join(steam_root, 'ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6'))
 
 steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")

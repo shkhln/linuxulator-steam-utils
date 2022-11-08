@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,6 +117,21 @@ int system(const char* command) {
 
     char* browser_env = getenv("LSU_BROWSER");
     if (!browser_env || strcmp(browser_env, "1") == 0) {
+
+      // bundled libstdc++.so.6 is linked against glibc 2.18
+      {
+        extern char* __progname_full;
+
+        char* format_str = "%s/../ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6";
+        char* basedir    = dirname(__progname_full);
+        int   buf_len    = strlen(format_str) - 2 /* %s */ + strlen(basedir) + 1;
+        char* buf        = malloc(buf_len);
+
+        snprintf(buf, buf_len, format_str, basedir);
+        unlink(buf);
+
+        free(buf);
+      }
 
       char* format_str =
 #if __FreeBSD_version < 1300139
