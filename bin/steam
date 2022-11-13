@@ -117,6 +117,7 @@ preload = [
   ENV['STEAM_LD_PRELOAD']
 ].compact.join(':')
 
+ENV['LSU_PROTON_UPGRADE_CMD']     = "env -u LD_PRELOAD PATH=\"#{ENV['PATH']}\" #{File.expand_path('lsu-register-proton', __dir__)}"
 ENV['FREEBSD_PATH']               = ENV['PATH']
 ENV['PATH']                       = bin_path
 ENV['SYSTEM_PATH']                = bin_path

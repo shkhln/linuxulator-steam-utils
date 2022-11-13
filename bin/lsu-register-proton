@@ -7,6 +7,7 @@ require 'json'
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
 I386_PKG_ROOT  = ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
+PROTON_STEAMID = 1887720
 PROTON_VERSION = '7.0'
 
 def safe_system(*args)
@@ -54,16 +55,20 @@ end
 
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
 if not PROTON_DIR
+  STDERR.puts "\e[7m"
   STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
-  STDERR.puts "Try `steam \"steam://install/1887720\"` if it's not installed."
+  STDERR.puts "Try `steam \"steam://install/#{PROTON_STEAMID}\"` if it's not installed."
+  STDERR.puts "\e[27m"
   exit(1)
 end
 
 for winedir in ['/usr/local/wine-proton', File.join(I386_PKG_ROOT, 'usr/local/wine-proton')]
 
   if not File.exist?(winedir)
+    STDERR.puts "\e[7m"
     STDERR.puts "#{winedir} doesn't exist!"
     STDERR.puts "Install emulators/wine-proton first."
+    STDERR.puts "\e[27m"
     exit(1)
   end
 
@@ -75,7 +80,9 @@ for winedir in ['/usr/local/wine-proton', File.join(I386_PKG_ROOT, 'usr/local/wi
 
   version = `#{wine} --version`.chomp
   if version != "wine-#{PROTON_VERSION}"
+    STDERR.puts "\e[27m"
     STDERR.puts "Expected Wine version \"wine-#{PROTON_VERSION}\", got \"#{version}\" from #{wine}."
+    STDERR.puts "\e[27m"
     exit(1)
   end
 end
@@ -127,9 +134,9 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
 
     set_up_file("proton_#{PROTON_VERSION}") do |target|
       FileUtils.mkdir_p(target)
+      FileUtils.rm_f('proton') # we no longer need the symlink
+      FileUtils.rm_f('run.sh') # in case there is a new version of the script
     end
-
-    safe_system("ln -sf -h proton_#{PROTON_VERSION} proton")
 
     Dir.chdir("proton_#{PROTON_VERSION}") do
 
@@ -219,9 +226,14 @@ Dir.chdir(File.join(ENV['HOME'], '.steam/steam/compatibilitytools.d')) do
       str = <<~E
         #!/bin/sh
         dir="$(dirname "$(realpath "$0")")"
-        export PROTON_LIB32="$dir/proton/dist/lib"
-        export PROTON_LIB64="$dir/proton/dist/lib64"
-        exec lsu-proton "$dir/proton/proton" "$@"
+        ver="$(unset LD_PRELOAD; /usr/local/wine-proton/bin/wine64 --version | /usr/bin/sed s/wine-//)"
+        if [ ! -f "$dir/proton_$ver/proton" ]
+        then
+          $LSU_PROTON_UPGRADE_CMD || exit 1
+        fi
+        export PROTON_LIB32="$dir/proton_$ver/dist/lib"
+        export PROTON_LIB64="$dir/proton_$ver/dist/lib64"
+        exec lsu-proton "$dir/proton_$ver/proton" "$@"
       E
 
       File.write('run.sh', str)
