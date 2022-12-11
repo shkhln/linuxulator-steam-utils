@@ -343,13 +343,17 @@ static void* (*libc_dlmopen)(Lmid_t, const char*, int) = NULL;
 
 void* dlmopen(Lmid_t lmid, const char* path, int mode) {
 
+  static bool rlist_broken = false;
+
   if (!libc_dlmopen) {
+    void* x[2];
+    rlist_broken = syscall(SYS_get_robust_list, 0, &x[0], &x[1]) == 0 && x[0] != NULL && x[1] == 0;
     libc_dlmopen = dlsym(RTLD_NEXT, "dlmopen");
   }
 
   void* p = NULL;
 
-  if (strstr(path, "chromehtml.so") != NULL || strstr(path, "steamclient.so") != NULL || strstr(path, "steamui.so") != NULL) {
+  if (rlist_broken && (strstr(path, "chromehtml.so") != NULL || strstr(path, "steamclient.so") != NULL || strstr(path, "steamui.so") != NULL)) {
 
     char* format_str = "%s.patched";
 
