@@ -4,6 +4,7 @@ export LD_LIBRARY_PATH=$PROTON_LIB64
 export LD_PRELOAD=""
 export PATH=$FREEBSD_PATH
 
+export DISABLE_VK_LAYER_VALVE_steam_overlay_1=1 # avoids ubuntu12_32/steamoverlayvulkanlayer.so crash
 export DXVK_HUD=${DXVK_HUD-frametimes,version,devinfo,fps}
 export WINEDEBUG=${WINEDEBUG-warn+module}
 
