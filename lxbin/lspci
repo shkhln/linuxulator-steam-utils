@@ -1,0 +1,2 @@
+#!/compat/linux/bin/sh
+exit 1
