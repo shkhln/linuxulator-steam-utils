@@ -1,28 +1,38 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
-#TODO: DBUS_SYSTEM_BUS_ADDRESS?
-
 def check_requirements
 
   reqs = []
 
-  reqs << '32-bit Linux emulation support' if `sysctl -nq kern.features.linux`  .to_i != 1
-  reqs << '64-bit Linux emulation support' if `sysctl -nq kern.features.linux64`.to_i != 1
+  reqs << [:linux, '32-bit Linux emulation support'] if `sysctl -nq kern.features.linux`  .to_i != 1
+  reqs << [:linux, '64-bit Linux emulation support'] if `sysctl -nq kern.features.linux64`.to_i != 1
 
-  mounted_filesystems = `mount -p`
+  mounts = Hash[`mount -p`.lines.each_with_index.map{|line, i| p = line.split(/\t+/); [p[1], {type: p[2], line: i}]}]
 
   for fs, path in {
     'linprocfs' => '/compat/linux/proc',
     'linsysfs'  => '/compat/linux/sys',
+    'devfs'     => '/compat/linux/dev',
     'tmpfs'     => '/compat/linux/dev/shm',
-    'fdescfs'   => '/dev/fd',
-    'procfs'    => '/proc'
+    'fdescfs'   => '/compat/linux/dev/fd',
   }
-    reqs << "#{fs} mounted at #{path}" if not mounted_filesystems =~ /#{Regexp.escape(path)}\s+#{fs}/
+    m = mounts[path]
+    if !(m && m[:type] == fs)
+      reqs << [:linux, "#{fs} mounted at #{path}"]
+    end
   end
 
-  reqs << 'write access to /compat/linux/dev/shm' if not File.writable?('/compat/linux/dev/shm')
+  dev = mounts['/compat/linux/dev']
+  shm = mounts['/compat/linux/dev/shm']
+  fd  = mounts['/compat/linux/dev/fd']
+  if dev && shm && fd
+    reqs << [:linux, '/compat/linux/dev mounted before /compat/linux/dev/shm'] if shm[:line] < dev[:line]
+    reqs << [:linux, '/compat/linux/dev mounted before /compat/linux/dev/fd' ] if fd [:line] < dev[:line]
+  end
+
+  reqs << [:linux, 'write access to /compat/linux/dev/shm'] if not File.writable?('/compat/linux/dev/shm')
+  reqs << [:dbus,  '/var/lib/dbus/machine-id existence']    if not File.exist?('/var/lib/dbus/machine-id')
   reqs
 end
 
@@ -38,8 +48,17 @@ requirements = check_requirements()
 if not requirements.empty?
   STDERR.puts 'Please, make sure the following requirements are satisfied:'
   for req in requirements
-    STDERR.puts "  * #{req}"
+    STDERR.puts "  * #{req[1]}"
   end
+
+  if requirements.find{|req| req[0] == :linux}
+    STDERR.puts "\nRun (as root) `sysrc linux_enable=YES && service linux start` to enable Linux emulation."
+  end
+
+  if requirements.find{|req| req[0] == :dbus}
+    STDERR.puts "\nRun (as root) `mkdir -p /var/lib/dbus && /usr/local/bin/dbus-uuidgen --ensure` to generate a machine id."
+  end
+
   exit 1
 end
 
