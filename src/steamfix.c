@@ -137,7 +137,7 @@ int system(const char* command) {
 #if __FreeBSD_version < 1300139
         "LD_PRELOAD=webfix.so"
 #endif
-        " '%s' %s"
+        " '%s.patched' %s"
         " --no-sandbox"
 #if __FreeBSD_version < 1300139
         " --no-zygote"

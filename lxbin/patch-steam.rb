@@ -15,6 +15,7 @@ def patch_executable(path, out_path)
 
   if not (File.exists?(out_path) && same_size(path, out_path) && is_older(path, out_path))
     IO.binwrite(out_path, yield(IO.binread(path)))
+    File.chmod(0700, out_path)
   end
 end
 
@@ -26,4 +27,9 @@ for f in ['ubuntu12_32/chromehtml.so', 'ubuntu12_32/steamclient.so', 'ubuntu12_3
     obj.gsub!(Regexp.new("\0syscall@" .force_encoding('BINARY'), Regexp::FIXEDENCODING), "\0llacsys@" .force_encoding('BINARY'))
     obj
   end
+end
+
+patch_executable(steam_root + '/ubuntu12_64/steamwebhelper.sh', steam_root + '/ubuntu12_64/steamwebhelper.sh.patched') do |obj|
+  obj.gsub!('"${in_container[@]}"', '')
+  obj
 end
