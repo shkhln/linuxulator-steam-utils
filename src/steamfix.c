@@ -78,6 +78,52 @@ void purge_reaper(const char* command) {
   }
 }
 
+// bundled libstdc++.so.6 is linked against glibc 2.18
+void unlink_libstdcpp() {
+
+  extern char* __progname_full;
+
+  char* format_str = "%s/../ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6";
+  char* basedir    = dirname(__progname_full);
+  int   buf_len    = strlen(format_str) - 2 /* %s */ + strlen(basedir) + 1;
+  char* buf        = malloc(buf_len);
+
+  snprintf(buf, buf_len, format_str, basedir);
+  unlink(buf);
+
+  free(buf);
+}
+
+char* modify_webhelper_command(const char* command) {
+
+  char* format_str =
+#if __FreeBSD_version < 1300139
+    "LD_PRELOAD=webfix.so "
+#endif
+    "%s.patched' %s"
+    " --no-sandbox"
+#if __FreeBSD_version < 1300139
+    " --no-zygote"
+#endif
+    " --in-process-gpu" // YMMV
+    //" --enable-logging=stderr"
+    //" --v=0"
+  ;
+
+  int   buf_len = strlen(format_str) + strlen(command) + 1;
+  char* buf     = malloc(buf_len);
+
+  char* webhelper_path = strdup(command);
+  char* webhelper_args = strstr(webhelper_path, "steamwebhelper.sh' ") + sizeof("steamwebhelper.sh' ") - 1;
+  assert(webhelper_args[-2] == '\'');
+  webhelper_args[-2] = '\0';
+
+  snprintf(buf, buf_len, format_str, webhelper_path, webhelper_args);
+  free(webhelper_path);
+
+  return buf;
+}
+
 static int (*libc_system)(const char*) = NULL;
 
 #define SYSTEM_ENV   "LD_LIBRARY_PATH=\"$SYSTEM_LD_LIBRARY_PATH\" PATH=\"$SYSTEM_PATH\""
@@ -118,46 +164,9 @@ int system(const char* command) {
     char* browser_env = getenv("LSU_BROWSER");
     if (!browser_env || strcmp(browser_env, "1") == 0) {
 
-      // bundled libstdc++.so.6 is linked against glibc 2.18
-      {
-        extern char* __progname_full;
+      unlink_libstdcpp();
 
-        char* format_str = "%s/../ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6";
-        char* basedir    = dirname(__progname_full);
-        int   buf_len    = strlen(format_str) - 2 /* %s */ + strlen(basedir) + 1;
-        char* buf        = malloc(buf_len);
-
-        snprintf(buf, buf_len, format_str, basedir);
-        unlink(buf);
-
-        free(buf);
-      }
-
-      char* format_str =
-#if __FreeBSD_version < 1300139
-        "LD_PRELOAD=webfix.so"
-#endif
-        " '%s.patched' %s"
-        " --no-sandbox"
-#if __FreeBSD_version < 1300139
-        " --no-zygote"
-#endif
-        " --in-process-gpu" // YMMV
-        //" --enable-logging=stderr"
-        //" --v=0"
-      ;
-
-      int   buf_len = strlen(format_str) + strlen(command) + 1;
-      char* buf     = malloc(buf_len);
-
-      char* webhelper_path = strdup(command + 1);
-      char* webhelper_args = strstr(webhelper_path, "steamwebhelper.sh' ") + sizeof("steamwebhelper.sh' ") - 1;
-      assert(webhelper_args[-2] == '\'');
-      webhelper_args[-2] = '\0';
-
-      snprintf(buf, buf_len, format_str, webhelper_path, webhelper_args);
-      free(webhelper_path);
-
+      char* buf = modify_webhelper_command(command);
       fprintf(stderr, "[[%s]]\n", buf);
 
       int err = libc_system(buf);
@@ -188,6 +197,50 @@ int execvp(const char* path, char* const argv[]) {
   }
 
   return libc_execvp(path, argv);
+}
+
+static int (*libc_execv)(const char*, char* const []) = NULL;
+
+int execv(const char* file, char* const argv[]) {
+
+  if (!libc_execv) {
+    libc_execv = dlsym(RTLD_NEXT, "execv");
+  }
+
+  int arg_count = 0;
+  int webhelper_str_index = -1;
+
+  for (int i = 0; argv[arg_count] != NULL; i++, arg_count = i) {
+    if (strstr(argv[i], "steamwebhelper.sh") && !strstr(argv[i], "steamwebhelper.sh.patched")) {
+      webhelper_str_index = i;
+    }
+  }
+
+  if (webhelper_str_index != -1) {
+
+    unlink_libstdcpp();
+
+    size_t argv_size_in_bytes = sizeof(char*) * (arg_count + 1);
+    char** argv2 = malloc(argv_size_in_bytes);
+    memcpy(argv2, argv, argv_size_in_bytes);
+
+    argv2[webhelper_str_index] = modify_webhelper_command(argv[webhelper_str_index]);
+
+    for (int i = 0; argv2[i] != NULL; i++) {
+      fprintf(stderr, "[[%s]]\n", argv2[i]);
+    }
+
+    int err = libc_execv(file, argv2);
+    perror("execv");
+
+    free(argv2[webhelper_str_index]);
+    free(argv2);
+
+    return err;
+
+  } else {
+    return libc_execv(file, argv);
+  }
 }
 
 /* Handle Steam restart */
