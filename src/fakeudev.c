@@ -37,6 +37,7 @@ FAKE(udev_device_get_devtype);
 FAKE(udev_device_get_sysnum);
 FAKE(udev_device_get_parent_with_subsystem_devtype);
 FAKE(udev_device_get_parent);
+FAKE(udev_device_get_properties_list_entry);
 FAKE(udev_device_get_property_value);
 FAKE(udev_device_get_subsystem);
 FAKE(udev_device_get_sysattr_value);
