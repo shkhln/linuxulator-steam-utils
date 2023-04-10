@@ -348,7 +348,6 @@ FAKE(pa_sw_volume_to_linear);
 FAKE(pa_threaded_mainloop_accept);
 FAKE(pa_threaded_mainloop_free);
 FAKE(pa_threaded_mainloop_get_retval);
-FAKE(pa_threaded_mainloop_in_thread);
 FAKE(pa_threaded_mainloop_set_name);
 FAKE(pa_threaded_mainloop_signal);
 FAKE(pa_threaded_mainloop_stop);
@@ -456,9 +455,14 @@ int pa_context_errno(const void* c) {
   return -1;
 }
 
-void pa_threaded_mainloop_unlock (void* mainloop) {
+void pa_threaded_mainloop_unlock(void* mainloop) {
   // do nothing
 }
-void* pa_channel_map_init_extend (void* channel_map, unsigned channels, int def){
-    return NULL;
+
+void* pa_channel_map_init_extend(void* channel_map, unsigned channels, int def) {
+  return NULL;
+}
+
+int pa_threaded_mainloop_in_thread(void* m) {
+  return 0;
 }
