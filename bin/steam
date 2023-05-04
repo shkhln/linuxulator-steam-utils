@@ -10,12 +10,14 @@ def check_requirements
 
   mounts = Hash[`mount -p`.lines.each_with_index.map{|line, i| p = line.split(/[ \t]+/); [p[1], {type: p[2], line: i}]}]
 
+  emul_path = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp;
+
   for fs, path in {
-    'linprocfs' => '/compat/linux/proc',
-    'linsysfs'  => '/compat/linux/sys',
-    'devfs'     => '/compat/linux/dev',
-    'tmpfs'     => '/compat/linux/dev/shm',
-    'fdescfs'   => '/compat/linux/dev/fd',
+    'linprocfs' => emul_path + '/proc',
+    'linsysfs'  => emul_path + '/sys',
+    'devfs'     => emul_path + '/dev',
+    'tmpfs'     => emul_path + '/dev/shm',
+    'fdescfs'   => emul_path + '/dev/fd',
   }
     m = mounts[path]
     if !(m && m[:type] == fs)
@@ -23,15 +25,15 @@ def check_requirements
     end
   end
 
-  dev = mounts['/compat/linux/dev']
-  shm = mounts['/compat/linux/dev/shm']
-  fd  = mounts['/compat/linux/dev/fd']
+  dev = mounts[emul_path + '/dev']
+  shm = mounts[emul_path + '/dev/shm']
+  fd  = mounts[emul_path + '/dev/fd']
   if dev && shm && fd
-    reqs << [:linux, '/compat/linux/dev mounted before /compat/linux/dev/shm'] if shm[:line] < dev[:line]
-    reqs << [:linux, '/compat/linux/dev mounted before /compat/linux/dev/fd' ] if fd [:line] < dev[:line]
+    reqs << [:linux, '#{emul_path}/dev mounted before #{emul_path}/dev/shm'] if shm[:line] < dev[:line]
+    reqs << [:linux, '#{emul_path}/dev mounted before #{emul_path}/dev/fd' ] if fd [:line] < dev[:line]
   end
 
-  reqs << [:linux, 'write access to /compat/linux/dev/shm'] if not File.writable?('/compat/linux/dev/shm')
+  reqs << [:linux, "write access to #{emul_path}/dev/shm"] if not File.writable?("#{emul_path}/dev/shm")
   reqs << [:dbus,  '/var/lib/dbus/machine-id existence']    if not File.exist?('/var/lib/dbus/machine-id')
   reqs
 end
