@@ -8,7 +8,7 @@ def check_requirements
   reqs << [:linux, '32-bit Linux emulation support'] if `sysctl -nq kern.features.linux`  .to_i != 1
   reqs << [:linux, '64-bit Linux emulation support'] if `sysctl -nq kern.features.linux64`.to_i != 1
 
-  mounts = Hash[`mount -p`.lines.each_with_index.map{|line, i| p = line.split(/\t+/); [p[1], {type: p[2], line: i}]}]
+  mounts = Hash[`mount -p`.lines.each_with_index.map{|line, i| p = line.split(/[ \t]+/); [p[1], {type: p[2], line: i}]}]
 
   for fs, path in {
     'linprocfs' => '/compat/linux/proc',
