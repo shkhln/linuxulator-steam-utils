@@ -46,7 +46,7 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
   end
 
   # keep previous 2 versions just in case
-  Dir['steam-runtime_*'].sort[0..-3].each do |dir|
+  for dir in Dir['steam-runtime_*'].sort[0..-3] - [File.readlink("steam-runtime")]
     FileUtils.rm_r(dir)
   end
 end
