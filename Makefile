@@ -16,6 +16,8 @@ LIBS  = lib32/steamfix/steamfix.so    \
         lib64/fakepulse/libpulse.so.0 \
         lib32/fakeudev/libudev.so.0   \
         lib64/fakeudev/libudev.so.0   \
+        lib32/fakeudev/libudev.so.1   \
+        lib64/fakeudev/libudev.so.1   \
         lib32/pathfix/pathfix.so      \
         lib64/pathfix/pathfix.so      \
         lib32/protonfix/protonfix.so  \
@@ -48,6 +50,9 @@ $(BUILD_DIR)/lib$(b)/fakepulse/libpulse.so.0: src/fakepulse.c
 $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.0: src/fakeudev.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/fakeudev
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/fakeudev.c
+
+$(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.1: $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.0
+	ln -s libudev.so.0 $(.TARGET)
 
 $(BUILD_DIR)/lib$(b)/pathfix/pathfix.so: src/pathfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/pathfix
