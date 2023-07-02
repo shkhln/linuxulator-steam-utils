@@ -46,7 +46,8 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
   end
 
   # keep previous 2 versions just in case
-  for dir in Dir['steam-runtime_*'].sort[0..-3] - [File.readlink("steam-runtime")]
+  symlink_target = File.symlink?("steam-runtime") ? File.readlink("steam-runtime") : nil
+  for dir in Dir['steam-runtime_*'].sort[0..-3] - [symlink_target]
     FileUtils.rm_r(dir)
   end
 end
