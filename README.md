@@ -1,6 +1,6 @@
 # linuxulator-steam-utils
 
-A set of workarounds for running the Linux Steam client under the FreeBSD Linux emulation layer.
+A set of workarounds for running the Linux Steam client under the FreeBSD (13.2+) Linux emulation layer.
 
 For the list of tested Linux games see the [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
 

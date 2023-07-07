@@ -340,29 +340,6 @@ int fputs(const char* str, FILE* stream) {
   return libc_fputs(str, stream);
 }
 
-/* Apparently communication with CSGO process breaks when Steam receives an unexpected EAGAIN error, which prevents the game from starting */
-
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-
-static ssize_t (*libc_send)(int s, const void* msg, size_t len, int flags) = NULL;
-
-ssize_t send(int s, const void* msg, size_t len, int flags) {
-
-  if (!libc_send) {
-    libc_send = dlsym(RTLD_NEXT, "send");
-  }
-
-  ssize_t nbytes = libc_send(s, msg, len, flags);
-
-  if (nbytes == -1 && errno == EAGAIN && flags == MSG_NOSIGNAL && !(fcntl(s, F_GETFL) & O_NONBLOCK)) {
-    nbytes = libc_send(s, msg, len, 0x00020000);
-  }
-
-  return nbytes;
-}
-
 /* Steam doesn't have the ability to detach anything, but this action must succeed, otherwise Steam won't see any devices */
 
 int libusb_detach_kernel_driver(void* dev, int interface) {
@@ -384,89 +361,4 @@ int setsockopt(int s, int level, int optname, const void *optval, socklen_t optl
   }
 
   return libc_setsockopt(s, level, optname, optval, optlen);
-}
-
-// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=267616
-
-#include <stdarg.h>
-#include <linux/futex.h>
-#include <sys/syscall.h>
-
-static void* (*libc_dlmopen)(Lmid_t, const char*, int) = NULL;
-
-void* dlmopen(Lmid_t lmid, const char* path, int mode) {
-
-  static bool rlist_broken = false;
-
-  if (!libc_dlmopen) {
-    void* x[2];
-    rlist_broken = syscall(SYS_get_robust_list, 0, &x[0], &x[1]) == 0 && x[0] != NULL && x[1] == 0;
-    libc_dlmopen = dlsym(RTLD_NEXT, "dlmopen");
-  }
-
-  void* p = NULL;
-
-  if (rlist_broken && (strstr(path, "chromehtml.so") != NULL || strstr(path, "steamclient.so") != NULL || strstr(path, "steamui.so") != NULL)) {
-
-    char* format_str = "%s.patched";
-
-    int   buf_len = strlen(format_str) + strlen(path) + 1;
-    char* buf     = malloc(buf_len);
-
-    snprintf(buf, buf_len, format_str, path);
-
-    p = libc_dlmopen(lmid, buf, mode);
-
-    free(buf);
-
-  } else {
-    p = libc_dlmopen(lmid, path, mode);
-  }
-
-  return p;
-}
-
-long int llacsys(long int number, ...) {
-
-  if (number == SYS_get_robust_list) {
-
-    va_list args;
-    va_start(args, number);
-
-    int pid                            = va_arg(args, int);
-    struct robust_list_head** head_ptr = va_arg(args, struct robust_list_head**);
-    size_t* len_ptr                    = va_arg(args, size_t *);
-
-    va_end(args);
-
-    int err = syscall(SYS_get_robust_list, pid, head_ptr, len_ptr);
-    if (err == 0) {
-      *len_ptr = 12;
-    }
-
-    return err;
-  }
-
-  if (number == SYS_gettid) {
-    return syscall(SYS_gettid);
-  }
-
-  if (number == SYS_futex) {
-
-    va_list args;
-    va_start(args, number);
-
-    int* uaddr                     = va_arg(args, int*);
-    int  futex_op                  = va_arg(args, int);
-    int  val                       = va_arg(args, int);
-    const struct timespec* timeout = va_arg(args, struct timespec*);
-    int* uaddr2                    = va_arg(args, int*);
-    int  val3                      = va_arg(args, int);
-
-    va_end(args);
-
-    return syscall(SYS_futex, uaddr, futex_op, val, timeout, uaddr2, val3);
-  }
-
-  assert(0);
 }
