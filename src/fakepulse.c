@@ -348,7 +348,6 @@ FAKE(pa_sw_volume_to_linear);
 FAKE(pa_threaded_mainloop_accept);
 FAKE(pa_threaded_mainloop_free);
 FAKE(pa_threaded_mainloop_get_retval);
-FAKE(pa_threaded_mainloop_set_name);
 FAKE(pa_threaded_mainloop_signal);
 FAKE(pa_threaded_mainloop_stop);
 FAKE(pa_threaded_mainloop_wait);
@@ -420,6 +419,10 @@ int pa_threaded_mainloop_start(void* mainloop) {
 }
 
 void pa_threaded_mainloop_lock(void* mainloop) {
+  // do nothing
+}
+
+void pa_threaded_mainloop_set_name(void* mainloop, const char* name) {
   // do nothing
 }
 
