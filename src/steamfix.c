@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 
+#include <sys/socket.h>
+
 #include <assert.h>
 #include <dlfcn.h>
 #include <errno.h>
