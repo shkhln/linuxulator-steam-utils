@@ -7,8 +7,11 @@ require 'json'
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
 I386_PKG_ROOT  = ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
-PROTON_STEAMID = 1887720
-PROTON_VERSION = '7.0'
+
+KNOWN_VERSIONS = {
+  '7.0' => {appId: 1887720},
+  '8.0' => {appId: 2348590}
+}
 
 def safe_system(*args)
   raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
@@ -53,43 +56,54 @@ def find_steamapp_dir(name)
   library_folders.map{|dir| File.join(dir, 'steamapps/common', name)}.find{|dir| File.exist?(dir)}
 end
 
-PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
-if not PROTON_DIR
+wine64_bin = '/usr/local/wine-proton/bin/wine64'
+wine32_bin = File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine')
+
+if not File.exist?(wine64_bin)
   STDERR.puts "\e[7m"
-  STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
-  STDERR.puts "Try `steam \"steam://install/#{PROTON_STEAMID}\"` if it's not installed."
+  STDERR.puts "#{wine64_bin} doesn't exist!"
+  STDERR.puts "Install emulators/wine-proton first."
   STDERR.puts "\e[27m"
   exit(1)
 end
 
-for winedir in ['/usr/local/wine-proton', File.join(I386_PKG_ROOT, 'usr/local/wine-proton')]
+if not File.exist?(wine32_bin)
+  STDERR.puts "\e[7m"
+  STDERR.puts "#{wine32_bin} doesn't exist!"
+  STDERR.puts "\e[27m"
+  exit(1)
+end
 
-  if not File.exist?(winedir)
-    STDERR.puts "\e[7m"
-    STDERR.puts "#{winedir} doesn't exist!"
-    STDERR.puts "Install emulators/wine-proton first."
-    STDERR.puts "\e[27m"
-    exit(1)
-  end
+wine64_version = `#{wine64_bin} --version`.chomp.delete_prefix("wine-")
+if not KNOWN_VERSIONS[wine64_version]
+  STDERR.puts "\e[7m"
+  STDERR.puts "Found #{wine64_bin} version #{wine64_version}, expected#{KNOWN_VERSIONS.keys.size > 1 ? ':' : ''} #{KNOWN_VERSIONS.keys.join(', ')}."
+  STDERR.puts "\e[27m"
+  exit(1)
+end
 
-  wine = if File.exist?(File.join(winedir, 'bin/wine64'))
-    File.join(winedir, 'bin/wine64')
-  else
-    File.join(winedir, 'bin/wine')
-  end
-
-  version = `#{wine} --version`.chomp
-  if version != "wine-#{PROTON_VERSION}"
-    STDERR.puts "\e[27m"
-    STDERR.puts "Expected Wine version \"wine-#{PROTON_VERSION}\", got \"#{version}\" from #{wine}."
-    STDERR.puts "\e[27m"
-    exit(1)
-  end
+wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
+if wine64_version != wine32_version
+  STDERR.puts "\e[7m"
+  STDERR.puts "#{wine64_bin} (#{wine64_version}) and #{wine32_bin} (#{wine32_version}) versions must match each other"
+  STDERR.puts "\e[27m"
+  exit(1)
 end
 
 # we expect a PE Wine build
 raise if not File.exist?('/usr/local/wine-proton/lib/wine/x86_64-windows')
 raise if not File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows'))
+
+PROTON_VERSION = wine64_version
+
+PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
+if not PROTON_DIR
+  STDERR.puts "\e[7m"
+  STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
+  STDERR.puts "Try `steam \"steam://install/#{KNOWN_VERSIONS[PROTON_VERSION][:appId]}\"` if it's not installed."
+  STDERR.puts "\e[27m"
+  exit(1)
+end
 
 $setup_steps = []
 $setup_state = nil
