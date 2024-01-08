@@ -1,0 +1,144 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'fileutils'
+require_relative '.dpkgs'
+require_relative '.utils'
+
+DIST_PATH = File.join(ENV['HOME'], '.steam/dist')
+EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+SLR_DIR   = ARGV[0] || 'SteamLinuxRuntime_sniper'
+
+reqs = []
+
+if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
+  reqs << "This script doesn't like your compat.linux.emul_path."
+end
+
+if not SLR_DIR =~ /SteamLinuxRuntime_\w+/
+  reqs << "Expected the directory name starting with SteamLinuxRuntime_."
+end
+
+if `sysctl -nq vfs.usermount`.to_i != 1
+  reqs << "This script requires vfs.usermount=1."
+end
+
+if not system('kldstat -q -m nullfs')
+  reqs << "nullfs.ko must be loaded."
+end
+
+if not ENV['HOME']
+  reqs << "$HOME is undefined."
+end
+
+steam_linux_runtime_path = find_steamapp_dir(SLR_DIR)
+if not steam_linux_runtime_path
+  reqs << "Can't find #{SLR_DIR}."
+end
+
+if reqs.size > 0
+  for msg in reqs
+    STDERR.puts msg
+  end
+  exit(1)
+end
+
+platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")].first
+raise if not platform
+
+download_debs(DPKGS, DIST_PATH)
+
+mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
+FileUtils.mkdir_p(mroot)
+
+#TODO: there might be mount points under $HOME
+#TODO: STEAM_COMPAT_LIBRARY_PATHS
+mounts = []
+if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
+  mounts << mroot
+  begin
+    # SteamLinuxRuntime
+    FileUtils.mkdir_p(File.join(mroot, 'usr'))
+    system('sh', '-c', 'tar --cd "$0" -c @../usr-mtree.txt.gz | tar --cd "$1" -x', '-', File.join(platform, 'files'), File.join(mroot, 'usr')) || raise
+    system('chmod', '-R', 'u+rwX', mroot) || raise
+    FileUtils.mv(File.join(mroot, 'usr/etc'), File.join(mroot, 'etc')) # ?
+
+    # additional packages we'd like to have
+    extract_debs(DPKGS, DIST_PATH, mroot)
+
+    FileUtils.ln_s('usr/bin', File.join(mroot, 'bin')) # ?
+
+    # basic mount point setup
+    mounts << mount('linprocfs', 'linprocfs', File.join(mroot, 'proc'))
+    mounts << mount('linsysfs',  'linsysfs',  File.join(mroot, 'sys'))
+    mounts << mount('devfs',     'devfs',     File.join(mroot, 'dev'))
+    mounts << mount('nullfs',    '/tmp',      File.join(mroot, 'tmp'))     # X11
+    mounts << mount('nullfs',    '/var/run',  File.join(mroot, 'var/run')) # Wayland (?)
+
+    # we can't mount anything over devfs from a non-root user,
+    # let's abuse emul_path redirection instead
+    mounts << mount('fdescfs', 'fdescfs',                       File.join(mroot, EMUL_PATH, 'dev/fd'), 'linrdlnk')
+    mounts << mount('nullfs',  File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, EMUL_PATH, 'dev/shm'))
+
+    # basic configuration
+    FileUtils.cp('/etc/group',       File.join(mroot, 'etc/'))
+    FileUtils.cp('/etc/hosts',       File.join(mroot, 'etc/'))
+    FileUtils.cp('/etc/machine-id',  File.join(mroot, 'etc/')) # dbus
+    FileUtils.cp('/etc/passwd',      File.join(mroot, 'etc/')) # getpwuid_r()
+    FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
+
+    # placing $HOME under emul_path avoids some redirection issues
+    # with Counter-Strike 2, Torchlight 2
+    home_dir = File.realpath(ENV['HOME'])
+    mounts << mount('nullfs', home_dir, File.join(mroot, home_dir.gsub(/^\/usr\/home/, '/home')))
+    mounts << mount('nullfs', home_dir, File.join(mroot, EMUL_PATH, home_dir.gsub(/^\/usr\/home/, '/home')))
+    FileUtils.ln_s('/home', File.join(mroot, 'usr/home'))
+
+    # LSU's lib32/lib64 dirs
+    lsu_dir = File.realpath(File.join(__dir__, '..'))
+    mounts << mount('nullfs', lsu_dir, File.join(mroot, lsu_dir))
+
+    # Nvidia libs
+    for source_dir, dest_dir in {
+      File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
+      File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
+    }
+      for path in Dir[File.join(source_dir, 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
+        if File.symlink?(path)
+          FileUtils.ln_s(File.readlink(path), File.join(dest_dir, File.basename(path)))
+        else
+          FileUtils.cp(path, dest_dir)
+        end
+      end
+    end
+
+    if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
+      FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', File.join(mroot, 'etc/vulkan/icd.d/'))
+    end
+
+    # sound
+    FileUtils.rm_r(File.join(mroot, 'etc/alsa'))
+    FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), File.join(mroot, 'etc/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
+    mounts << mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), File.join(mroot, 'usr/share/alsa'))
+
+    # glxgears
+    if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
+      FileUtils.cp(File.join(EMUL_PATH, 'bin/glxgears'), File.join(mroot, 'usr/bin/'))
+    end
+
+    # eON workaround
+    for i in 0..64 do
+      FileUtils.mkdir_p(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/")) # ?
+      File.write(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
+    end
+  rescue
+    for path in mounts.reverse
+      system('umount', '-f', path)
+    end
+    raise
+  end
+end

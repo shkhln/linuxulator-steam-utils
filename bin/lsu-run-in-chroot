@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
+  STDERR.puts "This script requires security.bsd.unprivileged_chroot=1."
+  exit(1)
+end
+
+if ARGV.length < 2
+  STDERR.puts "lsu-run-in-chroot <steam runtime dir> <executable>"
+  exit(1)
+end
+
+SLR_DIR = ARGV[0]
+
+if not system(File.join(__dir__, 'lsu-mount-runtime'), SLR_DIR)
+  STDERR.puts "Unable to prepare chroot dir."
+  exit(1)
+end
+
+mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
+
+ENV['LSU_LINUX_PATH'] ||= '/bin:/usr/bin'
+Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do
+  if `readelf -s libc.so.6 | grep GLIBC_2.34`.chomp == ''
+    STDERR.puts 'Found glibc < 2.34, preloading shmfix.so.'
+    ENV['LSU_LINUX_LD_PRELOAD'] = ['shmfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
+  end
+end
+
+wrapper = case ENV['LSU_DEBUG']
+  when 'ktrace'
+    ['/usr/bin/ktrace', '-i', '-d']
+  else
+    []
+end
+
+# yes, Linux /bin/sh receives FreeBSD LD_* and PATH vars here,
+# fortunately that is mostly benign
+exec(*wrapper, 'chroot', '-n', mroot,
+  '/bin/sh', '-c', '. "$1" && cd "$2" && shift 2 && exec "$@"', '-',
+  File.join(__dir__, 'lsu-freebsd-to-linux-env'), ENV['PWD'], *ARGV[1..-1])

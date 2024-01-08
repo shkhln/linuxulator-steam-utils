@@ -125,8 +125,8 @@ games_library_path = [
   __dir__ + '/../lib64/pathfix',
   __dir__ + '/../lib32/protonfix',
   __dir__ + '/../lib64/protonfix',
-  __dir__ + '/../lib32/monofix',
-  __dir__ + '/../lib64/monofix',
+  __dir__ + '/../lib32/shmfix',
+  __dir__ + '/../lib64/shmfix',
   __dir__ + '/../lib64/webfix',
   "#{EMUL_PATH}/usr/lib64/nss",
   steam_runtime_lib_path
@@ -151,6 +151,7 @@ ENV['LSU_PROTON_UPGRADE_CMD']               = "env -u LD_PRELOAD PATH=\"$LSU_FBS
 ENV['PATH']                                 = bin_path
 ENV['SDL_AUDIODRIVER']                      = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
+ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']       = [File.expand_path('../tools', __dir__), ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']].compact.join(':')
 ENV['STEAM_RUNTIME']                        = steam_runtime_root
 ENV['STEAM_RUNTIME_LIBRARY_PATH']           = games_library_path
 ENV['STEAM_ZENITY']                         = 'zenity'

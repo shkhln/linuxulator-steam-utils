@@ -24,6 +24,8 @@ LIBS  = lib32/steamfix/steamfix.so       \
         lib64/pathfix/pathfix.so         \
         lib32/protonfix/protonfix.so     \
         lib64/protonfix/protonfix.so     \
+        lib32/shmfix/shmfix.so           \
+        lib64/shmfix/shmfix.so           \
         lib64/webfix/webfix.so
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
@@ -69,6 +71,10 @@ $(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c
 $(BUILD_DIR)/lib$(b)/noepollexcl/noepollexcl.so: src/noepollexcl.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/noepollexcl
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/noepollexcl.c -ldl
+
+$(BUILD_DIR)/lib$(b)/shmfix/shmfix.so: src/shmfix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/shmfix
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/shmfix.c -ldl -lrt
 
 .endfor
 
