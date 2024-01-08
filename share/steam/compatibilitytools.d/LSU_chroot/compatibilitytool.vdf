@@ -1,0 +1,13 @@
+"compatibilitytools"
+{
+  "compat_tools"
+  {
+    "LSU_chroot"
+    {
+      "install_path" "."
+      "display_name" "LSU chroot"
+      "from_oslist"  "linux"
+      "to_oslist"    "linux"
+    }
+  }
+}

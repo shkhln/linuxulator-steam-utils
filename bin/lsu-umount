@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'json'
+
+mroot   = File.realpath(File.join(ENV['HOME'], '.steam/mnt'))
+user    = `id -un`.chomp
+mounted = JSON.parse(`mount --libxo json`)['mount']['mounted']
+
+paths = mounted
+  .find_all{|m| m['mounter'] == user && m['node'].start_with?(mroot)}
+  .map     {|m| m['node']}
+  .sort
+  .reverse
+
+for path in paths
+  cmd = "umount #{path}"
+  STDERR.puts cmd
+  if not system(cmd)
+    cmd = "umount -f #{path}"
+    STDERR.puts cmd
+    if not system(cmd)
+      STDERR.puts "Failed to unmount #{path}"
+    end
+  end
+end
