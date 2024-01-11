@@ -115,7 +115,9 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
         end
       end
 
-      FileUtils.cp('/compat/linux/bin/glxgears', 'bin/glxgears')
+      if File.exist?('/compat/linux/bin/glxgears')
+        FileUtils.cp('/compat/linux/bin/glxgears', 'bin/glxgears')
+      end
 
       # X11
       mount('nullfs', '/tmp', 'tmp')
