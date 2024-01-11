@@ -2,7 +2,7 @@
 # encoding: UTF-8
 
 require 'fileutils'
-require_relative '../lib/utils'
+require_relative '.utils'
 
 if `sysctl -nq vfs.usermount`.to_i != 1
   STDERR.puts "This script requires vfs.usermount=1."

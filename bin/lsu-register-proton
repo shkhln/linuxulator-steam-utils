@@ -2,7 +2,7 @@
 # encoding: UTF-8
 
 require 'fileutils'
-require_relative '../lib/utils'
+require_relative '.utils'
 
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
