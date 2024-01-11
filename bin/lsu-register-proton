@@ -2,7 +2,7 @@
 # encoding: UTF-8
 
 require 'fileutils'
-require 'json'
+require_relative '../lib/utils'
 
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
@@ -35,27 +35,6 @@ def set_up_files(*paths)
   end
 end
 
-def find_steamapp_dir(name)
-  library_folders = [File.join(ENV['HOME'], '.steam/steam')]
-
-  vdf = File.read(File.join(ENV['HOME'], '.steam/steam/steamapps/libraryfolders.vdf'))
-    .gsub(/"(?=\t+")/, '":').gsub(/"(?=\s+\{)/, '":').gsub(/"(?=\n\t+")/, '",').gsub(/\}(?=\n\t+")/, '},')
-
-  data = JSON.parse("{#{vdf}}")
-
-  for key, value in (data['LibraryFolders'] || data['libraryfolders'])
-    if key =~ /^\d+$/
-      if value.is_a?(Hash)
-        library_folders << value['path']
-      else
-        library_folders << value
-      end
-    end
-  end
-
-  library_folders.map{|dir| File.join(dir, 'steamapps/common', name)}.find{|dir| File.exist?(dir)}
-end
-
 wine64_bin = '/usr/local/wine-proton/bin/wine64'
 wine32_bin = File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine')
 
@@ -85,7 +64,7 @@ end
 wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
 if wine64_version != wine32_version
   STDERR.puts "\e[7m"
-  STDERR.puts "#{wine64_bin} (#{wine64_version}) and #{wine32_bin} (#{wine32_version}) versions must match each other"
+  STDERR.puts "#{wine64_bin} (#{wine64_version}) and #{wine32_bin} (#{wine32_version}) versions must match each other."
   STDERR.puts "\e[27m"
   exit(1)
 end

@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+require 'fileutils'
+require_relative '../lib/utils'
+
 if `sysctl -nq vfs.usermount`.to_i != 1
   STDERR.puts "This script requires vfs.usermount=1."
   exit(1)
@@ -11,10 +14,19 @@ if not system('kldstat -q -m nullfs')
   exit(1)
 end
 
-require 'fileutils'
+if not ENV['HOME']
+  STDERR.puts "$HOME is undefined."
+  exit(1)
+end
 
-platform = File.realpath(File.join(ENV['HOME'], '.steam/steam/steamapps/common/SteamLinuxRuntime_sniper/sniper_platform_0.20231107.66301'))
-mroot    = File.realpath(File.join(ENV['HOME'], '.steam/mnt'))
+sniper_dir = find_steamapp_dir('SteamLinuxRuntime_sniper')
+if not sniper_dir
+  STDERR.puts "Can't find SteamLinuxRuntime_sniper."
+  exit(1)
+end
+
+platform = Dir[File.join(sniper_dir, 'sniper_platform_*')].first
+raise if not platform
 
 mtree = Dir.chdir(platform) do
   `zcat usr-mtree.txt.gz`.lines.reject{|line| line.start_with?('#')}.map do |line|
@@ -24,6 +36,7 @@ mtree = Dir.chdir(platform) do
   end
 end
 
+mroot = File.join(ENV['HOME'], '.steam/mnt')
 FileUtils.mkdir_p(mroot)
 
 $MOUNTS = []
@@ -73,7 +86,7 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
           end
         end
 
-        #~ # wtf with those incorrect symlinks?
+        # wtf with those incorrect symlinks?
         Dir.chdir('lib/x86_64-linux-gnu/dri') do
           FileUtils.ln_s('../../..', 'usr')
         end
@@ -95,7 +108,7 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       mount('linprocfs', 'linprocfs', 'proc')
       mount('linsysfs',  'linsysfs',  'sys')
 
-      # this a bit fucked up
+      # this is a bit fucked up
       mount('devfs', 'devfs', 'dev/.dev')
       Dir.chdir('dev') do
         Dir['.dev/*'].each do |path|
