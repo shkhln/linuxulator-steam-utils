@@ -146,7 +146,7 @@ int system(const char* command) {
 
     const char* xdg_open_args = strstr(command, XDG_OPEN_CMD " ") + sizeof(XDG_OPEN_CMD " ") - 1;
 
-    char* format_str = "LD_LIBRARY_PATH='' LD_PRELOAD='' PATH=${FREEBSD_PATH} xdg-open %s";
+    char* format_str = "LD_LIBRARY_PATH=\"${LSU_FBSD_LD_LIBRARY_PATH}\" LD_PRELOAD=\"${LSU_FBSD_LD_PRELOAD}\" PATH=\"${LSU_FBSD_PATH}\" xdg-open %s";
 
     int   buf_len = strlen(format_str) + strlen(xdg_open_args) + 1;
     char* buf     = malloc(buf_len);

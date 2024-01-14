@@ -1,23 +1,23 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+
 def check_requirements
 
   reqs = []
 
-  reqs << [:linux, '32-bit Linux emulation support'] if `sysctl -nq kern.features.linux`  .to_i != 1
-  reqs << [:linux, '64-bit Linux emulation support'] if `sysctl -nq kern.features.linux64`.to_i != 1
+  reqs << [:linux, '32-bit Linux emulation support'] if `sysctl -qn kern.features.linux`  .to_i != 1
+  reqs << [:linux, '64-bit Linux emulation support'] if `sysctl -qn kern.features.linux64`.to_i != 1
 
   mounts = Hash[`mount -p`.lines.each_with_index.map{|line, i| p = line.split(/[ \t]+/); [p[1], {type: p[2], line: i}]}]
 
-  emul_path = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp;
-
   for fs, path in {
-    'linprocfs' => emul_path + '/proc',
-    'linsysfs'  => emul_path + '/sys',
-    'devfs'     => emul_path + '/dev',
-    'tmpfs'     => emul_path + '/dev/shm',
-    'fdescfs'   => emul_path + '/dev/fd',
+    'linprocfs' => EMUL_PATH + '/proc',
+    'linsysfs'  => EMUL_PATH + '/sys',
+    'devfs'     => EMUL_PATH + '/dev',
+    'tmpfs'     => EMUL_PATH + '/dev/shm',
+    'fdescfs'   => EMUL_PATH + '/dev/fd',
   }
     m = mounts[path]
     if !(m && m[:type] == fs)
@@ -25,21 +25,21 @@ def check_requirements
     end
   end
 
-  dev = mounts[emul_path + '/dev']
-  shm = mounts[emul_path + '/dev/shm']
-  fd  = mounts[emul_path + '/dev/fd']
+  dev = mounts[EMUL_PATH + '/dev']
+  shm = mounts[EMUL_PATH + '/dev/shm']
+  fd  = mounts[EMUL_PATH + '/dev/fd']
   if dev && shm && fd
-    reqs << [:linux, '#{emul_path}/dev mounted before #{emul_path}/dev/shm'] if shm[:line] < dev[:line]
-    reqs << [:linux, '#{emul_path}/dev mounted before #{emul_path}/dev/fd' ] if fd [:line] < dev[:line]
+    reqs << [:linux, '#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/shm'] if shm[:line] < dev[:line]
+    reqs << [:linux, '#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/fd' ] if fd [:line] < dev[:line]
   end
 
-  reqs << [:linux, "write access to #{emul_path}/dev/shm"] if not File.writable?("#{emul_path}/dev/shm")
+  reqs << [:linux, "write access to #{EMUL_PATH}/dev/shm"] if not File.writable?("#{EMUL_PATH}/dev/shm")
   reqs << [:dbus,  '/var/lib/dbus/machine-id existence']    if not File.exist?('/var/lib/dbus/machine-id')
   reqs
 end
 
 def linux_run(cmd)
-  `env LD_LIBRARY_PATH='' PATH="#{__dir__}/../lxbin:/compat/linux/bin" /compat/linux/bin/bash -c \"#{cmd}\"`.chomp
+  `env LD_LIBRARY_PATH='' PATH="#{__dir__}/../lxbin:/#{EMUL_PATH}/bin" #{EMUL_PATH}/bin/bash -c \"#{cmd}\"`.chomp
 end
 
 def safe_system(*args)
@@ -95,7 +95,7 @@ steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam
 bin_path = [
   __dir__ + '/../lxbin',
   steam_runtime_bin_path,
-  '/compat/linux/bin'
+  "#{EMUL_PATH}/bin"
 ].compact.join(':')
 
 client_library_path = [
@@ -108,7 +108,7 @@ client_library_path = [
   __dir__ + '/../lib32/protonfix',
   __dir__ + '/../lib64/protonfix',
   __dir__ + '/../lib64/webfix',
-  '/compat/linux/usr/lib64/nss',
+  "#{EMUL_PATH}/usr/lib64/nss",
   "#{steam_root}/ubuntu12_32",
   "#{steam_root}/ubuntu12_32/panorama",
   steam_runtime_lib_path
@@ -128,7 +128,7 @@ games_library_path = [
   __dir__ + '/../lib32/monofix',
   __dir__ + '/../lib64/monofix',
   __dir__ + '/../lib64/webfix',
-  '/compat/linux/usr/lib64/nss',
+  "#{EMUL_PATH}/usr/lib64/nss",
   steam_runtime_lib_path
 ].compact.join(':')
 
@@ -139,7 +139,9 @@ preload = [
 ].compact.join(':')
 
 ENV['LSU_PROTON_UPGRADE_CMD']     = "env -u LD_PRELOAD PATH=\"#{ENV['PATH']}\" #{File.expand_path('lsu-register-proton', __dir__)}"
-ENV['FREEBSD_PATH']               = ENV['PATH']
+ENV['LSU_FBSD_PATH']              = ENV['PATH']
+ENV['LSU_FBSD_LD_LIBRARY_PATH']   = ENV['LD_LIBRARY_PATH']
+ENV['LSU_FBSD_LD_PRELOAD']        = ENV['LD_PRELOAD']
 ENV['PATH']                       = bin_path
 ENV['SYSTEM_PATH']                = bin_path
 ENV['LD_LIBRARY_PATH']            = client_library_path
@@ -152,7 +154,7 @@ ENV['LD_PRELOAD']                 = preload
 ENV['SDL_AUDIODRIVER'] = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
 
-safe_system(__dir__ + '/../lxbin/patch-steam')
-safe_system(__dir__ + '/../lxbin/upgrade-steam-runtime')
+safe_system("#{EMUL_PATH}/bin/sh", File.expand_path('../lxbin/patch-steam', __dir__))
+safe_system("#{EMUL_PATH}/bin/sh", File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
 
 exec steam_root + '/ubuntu12_32/steam', *ARGV
