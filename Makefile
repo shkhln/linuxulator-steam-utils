@@ -84,7 +84,21 @@ install:
 	install $(f) $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}
 .endfor
 	install bin/lsu-* bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
-	install lxbin/curl-config lxbin/dbus-launch lxbin/file* lxbin/tar lxbin/lspci lxbin/lsu-* lxbin/patch-steam* lxbin/python3 lxbin/upgrade-steam-runtime* lxbin/xrandr lxbin/zenity $(PREFIX)/$(PROJECT)/lxbin
+	install \
+ lxbin/curl-config \
+ lxbin/dbus-launch \
+ lxbin/file* \
+ lxbin/tar \
+ lxbin/lsof \
+ lxbin/lspci \
+ lxbin/lsu-* \
+ lxbin/patch-steam* \
+ lxbin/python3 \
+ lxbin/upgrade-steam-runtime* \
+ lxbin/xdg-user-dir \
+ lxbin/xrandr \
+ lxbin/zenity \
+ $(PREFIX)/$(PROJECT)/lxbin
 
 deinstall:
 .if exists($(PREFIX)/$(PROJECT))
