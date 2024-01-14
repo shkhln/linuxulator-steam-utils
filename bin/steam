@@ -138,21 +138,24 @@ preload = [
   ENV['STEAM_LD_PRELOAD']
 ].compact.join(':')
 
-ENV['LSU_PROTON_UPGRADE_CMD']     = "env -u LD_PRELOAD PATH=\"#{ENV['PATH']}\" #{File.expand_path('lsu-register-proton', __dir__)}"
-ENV['LSU_FBSD_PATH']              = ENV['PATH']
-ENV['LSU_FBSD_LD_LIBRARY_PATH']   = ENV['LD_LIBRARY_PATH']
-ENV['LSU_FBSD_LD_PRELOAD']        = ENV['LD_PRELOAD']
-ENV['PATH']                       = bin_path
-ENV['SYSTEM_PATH']                = bin_path
-ENV['LD_LIBRARY_PATH']            = client_library_path
-ENV['STEAM_RUNTIME']              = steam_runtime_root
-ENV['STEAM_RUNTIME_LIBRARY_PATH'] = games_library_path
-ENV['STEAM_ZENITY']               = 'zenity'
-ENV['SYSTEM_LD_LIBRARY_PATH']     = games_library_path
-ENV['LD_PRELOAD']                 = preload
+freebsd_path            = ENV['PATH']
+freebsd_ld_library_path = ENV['LD_LIBRARY_PATH']
+freebsd_ld_preload      = ENV['LD_PRELOAD']
 
-ENV['SDL_AUDIODRIVER'] = 'dsp'
+ENV['LD_LIBRARY_PATH']                      = client_library_path
+ENV['LD_PRELOAD']                           = preload
+ENV['LSU_FBSD_PATH']                        = freebsd_path
+ENV['LSU_FBSD_LD_LIBRARY_PATH']             = freebsd_ld_library_path
+ENV['LSU_FBSD_LD_PRELOAD']                  = freebsd_ld_preload
+ENV['LSU_PROTON_UPGRADE_CMD']               = "env -u LD_PRELOAD PATH=\"$LSU_FBSD_PATH\" #{File.expand_path('lsu-register-proton', __dir__)}"
+ENV['PATH']                                 = bin_path
+ENV['SDL_AUDIODRIVER']                      = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
+ENV['STEAM_RUNTIME']                        = steam_runtime_root
+ENV['STEAM_RUNTIME_LIBRARY_PATH']           = games_library_path
+ENV['STEAM_ZENITY']                         = 'zenity'
+ENV['SYSTEM_LD_LIBRARY_PATH']               = games_library_path
+ENV['SYSTEM_PATH']                          = bin_path
 
 safe_system("#{EMUL_PATH}/bin/sh", File.expand_path('../lxbin/patch-steam', __dir__))
 safe_system("#{EMUL_PATH}/bin/sh", File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
