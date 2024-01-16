@@ -115,6 +115,10 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       mount('fdescfs', 'fdescfs',               'compat/linux/dev/fd', 'linrdlnk')
       mount('nullfs',  '/compat/linux/dev/shm', 'compat/linux/dev/shm')
 
+      # avoids some path redirection issues with Counter-Strike 2, Torchlight 2
+      FileUtils.ln_s('/usr',  'compat/linux/usr')
+      FileUtils.ln_s('/home', 'compat/linux/home')
+
       # handy for diagnostics
       if File.exist?('/compat/linux/bin/glxgears')
         FileUtils.cp('/compat/linux/bin/glxgears', 'bin/glxgears')
