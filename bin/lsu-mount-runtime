@@ -107,27 +107,15 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
 
       mount('linprocfs', 'linprocfs', 'proc')
       mount('linsysfs',  'linsysfs',  'sys')
+      mount('devfs',     'devfs',     'dev')
 
-      # this is a bit fucked up
-      mount('devfs', 'devfs', 'dev/.dev')
-      Dir.chdir('dev') do
-        Dir['.dev/*'].each do |path|
-          basename = File.basename(path)
-          FileUtils.ln_s(path, basename) if not basename =~ /^(fd|shm)$/
-        end
-        FileUtils.ln_s('.dev/dsp', 'dsp')
-      end
+      # we can't mount anything over devfs from a non-root user,
+      # let's abuse emul_path redirection instead
+      raise if `sysctl -nq compat.linux.emul_path`.chomp != '/compat/linux'
+      mount('fdescfs', 'fdescfs',               'compat/linux/dev/fd', 'linrdlnk')
+      mount('nullfs',  '/compat/linux/dev/shm', 'compat/linux/dev/shm')
 
-      mount('fdescfs', 'fdescfs', 'dev/fd', 'linrdlnk')
-
-      # glibc doesn't like seeing nullfs at /dev/shm
-      FileUtils.mkdir_p('dev/shm')
-      Dir.chdir('dev/shm') do
-        Dir['/compat/linux/dev/shm/*'].each do |path|          
-          mount('nullfs', path, File.basename(path))
-        end
-      end
-
+      # handy for diagnostics
       if File.exist?('/compat/linux/bin/glxgears')
         FileUtils.cp('/compat/linux/bin/glxgears', 'bin/glxgears')
       end
