@@ -136,12 +136,17 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       mount('nullfs', '/tmp', 'tmp')
 
       # Nvidia
-      for path in Dir[File.join('/compat/linux/usr/lib64', 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
-        FileUtils.cp(path, 'lib/x86_64-linux-gnu/')
-      end
-
-      for path in Dir[File.join('/compat/linux/usr/lib', 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
-        FileUtils.cp(path, 'lib/i386-linux-gnu/')
+      for source_dir, dest_dir in {
+        '/compat/linux/usr/lib64' => 'lib/x86_64-linux-gnu',
+        '/compat/linux/usr/lib'   => 'lib/i386-linux-gnu'
+      }
+        for path in Dir[File.join(source_dir, 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
+          if File.symlink?(path)
+            FileUtils.ln_s(File.readlink(path), File.join(dest_dir, File.basename(path)))
+          else
+            FileUtils.cp(path, dest_dir)
+          end
+        end
       end
 
       if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
@@ -173,7 +178,7 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       # just in case
       lsu_dir = File.realpath(File.join(__dir__, '..'))
       mount('nullfs', lsu_dir, File.join('.', lsu_dir))
-    end
+    end # chdir(mroot)
   rescue
     for path in $MOUNTS.reverse
       system("umount -f #{path}")
