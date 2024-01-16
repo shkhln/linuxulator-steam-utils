@@ -9,19 +9,21 @@ PREFIX    ?= /opt
 
 CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION}
 
-LIBS  = lib32/steamfix/steamfix.so    \
-        lib32/fakenm/libnm.so.0       \
-        lib32/fakenm/libnm-glib.so.4  \
-        lib32/fakepulse/libpulse.so.0 \
-        lib64/fakepulse/libpulse.so.0 \
-        lib32/fakeudev/libudev.so.0   \
-        lib64/fakeudev/libudev.so.0   \
-        lib32/fakeudev/libudev.so.1   \
-        lib64/fakeudev/libudev.so.1   \
-        lib32/pathfix/pathfix.so      \
-        lib64/pathfix/pathfix.so      \
-        lib32/protonfix/protonfix.so  \
-        lib64/protonfix/protonfix.so  \
+LIBS  = lib32/steamfix/steamfix.so       \
+        lib32/fakenm/libnm.so.0          \
+        lib32/fakenm/libnm-glib.so.4     \
+        lib32/fakepulse/libpulse.so.0    \
+        lib64/fakepulse/libpulse.so.0    \
+        lib32/fakeudev/libudev.so.0      \
+        lib64/fakeudev/libudev.so.0      \
+        lib32/fakeudev/libudev.so.1      \
+        lib64/fakeudev/libudev.so.1      \
+        lib32/noepollexcl/noepollexcl.so \
+        lib64/noepollexcl/noepollexcl.so \
+        lib32/pathfix/pathfix.so         \
+        lib64/pathfix/pathfix.so         \
+        lib32/protonfix/protonfix.so     \
+        lib64/protonfix/protonfix.so     \
         lib64/webfix/webfix.so
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
@@ -63,6 +65,10 @@ $(BUILD_DIR)/lib$(b)/protonfix/protonfix.so: src/protonfix.c
 $(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c -pthread -ldl -lm
+
+$(BUILD_DIR)/lib$(b)/noepollexcl/noepollexcl.so: src/noepollexcl.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/noepollexcl
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/noepollexcl.c -ldl
 
 .endfor
 
