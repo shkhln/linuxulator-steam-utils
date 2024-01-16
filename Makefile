@@ -9,21 +9,23 @@ PREFIX    ?= /opt
 
 CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION}
 
-LIBS  = lib32/steamfix/steamfix.so    \
-        lib32/fakenm/libnm.so.0       \
-        lib32/fakenm/libnm-glib.so.4  \
-        lib32/fakepulse/libpulse.so.0 \
-        lib64/fakepulse/libpulse.so.0 \
-        lib32/fakeudev/libudev.so.0   \
-        lib64/fakeudev/libudev.so.0   \
-        lib32/fakeudev/libudev.so.1   \
-        lib64/fakeudev/libudev.so.1   \
-        lib32/pathfix/pathfix.so      \
-        lib64/pathfix/pathfix.so      \
-        lib32/protonfix/protonfix.so  \
-        lib64/protonfix/protonfix.so  \
-        lib32/shmfix/shmfix.so        \
-        lib64/shmfix/shmfix.so        \
+LIBS  = lib32/steamfix/steamfix.so       \
+        lib32/fakenm/libnm.so.0          \
+        lib32/fakenm/libnm-glib.so.4     \
+        lib32/fakepulse/libpulse.so.0    \
+        lib64/fakepulse/libpulse.so.0    \
+        lib32/fakeudev/libudev.so.0      \
+        lib64/fakeudev/libudev.so.0      \
+        lib32/fakeudev/libudev.so.1      \
+        lib64/fakeudev/libudev.so.1      \
+        lib32/noepollexcl/noepollexcl.so \
+        lib64/noepollexcl/noepollexcl.so \
+        lib32/pathfix/pathfix.so         \
+        lib64/pathfix/pathfix.so         \
+        lib32/protonfix/protonfix.so     \
+        lib64/protonfix/protonfix.so     \
+        lib32/shmfix/shmfix.so           \
+        lib64/shmfix/shmfix.so           \
         lib64/webfix/webfix.so
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
@@ -69,6 +71,10 @@ $(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c
 $(BUILD_DIR)/lib$(b)/shmfix/shmfix.so: src/shmfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/shmfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/shmfix.c -ldl -lrt
+
+$(BUILD_DIR)/lib$(b)/noepollexcl/noepollexcl.so: src/noepollexcl.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/noepollexcl
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/noepollexcl.c -ldl
 
 .endfor
 

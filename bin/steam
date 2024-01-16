@@ -119,6 +119,8 @@ games_library_path = [
   __dir__ + '/../lib64/fakepulse',
   __dir__ + '/../lib32/fakeudev',
   __dir__ + '/../lib64/fakeudev',
+  __dir__ + '/../lib32/noepollexcl',
+  __dir__ + '/../lib64/noepollexcl',
   __dir__ + '/../lib32/pathfix',
   __dir__ + '/../lib64/pathfix',
   __dir__ + '/../lib32/protonfix',
