@@ -4,6 +4,13 @@
 require 'fileutils'
 require_relative '.utils'
 
+EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+
+if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
+  STDERR.puts "This script doesn't like your compat.linux.emul_path"
+  exit(1)
+end
+
 if `sysctl -nq vfs.usermount`.to_i != 1
   STDERR.puts "This script requires vfs.usermount=1."
   exit(1)
@@ -111,25 +118,24 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
 
       # we can't mount anything over devfs from a non-root user,
       # let's abuse emul_path redirection instead
-      raise if `sysctl -nq compat.linux.emul_path`.chomp != '/compat/linux'
-      mount('fdescfs', 'fdescfs',               'compat/linux/dev/fd', 'linrdlnk')
-      mount('nullfs',  '/compat/linux/dev/shm', 'compat/linux/dev/shm')
+      mount('fdescfs', 'fdescfs',                       File.join('.', EMUL_PATH, 'dev/fd'), 'linrdlnk')
+      mount('nullfs',  File.join(EMUL_PATH, 'dev/shm'), File.join('.', EMUL_PATH, 'dev/shm'))
 
       # placing $HOME under emul_path avoids some redirection issues
       # with Counter-Strike 2, Torchlight 2
       #TODO: there might be mount points under $HOME
       home_dir = File.realpath(ENV['HOME'])
-      mount('nullfs', home_dir, File.join('compat/linux', home_dir))
+      mount('nullfs', home_dir, File.join('.', EMUL_PATH, home_dir))
 
       if File.symlink?('/home') && File.readlink('/home') == 'usr/home'
-        FileUtils.ln_s('usr/home', 'compat/linux/home')
+        FileUtils.ln_s('usr/home', File.join('.', EMUL_PATH, 'home'))
       end
 
-      FileUtils.ln_s('compat/linux/home', 'home')
+      FileUtils.ln_s(File.join('.', EMUL_PATH, 'home'), 'home')
 
       # handy for diagnostics
-      if File.exist?('/compat/linux/bin/glxgears')
-        FileUtils.cp('/compat/linux/bin/glxgears', 'bin/glxgears')
+      if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
+        FileUtils.cp(File.join(EMUL_PATH, 'bin/glxgears'), 'bin/glxgears')
       end
 
       # X11
@@ -137,8 +143,8 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
 
       # Nvidia
       for source_dir, dest_dir in {
-        '/compat/linux/usr/lib64' => 'lib/x86_64-linux-gnu',
-        '/compat/linux/usr/lib'   => 'lib/i386-linux-gnu'
+        File.join(EMUL_PATH, 'usr/lib64') => 'lib/x86_64-linux-gnu',
+        File.join(EMUL_PATH, 'usr/lib')   => 'lib/i386-linux-gnu'
       }
         for path in Dir[File.join(source_dir, 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
           if File.symlink?(path)
@@ -155,8 +161,8 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
 
       # eON workaround
       for i in 0..64 do
-        FileUtils.mkdir_p("compat/linux/sys/devices/system/cpu/cpu#{i}/topology/")
-        File.write("compat/linux/sys/devices/system/cpu/cpu#{i}/topology/core_id", i.to_s)
+        FileUtils.mkdir_p(File.join('.', EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/"))
+        File.write(File.join('.', EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
       end
 
       #~ FileUtils.cp('/etc/resolv.conf', 'etc/') # ?
@@ -168,11 +174,11 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       FileUtils.cp('/etc/passwd', 'etc/')
 
       # sound
-      FileUtils.cp('/compat/linux/etc/asound.conf', 'etc/')
-      FileUtils.cp('/compat/linux/usr/lib64/alsa-lib/libasound_module_ctl_oss.so', 'usr/lib/x86_64-linux-gnu/alsa-lib/')
-      FileUtils.cp('/compat/linux/usr/lib64/alsa-lib/libasound_module_pcm_oss.so', 'usr/lib/x86_64-linux-gnu/alsa-lib/')
-      FileUtils.cp('/compat/linux/usr/lib/alsa-lib/libasound_module_ctl_oss.so', 'usr/lib/i386-linux-gnu/alsa-lib/')
-      FileUtils.cp('/compat/linux/usr/lib/alsa-lib/libasound_module_pcm_oss.so', 'usr/lib/i386-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), 'etc/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), 'usr/lib/x86_64-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), 'usr/lib/x86_64-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   'usr/lib/i386-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   'usr/lib/i386-linux-gnu/alsa-lib/')
 
       # just in case
       lsu_dir = File.realpath(File.join(__dir__, '..'))
