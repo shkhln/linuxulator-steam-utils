@@ -165,7 +165,8 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
         File.write(File.join('.', EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
       end
 
-      #~ FileUtils.cp('/etc/resolv.conf', 'etc/') # ?
+      # dns
+      FileUtils.cp('/etc/resolv.conf', 'etc/')
 
       # dbus
       FileUtils.cp('/etc/machine-id', 'etc/')
