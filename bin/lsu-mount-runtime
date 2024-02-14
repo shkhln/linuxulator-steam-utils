@@ -179,6 +179,8 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), 'usr/lib/x86_64-linux-gnu/alsa-lib/')
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   'usr/lib/i386-linux-gnu/alsa-lib/')
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   'usr/lib/i386-linux-gnu/alsa-lib/')
+      mount('nullfs', File.join(EMUL_PATH, 'etc/alsa'), 'etc/alsa') #?
+      mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), 'usr/share/alsa')
 
       # just in case
       lsu_dir = File.realpath(File.join(__dir__, '..'))
