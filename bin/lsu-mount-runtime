@@ -5,9 +5,15 @@ require 'fileutils'
 require_relative '.utils'
 
 EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+SLR_DIR   = ARGV[0] || 'SteamLinuxRuntime_sniper'
 
 if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
   STDERR.puts "This script doesn't like your compat.linux.emul_path"
+  exit(1)
+end
+
+if not SLR_DIR =~ /SteamLinuxRuntime_\w+/
+  STDERR.puts "Expected the directory name starting with SteamLinuxRuntime_"
   exit(1)
 end
 
@@ -26,13 +32,13 @@ if not ENV['HOME']
   exit(1)
 end
 
-sniper_dir = find_steamapp_dir('SteamLinuxRuntime_sniper')
-if not sniper_dir
-  STDERR.puts "Can't find SteamLinuxRuntime_sniper."
+steam_linux_runtime_path = find_steamapp_dir(SLR_DIR)
+if not steam_linux_runtime_path
+  STDERR.puts "Can't find #{SLR_DIR}."
   exit(1)
 end
 
-platform = Dir[File.join(sniper_dir, 'sniper_platform_*')].first
+platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")].first
 raise if not platform
 
 mtree = Dir.chdir(platform) do
@@ -43,7 +49,7 @@ mtree = Dir.chdir(platform) do
   end
 end
 
-mroot = File.join(ENV['HOME'], '.steam/mnt')
+mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
 FileUtils.mkdir_p(mroot)
 
 $MOUNTS = []

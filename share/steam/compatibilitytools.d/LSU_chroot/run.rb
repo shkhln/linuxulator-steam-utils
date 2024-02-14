@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+SLR_DIR = 'SteamLinuxRuntime_sniper'
+
 def run(args)
 
   if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
@@ -8,7 +10,9 @@ def run(args)
     exit(1)
   end
 
-  mroot = File.join(ENV['HOME'], '.steam/mnt')
+  mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
+
+  system("#{File.expand_path("../../../../bin/lsu-mount-runtime", __dir__)} #{SLR_DIR}") || raise
 
   ENV['LSU_LINUX_LD_PRELOAD']      = ['shmfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
   ENV['LSU_LINUX_LD_LIBRARY_PATH'] = ENV['LSU_LINUX_LD_LIBRARY_PATH'].gsub(/[^:]+steam-runtime[^:]+:/, '')
