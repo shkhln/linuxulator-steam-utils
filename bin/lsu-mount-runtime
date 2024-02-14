@@ -115,9 +115,17 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       mount('fdescfs', 'fdescfs',               'compat/linux/dev/fd', 'linrdlnk')
       mount('nullfs',  '/compat/linux/dev/shm', 'compat/linux/dev/shm')
 
-      # avoids some path redirection issues with Counter-Strike 2, Torchlight 2
-      FileUtils.ln_s('/usr',  'compat/linux/usr')
-      FileUtils.ln_s('/home', 'compat/linux/home')
+      # placing $HOME under emul_path avoids some redirection issues
+      # with Counter-Strike 2, Torchlight 2
+      #TODO: there might be mount points under $HOME
+      home_dir = File.realpath(ENV['HOME'])
+      mount('nullfs', home_dir, File.join('compat/linux', home_dir))
+
+      if File.symlink?('/home') && File.readlink('/home') == 'usr/home'
+        FileUtils.ln_s('usr/home', 'compat/linux/home')
+      end
+
+      FileUtils.ln_s('compat/linux/home', 'home')
 
       # handy for diagnostics
       if File.exist?('/compat/linux/bin/glxgears')
@@ -143,13 +151,6 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
 
       if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
         FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', 'etc/vulkan/icd.d/')
-      end
-
-      #TODO: there might be mount points under $HOME
-      home_dir = File.realpath(ENV['HOME'])
-      mount('nullfs', home_dir, File.join('.', home_dir))
-      if File.symlink?('/home')
-        FileUtils.ln_s('usr/home', 'home')
       end
 
       #~ FileUtils.cp('/etc/resolv.conf', 'etc/') # ?
