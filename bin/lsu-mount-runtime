@@ -153,6 +153,12 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
         FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', 'etc/vulkan/icd.d/')
       end
 
+      # eON workaround
+      for i in 0..64 do
+        FileUtils.mkdir_p("compat/linux/sys/devices/system/cpu/cpu#{i}/topology/")
+        File.write("compat/linux/sys/devices/system/cpu/cpu#{i}/topology/core_id", i.to_s)
+      end
+
       #~ FileUtils.cp('/etc/resolv.conf', 'etc/') # ?
 
       # dbus
