@@ -1,0 +1,13 @@
+"compatibilitytools"
+{
+  "compat_tools"
+  {
+    "LSU_chroot_proton_8"
+    {
+      "install_path" "."
+      "display_name" "Proton 8 in LSU chroot"
+      "from_oslist"  "windows"
+      "to_oslist"    "linux"
+    }
+  }
+}

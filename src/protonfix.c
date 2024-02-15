@@ -27,7 +27,11 @@ static void redirect_wine_to_wine64(int argc, char** argv, char** env) {
     snprintf(wine64_path, sizeof(wine64_path), "%s64", argv[0]);
 
     if (strcmp(argv[1], "steam") == 0) {
-      argv[0] = "/compat/linux/bin/env";
+      if (access("/compat/linux/bin/env", F_OK) == 0) {
+        argv[0] = "/compat/linux/bin/env";
+      } else {
+        argv[0] = "/bin/env";
+      }
       argv[1] = wine64_path;
     } else {
       argv[0] = wine64_path;
@@ -71,3 +75,9 @@ long ptrace(int request, pid_t pid, void* addr, void* data) {
 }
 
 #endif
+
+/* ??? */
+
+int prctl() {
+  return 0;
+}
