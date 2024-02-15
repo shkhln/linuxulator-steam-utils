@@ -151,7 +151,7 @@ ENV['LSU_PROTON_UPGRADE_CMD']               = "env -u LD_PRELOAD PATH=\"$LSU_FBS
 ENV['PATH']                                 = bin_path
 ENV['SDL_AUDIODRIVER']                      = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
-ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']       = [File.expand_path('../share/steam/compatibilitytools.d', __dir__), ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']].compact.join(':')
+ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']       = [File.expand_path('../tools', __dir__), ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']].compact.join(':')
 ENV['STEAM_RUNTIME']                        = steam_runtime_root
 ENV['STEAM_RUNTIME_LIBRARY_PATH']           = games_library_path
 ENV['STEAM_ZENITY']                         = 'zenity'
