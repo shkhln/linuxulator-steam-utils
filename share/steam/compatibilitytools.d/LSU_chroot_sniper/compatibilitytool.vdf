@@ -2,10 +2,10 @@
 {
   "compat_tools"
   {
-    "LSU_chroot"
+    "LSU_chroot_sniper"
     {
       "install_path" "."
-      "display_name" "LSU chroot"
+      "display_name" "LSU chroot (sniper)"
       "from_oslist"  "linux"
       "to_oslist"    "linux"
     }
