@@ -8,12 +8,12 @@ EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
 SLR_DIR   = ARGV[0] || 'SteamLinuxRuntime_sniper'
 
 if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
-  STDERR.puts "This script doesn't like your compat.linux.emul_path"
+  STDERR.puts "This script doesn't like your compat.linux.emul_path."
   exit(1)
 end
 
 if not SLR_DIR =~ /SteamLinuxRuntime_\w+/
-  STDERR.puts "Expected the directory name starting with SteamLinuxRuntime_"
+  STDERR.puts "Expected the directory name starting with SteamLinuxRuntime_."
   exit(1)
 end
 
@@ -131,13 +131,13 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       # with Counter-Strike 2, Torchlight 2
       #TODO: there might be mount points under $HOME
       home_dir = File.realpath(ENV['HOME'])
+      mount('nullfs', home_dir, File.join('.', home_dir))
       mount('nullfs', home_dir, File.join('.', EMUL_PATH, home_dir))
 
       if File.symlink?('/home') && File.readlink('/home') == 'usr/home'
+        FileUtils.ln_s('usr/home', 'home')
         FileUtils.ln_s('usr/home', File.join('.', EMUL_PATH, 'home'))
       end
-
-      FileUtils.ln_s(File.join('.', EMUL_PATH, 'home'), 'home')
 
       # handy for diagnostics
       if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
