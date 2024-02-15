@@ -18,6 +18,8 @@ if not system(File.join(__dir__, 'lsu-mount-runtime'), SLR_DIR)
   exit(1)
 end
 
+ENV['LSU_LINUX_PATH'] ||= '/bin'
+
 wrapper = case ENV['LSU_DEBUG']
   when 'ktrace'
     ['/usr/bin/ktrace', '-i', '-d']
