@@ -2,13 +2,14 @@
 
 A set of workarounds for running the Linux Steam client under the FreeBSD (13.2+) Linux emulation layer.
 
+Nvidia GPU is highly recommended, Intel might work and *don't even bother with AMD*.
 For the list of tested Linux games see the [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
 
 ## Limitations
 
 1. Sandbox is disabled for the web browser component.
 1. No controller input, no streaming, no VR.
-1. Valve Anti-Cheat doesn't work with FreeBSD < 13, other than that it's largely untested.
+1. Valve Anti-Cheat is untested.
 1. No Linux Proton at the moment.
 
 ## Setup
