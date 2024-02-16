@@ -18,7 +18,15 @@ if not system(File.join(__dir__, 'lsu-mount-runtime'), SLR_DIR)
   exit(1)
 end
 
+mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
+
 ENV['LSU_LINUX_PATH'] ||= '/bin'
+Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do
+  if `readelf -s libc.so.6 | grep GLIBC_2.34`.chomp == ''
+    STDERR.puts 'Found glibc < 2.34, preloading shmfix.so.'
+    ENV['LSU_LINUX_LD_PRELOAD'] = ['shmfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
+  end
+end
 
 wrapper = case ENV['LSU_DEBUG']
   when 'ktrace'
@@ -26,8 +34,6 @@ wrapper = case ENV['LSU_DEBUG']
   else
     []
 end
-
-mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
 
 # yes, Linux /bin/sh receives FreeBSD LD_* and PATH vars here,
 # fortunately that is mostly benign

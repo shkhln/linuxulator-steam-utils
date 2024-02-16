@@ -13,9 +13,8 @@ def run(args)
     exit(1)
   end
 
-  ENV['LSU_LINUX_LD_PRELOAD']      = ['shmfix.so', 'protonfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
+  ENV['LSU_LINUX_LD_PRELOAD']      = ['protonfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
   ENV['LSU_LINUX_LD_LIBRARY_PATH'] = ENV['LSU_LINUX_LD_LIBRARY_PATH'].gsub(/[^:]+steam-runtime[^:]+:/, '')
-  ENV['LSU_LINUX_PATH']            = '/bin'
   ENV['PROTON_NO_ESYNC']           = '1'
   ENV['PROTON_NO_FSYNC']           = '1'
 
