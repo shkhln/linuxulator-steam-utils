@@ -31,6 +31,6 @@ mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
 
 # yes, Linux /bin/sh receives FreeBSD LD_* and PATH vars here,
 # fortunately that is mostly benign
-exec(*wrapper, '/usr/sbin/chroot', '-n', mroot,
+exec(*wrapper, 'chroot', '-n', mroot,
   '/bin/sh', '-c', '. "$1" && cd "$2" && shift 2 && exec "$@"', '-',
   File.join(__dir__, 'lsu-freebsd-to-linux-env'), ENV['PWD'], *ARGV[1..-1])

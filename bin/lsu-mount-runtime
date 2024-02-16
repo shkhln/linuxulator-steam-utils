@@ -41,14 +41,6 @@ end
 platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")].first
 raise if not platform
 
-mtree = Dir.chdir(platform) do
-  `zcat usr-mtree.txt.gz`.lines.reject{|line| line.start_with?('#')}.map do |line|
-    path, *attrs = line.split(' ')
-    attrs = Hash[attrs.map{|a| a.split('=')}]
-    [path, attrs]
-  end
-end
-
 mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
 FileUtils.mkdir_p(mroot)
 
@@ -72,51 +64,11 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
   begin
     Dir.chdir(mroot) do
 
-      FileUtils.mkdir_p('usr')
+      system('sh', '-c', 'tar --cd "$0" -c @../usr-mtree.txt.gz | tar -x', '-', File.join(platform, 'files')) || raise
+      system('chmod -R u+rwX .') || raise
+      FileUtils.ln_s('/', 'usr')
 
-      Dir.chdir('usr') do
-        #TODO: verify that path doesn't go outside of mroot
-        mtree.each do |path, attrs|
-          case attrs['type']
-            when 'link'
-              #~ if attrs['link'] == '../usr/lib/os-release'
-                #~ FileUtils.ln_s('/usr/lib/os-release', path)
-              #~ else
-                FileUtils.ln_s(attrs['link'], path)
-              #~ end
-            when 'file'
-              next if path == './bin/\\133' || path =~ /NetLock_Arany_/
-              if attrs['size'] != '0'
-                FileUtils.cp(File.join(platform, 'files', path), path)
-              else
-                FileUtils.touch(path)
-              end
-              #TODO: set mode?
-            when 'dir'
-              FileUtils.mkdir_p(path)
-            else
-              raise "Unknown attr #{attrs['type'].inspect}"
-          end
-        end
-
-        # wtf with those incorrect symlinks?
-        Dir.chdir('lib/x86_64-linux-gnu/dri') do
-          FileUtils.ln_s('../../..', 'usr')
-        end
-
-        Dir.chdir('lib/i386-linux-gnu/dri') do
-          FileUtils.ln_s('../../..', 'usr')
-        end
-      end # chdir('usr')
-
-      #~ FileUtils.ln_s('/', 'usr') # ?
-
-      FileUtils.ln_s('usr/bin',   'bin')
-      FileUtils.ln_s('usr/lib',   'lib')
-      FileUtils.ln_s('usr/lib64', 'lib64')
-
-      FileUtils.mv('usr/etc', 'etc') #?
-      FileUtils.rm('bin/zenity') #?
+      #~ FileUtils.rm('bin/zenity') #?
 
       mount('linprocfs', 'linprocfs', 'proc')
       mount('linsysfs',  'linsysfs',  'sys')
@@ -131,13 +83,8 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
       # with Counter-Strike 2, Torchlight 2
       #TODO: there might be mount points under $HOME
       home_dir = File.realpath(ENV['HOME'])
-      mount('nullfs', home_dir, File.join('.', home_dir))
-      mount('nullfs', home_dir, File.join('.', EMUL_PATH, home_dir))
-
-      if File.symlink?('/home') && File.readlink('/home') == 'usr/home'
-        FileUtils.ln_s('usr/home', 'home')
-        FileUtils.ln_s('usr/home', File.join('.', EMUL_PATH, 'home'))
-      end
+      mount('nullfs', home_dir, File.join('.', home_dir.gsub(/^\/usr\/home/, '/home')))
+      mount('nullfs', home_dir, File.join('.', EMUL_PATH, home_dir.gsub(/^\/usr\/home/, '/home')))
 
       # handy for diagnostics
       if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
@@ -182,12 +129,12 @@ if system("mount -o nocover -t tmpfs tmpfs #{mroot}")
 
       # sound
       FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), 'etc/')
-      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), 'usr/lib/x86_64-linux-gnu/alsa-lib/')
-      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), 'usr/lib/x86_64-linux-gnu/alsa-lib/')
-      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   'usr/lib/i386-linux-gnu/alsa-lib/')
-      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   'usr/lib/i386-linux-gnu/alsa-lib/')
-      mount('nullfs', File.join(EMUL_PATH, 'etc/alsa'), 'etc/alsa') #?
-      mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), 'usr/share/alsa')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), 'lib/x86_64-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), 'lib/x86_64-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   'lib/i386-linux-gnu/alsa-lib/')
+      FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   'lib/i386-linux-gnu/alsa-lib/')
+      mount('nullfs', File.join(EMUL_PATH, 'etc/alsa'),       'etc/alsa') #?
+      mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), 'share/alsa')
 
       # just in case
       lsu_dir = File.realpath(File.join(__dir__, '..'))
