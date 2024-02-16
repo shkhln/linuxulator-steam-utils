@@ -154,12 +154,12 @@ if system('mount', '-o', 'nocover', '-t', 'tmpfs', 'tmpfs', mroot)
       FileUtils.cp('/etc/passwd', 'etc/')
 
       # sound
+      FileUtils.rm_r('etc/alsa')
       FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), 'etc/')
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), 'lib/x86_64-linux-gnu/alsa-lib/')
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), 'lib/x86_64-linux-gnu/alsa-lib/')
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   'lib/i386-linux-gnu/alsa-lib/')
       FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   'lib/i386-linux-gnu/alsa-lib/')
-      mount('nullfs', File.join(EMUL_PATH, 'etc/alsa'),       'etc/alsa') #?
       mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), 'share/alsa')
 
       # LSU's lib32/lib64 dirs
