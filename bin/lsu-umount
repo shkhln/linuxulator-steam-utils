@@ -2,6 +2,7 @@
 # encoding: UTF-8
 
 require 'json'
+require_relative '.utils'
 
 mroot   = File.realpath(File.join(ENV['HOME'], '.steam/mnt'))
 user    = `id -un`.chomp
@@ -14,12 +15,12 @@ paths = mounted
   .reverse
 
 for path in paths
-  cmd = "umount #{path}"
-  STDERR.puts cmd
-  if not system(cmd)
-    cmd = "umount -f #{path}"
-    STDERR.puts cmd
-    if not system(cmd)
+  cmd = ['umount', path]
+  print_cmd(cmd)
+  if !system(*cmd)
+    cmd = ['umount', '-f', path]
+    print_cmd(cmd)
+    if !system(*cmd)
       STDERR.puts "Failed to unmount #{path}"
     end
   end

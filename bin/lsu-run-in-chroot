@@ -20,7 +20,7 @@ end
 
 mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
 
-ENV['LSU_LINUX_PATH'] ||= '/bin'
+ENV['LSU_LINUX_PATH'] ||= '/bin:/usr/bin'
 Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do
   if `readelf -s libc.so.6 | grep GLIBC_2.34`.chomp == ''
     STDERR.puts 'Found glibc < 2.34, preloading shmfix.so.'
