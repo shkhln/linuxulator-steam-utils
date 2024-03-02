@@ -1,9 +1,12 @@
 require 'json'
 
-def find_steamapp_dir(name)
-  library_folders = [File.join(ENV['HOME'], '.steam/steam')]
+LSU_TMPDIR_PATH = File.join(ENV['HOME'], '.steam/tmp')
+STEAM_ROOT_PATH = File.join(ENV['HOME'], '.steam/steam')
 
-  vdf = File.read(File.join(ENV['HOME'], '.steam/steam/steamapps/libraryfolders.vdf'))
+def find_steamapp_dir(name)
+  library_folders = [STEAM_ROOT_PATH]
+
+  vdf = File.read(File.join(STEAM_ROOT_PATH, 'steamapps/libraryfolders.vdf'))
     .gsub(/"(?=\t+")/, '":').gsub(/"(?=\s+\{)/, '":').gsub(/"(?=\n\t+")/, '",').gsub(/\}(?=\n\t+")/, '},')
 
   data = JSON.parse("{#{vdf}}")
