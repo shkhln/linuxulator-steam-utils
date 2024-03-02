@@ -95,22 +95,27 @@ install:
 	install -d `dirname $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}`
 	install $(f) $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}
 .endfor
-	install bin/lsu-* bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
+	install bin/.dpkgs.rb bin/.utils.rb bin/lsu-* bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
 	install \
  lxbin/curl-config \
  lxbin/dbus-launch \
  lxbin/file* \
- lxbin/tar \
  lxbin/lsof \
  lxbin/lspci \
  lxbin/lsu-* \
  lxbin/patch-steam* \
- lxbin/python3 \
+ lxbin/tar \
  lxbin/upgrade-steam-runtime* \
  lxbin/xdg-user-dir \
  lxbin/xrandr \
  lxbin/zenity \
  $(PREFIX)/$(PROJECT)/lxbin
+.for t in LSU_FreeBSD_Wine LSU_Proton_8_chroot LSU_Scout_chroot LSU_Sniper_chroot
+	install -d $(PREFIX)/$(PROJECT)/tools/$(t)
+	install -m 0644 tools/$(t)/compatibilitytool.vdf $(PREFIX)/$(PROJECT)/tools/$(t)
+	install -m 0644 tools/$(t)/toolmanifest.vdf      $(PREFIX)/$(PROJECT)/tools/$(t)
+	install tools/$(t)/run* $(PREFIX)/$(PROJECT)/tools/$(t)
+.endfor
 
 deinstall:
 .if exists($(PREFIX)/$(PROJECT))
