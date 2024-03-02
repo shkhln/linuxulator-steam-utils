@@ -2,10 +2,10 @@
 {
   "compat_tools"
   {
-    "LSU_chroot_proton_8"
+    "LSU_Proton_8_chroot"
     {
       "install_path" "."
-      "display_name" "Proton 8 in LSU chroot"
+      "display_name" "LSU chroot with Proton 8"
       "from_oslist"  "windows"
       "to_oslist"    "linux"
     }

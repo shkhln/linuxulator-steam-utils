@@ -2,10 +2,10 @@
 {
   "compat_tools"
   {
-    "LSU_chroot_sniper"
+    "LSU_Scout_chroot"
     {
       "install_path" "."
-      "display_name" "LSU chroot (sniper)"
+      "display_name" "LSU chroot with legacy Steam Runtime"
       "from_oslist"  "linux"
       "to_oslist"    "linux"
     }
