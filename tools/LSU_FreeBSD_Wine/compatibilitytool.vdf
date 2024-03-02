@@ -1,0 +1,13 @@
+"compatibilitytools"
+{
+  "compat_tools"
+  {
+    "LSU_FreeBSD_Wine"
+    {
+      "install_path" "."
+      "display_name" "FreeBSD Wine (emulators/wine-proton)"
+      "from_oslist"  "windows"
+      "to_oslist"    "linux"
+    }
+  }
+}

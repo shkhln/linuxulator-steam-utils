@@ -38,8 +38,6 @@ thus any issues encountered with it can *not* be directly reported to either pro
 1. Run `sudo pkg install wine-proton libc6-shim python3`.
 1. Run `/usr/local/wine-proton/bin/pkg32.sh install wine-proton mesa-dri`.
 1. In Steam install Proton 8.0 (appid 2348590).
-1. Run `lsu-register-proton` to copy files from the Proton distribution and register emulators/wine-proton as a compatibility tool.
-1. Restart Steam.
 
 To enable emulators/wine-proton right click a game title in Steam,
 click Properties, click Compatibility, select emulators/wine-proton.

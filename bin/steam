@@ -147,7 +147,6 @@ ENV['LD_PRELOAD']                           = preload
 ENV['LSU_FBSD_PATH']                        = freebsd_path
 ENV['LSU_FBSD_LD_LIBRARY_PATH']             = freebsd_ld_library_path
 ENV['LSU_FBSD_LD_PRELOAD']                  = freebsd_ld_preload
-ENV['LSU_PROTON_UPGRADE_CMD']               = "env -u LD_PRELOAD PATH=\"$LSU_FBSD_PATH\" #{File.expand_path('lsu-register-proton', __dir__)}"
 ENV['PATH']                                 = bin_path
 ENV['SDL_AUDIODRIVER']                      = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
