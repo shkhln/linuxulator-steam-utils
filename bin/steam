@@ -109,42 +109,42 @@ steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-p
 steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
 
 bin_path = [
-  __dir__ + '/../lxbin',
+  File.expand_path('../lxbin', __dir__),
   steam_runtime_bin_path,
-  "#{EMUL_PATH}/bin"
+  File.join(EMUL_PATH, 'bin')
 ].compact.join(':')
 
 client_library_path = [
-  __dir__ + '/../lib32/steamfix',
-  __dir__ + '/../lib32/fakenm',
-  __dir__ + '/../lib32/fakepulse',
-  __dir__ + '/../lib64/fakepulse',
-  __dir__ + '/../lib32/fakeudev',
-  __dir__ + '/../lib64/fakeudev',
-  __dir__ + '/../lib32/protonfix',
-  __dir__ + '/../lib64/protonfix',
-  __dir__ + '/../lib64/webfix',
-  "#{EMUL_PATH}/usr/lib64/nss",
-  "#{steam_root}/ubuntu12_32",
-  "#{steam_root}/ubuntu12_32/panorama",
+  File.expand_path('../lib32/steamfix',  __dir__),
+  File.expand_path('../lib32/fakenm',    __dir__),
+  File.expand_path('../lib32/fakepulse', __dir__),
+  File.expand_path('../lib64/fakepulse', __dir__),
+  File.expand_path('../lib32/fakeudev',  __dir__),
+  File.expand_path('../lib64/fakeudev',  __dir__),
+  File.expand_path('../lib32/protonfix', __dir__),
+  File.expand_path('../lib64/protonfix', __dir__),
+  File.expand_path('../lib64/webfix',    __dir__),
+  File.join(EMUL_PATH,  '/usr/lib64/nss'),
+  File.join(steam_root, '/ubuntu12_32'),
+  File.join(steam_root, '/ubuntu12_32/panorama'),
   steam_runtime_lib_path
 ].compact.join(':')
 
 games_library_path = [
-  __dir__ + '/../lib32/fakepulse',
-  __dir__ + '/../lib64/fakepulse',
-  __dir__ + '/../lib32/fakeudev',
-  __dir__ + '/../lib64/fakeudev',
-  __dir__ + '/../lib32/noepollexcl',
-  __dir__ + '/../lib64/noepollexcl',
-  __dir__ + '/../lib32/pathfix',
-  __dir__ + '/../lib64/pathfix',
-  __dir__ + '/../lib32/protonfix',
-  __dir__ + '/../lib64/protonfix',
-  __dir__ + '/../lib32/shmfix',
-  __dir__ + '/../lib64/shmfix',
-  __dir__ + '/../lib64/webfix',
-  "#{EMUL_PATH}/usr/lib64/nss",
+  File.expand_path('../lib32/fakepulse',   __dir__),
+  File.expand_path('../lib64/fakepulse',   __dir__),
+  File.expand_path('../lib32/fakeudev',    __dir__),
+  File.expand_path('../lib64/fakeudev',    __dir__),
+  File.expand_path('../lib32/noepollexcl', __dir__),
+  File.expand_path('../lib64/noepollexcl', __dir__),
+  File.expand_path('../lib32/pathfix',     __dir__),
+  File.expand_path('../lib64/pathfix',     __dir__),
+  File.expand_path('../lib32/protonfix',   __dir__),
+  File.expand_path('../lib64/protonfix',   __dir__),
+  File.expand_path('../lib32/shmfix',      __dir__),
+  File.expand_path('../lib64/shmfix',      __dir__),
+  File.expand_path('../lib64/webfix',      __dir__),
+  File.join(EMUL_PATH, 'usr/lib64/nss'),
   steam_runtime_lib_path
 ].compact.join(':')
 
@@ -160,6 +160,7 @@ freebsd_ld_preload      = ENV['LD_PRELOAD']
 
 ENV['LD_LIBRARY_PATH']                      = client_library_path
 ENV['LD_PRELOAD']                           = preload
+ENV['LSU_BIN_PATH']                         = __dir__
 ENV['LSU_FBSD_PATH']                        = freebsd_path
 ENV['LSU_FBSD_LD_LIBRARY_PATH']             = freebsd_ld_library_path
 ENV['LSU_FBSD_LD_PRELOAD']                  = freebsd_ld_preload
@@ -173,7 +174,13 @@ ENV['STEAM_ZENITY']                         = 'zenity'
 ENV['SYSTEM_LD_LIBRARY_PATH']               = games_library_path
 ENV['SYSTEM_PATH']                          = bin_path
 
-safe_system("#{EMUL_PATH}/bin/sh", File.expand_path('../lxbin/patch-steam', __dir__))
-safe_system("#{EMUL_PATH}/bin/sh", File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
+safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/patch-steam', __dir__))
+safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
 
-exec steam_root + '/ubuntu12_32/steam', *ARGV
+system([File.join(steam_root, 'ubuntu12_32/steam')] * 2, *ARGV)
+
+ENV['PATH']            = freebsd_path
+ENV['LD_LIBRARY_PATH'] = freebsd_ld_library_path
+ENV['LD_PRELOAD']      = freebsd_ld_preload
+
+system(File.join(__dir__, 'lsu-umount'))
