@@ -80,28 +80,13 @@ void purge_reaper(const char* command) {
   }
 }
 
-// bundled libstdc++.so.6 is linked against glibc 2.18
-void unlink_libstdcpp() {
-
-  extern char* __progname_full;
-
-  char* format_str = "%s/../ubuntu12_64/steam-runtime-heavy/pinned_libs_64/libstdc++.so.6";
-  char* basedir    = dirname(__progname_full);
-  int   buf_len    = strlen(format_str) - 2 /* %s */ + strlen(basedir) + 1;
-  char* buf        = malloc(buf_len);
-
-  snprintf(buf, buf_len, format_str, basedir);
-  unlink(buf);
-
-  free(buf);
-}
-
 char* modify_webhelper_command(const char* command) {
 
   char* format_str =
 #if __FreeBSD_version < 1300139
     "LD_PRELOAD=webfix.so "
 #endif
+    "LIBGL_ALWAYS_SOFTWARE=1 "
     "%s.patched' %s"
     " --no-sandbox"
 #if __FreeBSD_version < 1300139
@@ -166,8 +151,6 @@ int system(const char* command) {
     char* browser_env = getenv("LSU_BROWSER");
     if (!browser_env || strcmp(browser_env, "1") == 0) {
 
-      unlink_libstdcpp();
-
       char* buf = modify_webhelper_command(command);
       fprintf(stderr, "[[%s]]\n", buf);
 
@@ -219,8 +202,6 @@ int execv(const char* file, char* const argv[]) {
   }
 
   if (webhelper_str_index != -1) {
-
-    unlink_libstdcpp();
 
     size_t argv_size_in_bytes = sizeof(char*) * (arg_count + 1);
     char** argv2 = malloc(argv_size_in_bytes);

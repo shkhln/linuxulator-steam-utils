@@ -7,7 +7,7 @@ require_relative '.utils'
 
 DIST_PATH = File.join(ENV['HOME'], '.steam/dist')
 EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
-SLR_DIR   = ARGV[0] || 'SteamLinuxRuntime_sniper'
+SLR_NAME_OR_PATH = ARGV[0] || 'SteamLinuxRuntime_sniper'
 
 reqs = []
 
@@ -15,6 +15,7 @@ if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
   reqs << "This script doesn't like your compat.linux.emul_path."
 end
 
+SLR_DIR = File.basename(SLR_NAME_OR_PATH)
 if not SLR_DIR =~ /SteamLinuxRuntime_\w+/
   reqs << "Expected the directory name starting with SteamLinuxRuntime_."
 end
@@ -31,7 +32,7 @@ if not ENV['HOME']
   reqs << "$HOME is undefined."
 end
 
-steam_linux_runtime_path = find_steamapp_dir(SLR_DIR)
+steam_linux_runtime_path = SLR_NAME_OR_PATH.start_with?('/') ? SLR_NAME_OR_PATH : find_steamapp_dir(SLR_DIR)
 if not steam_linux_runtime_path
   reqs << "Can't find #{SLR_DIR}."
 end
