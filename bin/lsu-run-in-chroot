@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+require_relative '.utils'
+
 if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
   STDERR.puts "This script requires security.bsd.unprivileged_chroot=1."
   exit(1)
@@ -18,7 +20,7 @@ if not system(File.join(__dir__, 'lsu-mount-runtime'), SLR_NAME_OR_PATH)
   exit(1)
 end
 
-mroot = File.join(ENV['HOME'], '.steam/mnt', File.basename(SLR_NAME_OR_PATH))
+mroot = File.join(LSU_TMPDIR_PATH, File.basename(SLR_NAME_OR_PATH))
 
 ENV['LSU_LINUX_PATH'] ||= '/bin:/usr/bin'
 Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do

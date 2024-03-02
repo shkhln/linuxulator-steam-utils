@@ -5,12 +5,11 @@ require 'fileutils'
 require_relative '.dpkgs'
 require_relative '.utils'
 
-DIST_PATH = File.join(ENV['HOME'], '.steam/dist')
-EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
 SLR_NAME_OR_PATH = ARGV[0] || 'SteamLinuxRuntime_sniper'
 
 reqs = []
 
+EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
 if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
   reqs << "This script doesn't like your compat.linux.emul_path."
 end
@@ -28,10 +27,6 @@ if not system('kldstat -q -m nullfs')
   reqs << "nullfs.ko must be loaded."
 end
 
-if not ENV['HOME']
-  reqs << "$HOME is undefined."
-end
-
 steam_linux_runtime_path = SLR_NAME_OR_PATH.start_with?('/') ? SLR_NAME_OR_PATH : find_steamapp_dir(SLR_DIR)
 if not steam_linux_runtime_path
   reqs << "Can't find #{SLR_DIR}."
@@ -47,9 +42,12 @@ end
 platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")].first
 raise if not platform
 
-download_debs(DPKGS, DIST_PATH)
+download_debs(DPKGS, LSU_DIST_PATH)
 
-mroot = File.join(ENV['HOME'], '.steam/mnt', SLR_DIR)
+FileUtils.mkdir_p(LSU_TMPDIR_PATH)
+try_mount('tmpfs', 'tmpfs', LSU_TMPDIR_PATH, 'nocover')
+
+mroot = File.join(LSU_TMPDIR_PATH, SLR_DIR)
 FileUtils.mkdir_p(mroot)
 
 #TODO: there might be mount points under $HOME
@@ -65,7 +63,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.mv(File.join(mroot, 'usr/etc'), File.join(mroot, 'etc')) # ?
 
     # additional packages we'd like to have
-    extract_debs(DPKGS, DIST_PATH, mroot)
+    extract_debs(DPKGS, LSU_DIST_PATH, mroot)
 
     FileUtils.ln_s('usr/bin', File.join(mroot, 'bin')) # ?
 
@@ -142,4 +140,6 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     end
     raise
   end
+else
+  STDERR.puts "Assuming #{mroot} is already set up."
 end

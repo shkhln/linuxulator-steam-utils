@@ -4,12 +4,14 @@
 require 'json'
 require_relative '.utils'
 
-mroot   = File.realpath(File.join(ENV['HOME'], '.steam/mnt'))
+exit(0) if !File.exist?(LSU_TMPDIR_PATH)
+
 user    = `id -un`.chomp
 mounted = JSON.parse(`mount --libxo json`)['mount']['mounted']
+tmpdir  = File.realpath(LSU_TMPDIR_PATH)
 
 paths = mounted
-  .find_all{|m| m['mounter'] == user && m['node'].start_with?(mroot)}
+  .find_all{|m| m['mounter'] == user && m['node'].start_with?(tmpdir)}
   .map     {|m| m['node']}
   .sort
   .reverse
