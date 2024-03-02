@@ -11,12 +11,10 @@ end
 
 Dir.chdir(steam_root + '/ubuntu12_32') do
 
-  runtime_md5 = File.exist?('steam-runtime/checksum') ? File.read('steam-runtime/checksum').split(' ').first : nil
-  archive_md5 = File.exist?('steam-runtime.checksum') ? File.read('steam-runtime.checksum').split(' ').first : nil
+  runtime_md5 = File.exist?('steam-runtime/checksum')        ? File.read('steam-runtime/checksum').split(' ').first        : nil
+  archive_md5 = File.exist?('steam-runtime.tar.xz.checksum') ? File.read('steam-runtime.tar.xz.checksum').split(' ').first : nil
 
   if archive_md5 && runtime_md5 != archive_md5
-
-    safe_system('/bin/cat steam-runtime.tar.xz.part* > steam-runtime.tar.xz')
 
     if `/sbin/md5 -q steam-runtime.tar.xz`.chomp != archive_md5
       raise 'steam-runtime.tar.xz failed integrity check'
@@ -34,7 +32,7 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
       FileUtils.mkdir('steam-runtime_' + version)
       safe_system("/usr/bin/tar -C steam-runtime_#{version} -xf steam-runtime.tar.xz --strip-components 1")
 
-      FileUtils.cp('steam-runtime.checksum', "steam-runtime_#{version}/checksum")
+      FileUtils.cp('steam-runtime.tar.xz.checksum', "steam-runtime_#{version}/checksum")
     end
 
     FileUtils.rm_r('steam-runtime') if File.exist?('steam-runtime')
