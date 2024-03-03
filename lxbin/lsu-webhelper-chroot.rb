@@ -4,7 +4,7 @@
 require 'fileutils'
 require_relative '../bin/.utils'
 
-slr_sniper_path = find_steamapp_dir('SteamLinuxRuntime_sniper')
+slr_sniper_path = find_steamapp_dir('SteamLinuxRuntime_sniper') rescue nil
 if !slr_sniper_path
   # using bootstrap runtime instead
   slr_sniper_path = File.join(STEAM_ROOT_PATH, 'ubuntu12_64/SteamLinuxRuntime_sniper')
