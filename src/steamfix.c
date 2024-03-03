@@ -92,7 +92,6 @@ char* modify_webhelper_command(const char* command) {
 #if __FreeBSD_version < 1300139
     " --no-zygote"
 #endif
-    " --in-process-gpu" // YMMV
     //" --enable-logging=stderr"
     //" --v=0"
   ;
