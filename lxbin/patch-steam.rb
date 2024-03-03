@@ -31,11 +31,14 @@ steam_root = ENV['HOME'] + '/.steam/steam'
 #  obj
 #end
 
-out_path = File.join(steam_root, 'ubuntu12_64/steamwebhelper.sh.patched')
-if !(File.exists?(out_path) && is_older(__FILE__, out_path))
-  script = <<~SCRIPT
-  #!/bin/sh
-  cd "$(dirname "$(realpath "$0")")" && exec lsu-webhelper-chroot ./steamwebhelper_sniper_wrap.sh "$@" # &>> "${STEAM_BASE_FOLDER}/logs/steamwebhelper.log"
-  SCRIPT
-  File.write(out_path, script)
+if File.exists?(File.join(steam_root, 'ubuntu12_64/steamwebhelper.sh'))
+  out_path = File.join(steam_root, 'ubuntu12_64/steamwebhelper.sh.patched')
+  if !(File.exists?(out_path) && is_older(__FILE__, out_path))
+    script = <<~SCRIPT
+    #!/bin/sh
+    cd "$(dirname "$(realpath "$0")")" && exec lsu-webhelper-chroot ./steamwebhelper_sniper_wrap.sh "$@" # &>> "${STEAM_BASE_FOLDER}/logs/steamwebhelper.log"
+    SCRIPT
+    File.write(out_path, script)
+    File.chmod(0700, out_path)
+  end
 end
