@@ -181,21 +181,14 @@ ENV['SYSTEM_PATH']                          = bin_path
 safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/patch-steam', __dir__))
 safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
 
-def cleanup
-  cookie = read_tmp_dir_cookie()
-  if cookie == ENV['LSU_COOKIE']
-    with_fbsd_env do
-      system(File.join(__dir__, 'lsu-umount'))
-    end
-  end
-end
-
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
     with_fbsd_env do
       system(File.join(__dir__, 'lsu-kill'))
     end
-    cleanup
+    with_fbsd_env do
+      system(File.join(__dir__, 'lsu-umount'))
+    end
     exit
   end
 end
@@ -214,4 +207,6 @@ for process in process_list
   end
 end
 
-cleanup
+with_fbsd_env do
+  system(File.join(__dir__, 'lsu-umount'))
+end

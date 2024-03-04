@@ -6,24 +6,41 @@ require_relative '.utils'
 
 exit(0) if !File.exist?(LSU_TMPDIR_PATH)
 
-user    = `id -un`.chomp
-mounted = JSON.parse(`mount --libxo json`)['mount']['mounted']
-tmpdir  = File.realpath(LSU_TMPDIR_PATH)
+def unmount
+  user    = `id -un`.chomp
+  mounted = JSON.parse(`mount --libxo json`)['mount']['mounted']
+  tmpdir  = File.realpath(LSU_TMPDIR_PATH)
 
-paths = mounted
-  .find_all{|m| m['mounter'] == user && m['node'].start_with?(tmpdir)}
-  .map     {|m| m['node']}
-  .sort
-  .reverse
+  paths = mounted
+    .find_all{|m| m['mounter'] == user && m['node'].start_with?(tmpdir)}
+    .map     {|m| m['node']}
+    .sort
+    .reverse
 
-for path in paths
-  cmd = ['umount', path]
-  print_cmd(cmd)
-  if !system(*cmd)
-    cmd = ['umount', '-f', path]
+  for path in paths
+    cmd = ['umount', path]
     print_cmd(cmd)
     if !system(*cmd)
-      STDERR.puts "Failed to unmount #{path}"
+      cmd = ['umount', '-f', path]
+      print_cmd(cmd)
+      if !system(*cmd)
+        STDERR.puts "Failed to unmount #{path}"
+      end
     end
   end
+end
+
+if ENV['LSU_COOKIE']
+  cookie = read_tmp_dir_cookie()
+
+  # we won't touch a manually mounted dir in "auto" mode
+  exit(0) if !cookie
+
+  if ARGV.include?('--unmount-on-different-cookie')
+    unmount if cookie != ENV['LSU_COOKIE']
+  else
+    unmount if cookie == ENV['LSU_COOKIE']
+  end
+else
+  unmount
 end

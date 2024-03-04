@@ -291,7 +291,11 @@ void exit(int status) {
 
   if (status == 42) {
 
-    system(". lsu-linux-to-freebsd-env && \"$LSU_BIN_PATH/lsu-umount\"");
+    int err = system(". lsu-linux-to-freebsd-env && \"$LSU_BIN_PATH/lsu-umount\"");
+    if (err != 0) {
+      fprintf(stderr, "lsu-umount failed with exit code: %d\n", err);
+      libc_exit(EXIT_FAILURE);
+    }
 
     if (system("patch-steam") != 0 || system("upgrade-steam-runtime") != 0) {
       libc_exit(EXIT_FAILURE);

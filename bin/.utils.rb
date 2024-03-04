@@ -27,20 +27,17 @@ def with_fbsd_env
 end
 
 def init_tmp_dir
-  cookie = read_tmp_dir_cookie()
-  if cookie && cookie != ENV['LSU_COOKIE']
-    with_fbsd_env do
-      system(File.join(__dir__, 'lsu-umount')) # ignore result
-    end
+  with_fbsd_env do
+    system(File.join(__dir__, 'lsu-umount'), '--unmount-on-different-cookie') || raise
   end
 
   FileUtils.mkdir_p(LSU_TMPDIR_PATH)
   if try_mount('tmpfs', 'tmpfs', LSU_TMPDIR_PATH, 'nocover')
-    cookie = ENV['LSU_COOKIE']
-    File.write(File.join(LSU_TMPDIR_PATH, '.cookie'), "#{cookie}\n") if cookie
+    File.write(File.join(LSU_TMPDIR_PATH, '.cookie'), "#{ENV['LSU_COOKIE']}\n") if ENV['LSU_COOKIE']
+    File.write(File.join(LSU_TMPDIR_PATH, '.setup-done'), '')
   end
 
-  raise if !File.exist?(File.join(LSU_TMPDIR_PATH, '.cookie'))
+  raise if !File.exist?(File.join(LSU_TMPDIR_PATH, '.setup-done'))
 end
 
 def read_tmp_dir_cookie
