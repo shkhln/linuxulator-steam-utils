@@ -44,9 +44,7 @@ raise if not platform
 
 download_debs(DPKGS, LSU_DIST_PATH)
 
-FileUtils.mkdir_p(LSU_TMPDIR_PATH)
-try_mount('tmpfs', 'tmpfs', LSU_TMPDIR_PATH, 'nocover')
-
+init_tmp_dir()
 mroot = File.join(LSU_TMPDIR_PATH, SLR_DIR)
 FileUtils.mkdir_p(mroot)
 

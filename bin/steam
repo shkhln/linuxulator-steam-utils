@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+require 'securerandom'
+require_relative '.utils'
+
 EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
 
 def check_requirements
@@ -161,6 +164,7 @@ freebsd_ld_preload      = ENV['LD_PRELOAD']
 ENV['LD_LIBRARY_PATH']                      = client_library_path
 ENV['LD_PRELOAD']                           = preload
 ENV['LSU_BIN_PATH']                         = __dir__
+ENV['LSU_COOKIE']                           = SecureRandom.hex(16)
 ENV['LSU_FBSD_PATH']                        = freebsd_path
 ENV['LSU_FBSD_LD_LIBRARY_PATH']             = freebsd_ld_library_path
 ENV['LSU_FBSD_LD_PRELOAD']                  = freebsd_ld_preload
@@ -177,10 +181,37 @@ ENV['SYSTEM_PATH']                          = bin_path
 safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/patch-steam', __dir__))
 safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
 
+def cleanup
+  cookie = read_tmp_dir_cookie()
+  if cookie == ENV['LSU_COOKIE']
+    with_fbsd_env do
+      system(File.join(__dir__, 'lsu-umount'))
+    end
+  end
+end
+
+for signal in [:HUP, :INT, :TERM]
+  Signal.trap(signal) do
+    with_fbsd_env do
+      system(File.join(__dir__, 'lsu-kill'))
+    end
+    cleanup
+    exit
+  end
+end
+
 system([File.join(steam_root, 'ubuntu12_32/steam')] * 2, *ARGV)
 
-ENV['PATH']            = freebsd_path
-ENV['LD_LIBRARY_PATH'] = freebsd_ld_library_path
-ENV['LD_PRELOAD']      = freebsd_ld_preload
+# normal exit still leaves steamwebhelper processes
+process_list = with_fbsd_env do
+  JSON.parse(`ps eauxww -U \`id -u\` --libxo json`)['process-information']['process']
+end
+for process in process_list
+  if process['command'] =~ /\s?LSU_COOKIE=([\w\d]+).*steamwebhelper/ && $1 == ENV['LSU_COOKIE'] && process['state'] != 'Z'
+    pid = process['pid'].to_i
+    STDERR.puts "Killing leftover steamwebhelper process: #{pid}."
+    Process.kill(:KILL, pid)
+  end
+end
 
-system(File.join(__dir__, 'lsu-umount'))
+cleanup

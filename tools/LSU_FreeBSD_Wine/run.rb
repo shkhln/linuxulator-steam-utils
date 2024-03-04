@@ -84,8 +84,7 @@ end
 
 def set_up()
 
-  FileUtils.mkdir_p(LSU_TMPDIR_PATH)
-  try_mount('tmpfs', 'tmpfs', LSU_TMPDIR_PATH, 'nocover')
+  init_tmp_dir()
 
   $setup_steps = []
   $setup_state = nil

@@ -6,6 +6,48 @@ LSU_DIST_PATH   = File.join(ENV['HOME'], '.steam/dist')
 LSU_TMPDIR_PATH = File.join(ENV['HOME'], '.steam/tmp')
 STEAM_ROOT_PATH = File.join(ENV['HOME'], '.steam/steam')
 
+def with_fbsd_env
+  path            = ENV['PATH']
+  ld_library_path = ENV['LD_LIBRARY_PATH']
+  ld_preload      = ENV['LD_PRELOAD']
+
+  if ENV['LSU_FBSD_PATH']
+    ENV['PATH']            = ENV['LSU_FBSD_PATH']
+    ENV['LD_LIBRARY_PATH'] = ENV['LSU_FBSD_LD_LIBRARY_PATH']
+    ENV['LD_PRELOAD']      = ENV['LSU_FBSD_LD_PRELOAD']
+  end
+
+  value = yield
+
+  ENV['PATH']            = path
+  ENV['LD_LIBRARY_PATH'] = ld_library_path
+  ENV['LD_PRELOAD']      = ld_preload
+
+  value
+end
+
+def init_tmp_dir
+  cookie = read_tmp_dir_cookie()
+  if cookie && cookie != ENV['LSU_COOKIE']
+    with_fbsd_env do
+      system(File.join(__dir__, 'lsu-umount')) # ignore result
+    end
+  end
+
+  FileUtils.mkdir_p(LSU_TMPDIR_PATH)
+  if try_mount('tmpfs', 'tmpfs', LSU_TMPDIR_PATH, 'nocover')
+    cookie = ENV['LSU_COOKIE']
+    File.write(File.join(LSU_TMPDIR_PATH, '.cookie'), "#{cookie}\n") if cookie
+  end
+
+  raise if !File.exist?(File.join(LSU_TMPDIR_PATH, '.cookie'))
+end
+
+def read_tmp_dir_cookie
+  cookie_path = File.join(LSU_TMPDIR_PATH, '.cookie')
+  File.exist?(cookie_path) ? File.read(cookie_path).chomp : nil
+end
+
 def find_steamapp_dir(name)
   library_folders = [STEAM_ROOT_PATH]
 

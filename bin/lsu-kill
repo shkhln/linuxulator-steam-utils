@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'json'
+
+pid = begin
+  File.read(File.join(ENV['HOME'], '.steam/steam.pid')).to_i
+rescue Errno::ENOENT
+  STDERR.puts 'No pid file found.'
+  nil
+end
+
+if pid
+  begin
+    Process.kill(:KILL, pid)
+    Process.wait(pid)
+  rescue Errno::ESRCH
+    STDERR.puts 'Steam is not running.'
+  rescue Errno::ECHILD
+    # ?
+  end
+end
+
+process_list = JSON.parse(`ps auxww -U \`id -u\` --libxo json`)['process-information']['process']
+for process in process_list
+  if process['command'].include?('steamwebhelper') && process['state'] != 'Z'
+    pid = process['pid'].to_i
+    STDERR.puts "Killing leftover steamwebhelper process: #{pid}."
+    Process.kill(:KILL, pid)
+  end
+end
