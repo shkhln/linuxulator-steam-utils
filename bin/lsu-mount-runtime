@@ -100,11 +100,11 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
       File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
     }
-      for path in Dir[File.join(source_dir, 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
-        if File.symlink?(path)
-          FileUtils.ln_s(File.readlink(path), File.join(dest_dir, File.basename(path)))
-        else
-          FileUtils.cp(path, dest_dir)
+      libs = Dir[File.join(source_dir, 'lib{nvidia-*.so*,GLX_nvidia*.so*}')]
+      if libs.size > 0
+        mounts << mount('nullfs', source_dir, File.join(dest_dir, '.nvidia'))
+        for path in libs
+          FileUtils.ln_s(File.join('.nvidia', File.basename(path)), File.join(dest_dir, File.basename(path)))
         end
       end
     end

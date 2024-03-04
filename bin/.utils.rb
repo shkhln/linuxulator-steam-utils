@@ -27,8 +27,10 @@ def with_fbsd_env
 end
 
 def init_tmp_dir
-  with_fbsd_env do
-    system(File.join(__dir__, 'lsu-umount'), '--unmount-on-different-cookie') || raise
+  if ENV['LSU_COOKIE']
+    with_fbsd_env do
+      system(File.join(__dir__, 'lsu-umount'), '--unmount-on-different-cookie') || raise
+    end
   end
 
   FileUtils.mkdir_p(LSU_TMPDIR_PATH)
