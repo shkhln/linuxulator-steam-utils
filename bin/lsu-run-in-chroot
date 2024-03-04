@@ -41,4 +41,4 @@ end
 # fortunately that is mostly benign
 exec(*wrapper, 'chroot', '-n', mroot,
   '/bin/sh', '-c', '. "$1" && cd "$2" && shift 2 && exec "$@"', '-',
-  File.join(__dir__, 'lsu-freebsd-to-linux-env'), ENV['PWD'], *ARGV[1..-1])
+  File.join(__dir__, 'lsu-freebsd-to-linux-env.sh'), ENV['PWD'], *ARGV[1..-1])

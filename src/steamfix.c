@@ -293,19 +293,19 @@ void exit(int status) {
 
     int err;
 
-    err = system(". lsu-linux-to-freebsd-env && \"$LSU_BIN_PATH/lsu-umount\"");
+    err = system(". lsu-linux-to-freebsd-env.sh && \"$LSU_BIN_PATH/lsu-umount\"");
     if (err != 0) {
       fprintf(stderr, "lsu-umount failed with exit code: %d\n", err);
       libc_exit(EXIT_FAILURE);
     }
 
-    err = system(". lsu-linux-to-freebsd-env && \"$LSU_BIN_PATH/lsu-patch-steam\"");
+    err = system(". lsu-linux-to-freebsd-env.sh && \"$LSU_BIN_PATH/lsu-patch-steam\"");
     if (err != 0) {
       fprintf(stderr, "lsu-patch-steam failed with exit code: %d\n", err);
       libc_exit(EXIT_FAILURE);
     }
 
-    err = system(". lsu-linux-to-freebsd-env && \"$LSU_BIN_PATH/lsu-upgrade-steam-runtime\"");
+    err = system(". lsu-linux-to-freebsd-env.sh && \"$LSU_BIN_PATH/lsu-upgrade-steam-runtime\"");
     if (err != 0) {
       fprintf(stderr, "lsu-upgrade-steam-runtime failed with exit code: %d\n", err);
       libc_exit(EXIT_FAILURE);
