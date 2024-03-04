@@ -103,9 +103,7 @@ install:
  lxbin/lsof \
  lxbin/lspci \
  lxbin/lsu-* \
- lxbin/patch-steam* \
  lxbin/tar \
- lxbin/upgrade-steam-runtime* \
  lxbin/xdg-user-dir \
  lxbin/xrandr \
  lxbin/zenity \

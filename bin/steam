@@ -178,8 +178,10 @@ ENV['STEAM_ZENITY']                         = 'zenity'
 ENV['SYSTEM_LD_LIBRARY_PATH']               = games_library_path
 ENV['SYSTEM_PATH']                          = bin_path
 
-safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/patch-steam', __dir__))
-safe_system(File.join(EMUL_PATH, 'bin/sh'), File.expand_path('../lxbin/upgrade-steam-runtime', __dir__))
+with_fbsd_env do
+  safe_system(File.join(__dir__, 'lsu-patch-steam'))
+  safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
+end
 
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do

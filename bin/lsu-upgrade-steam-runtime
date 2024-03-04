@@ -30,7 +30,7 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
       puts 'Extracting steam-runtime...'
 
       FileUtils.mkdir('steam-runtime_' + version)
-      safe_system("/usr/bin/tar -C steam-runtime_#{version} -xf steam-runtime.tar.xz --strip-components 1")
+      safe_system("tar -C steam-runtime_#{version} -xf steam-runtime.tar.xz --strip-components 1")
 
       FileUtils.cp('steam-runtime.tar.xz.checksum', "steam-runtime_#{version}/checksum")
     end
@@ -40,7 +40,8 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
   end
 
   if not (File.exists?('steam-runtime/pinned_libs_32') && File.exists?('steam-runtime/pinned_libs_64'))
-    safe_system("/compat/linux/bin/env PATH=\"#{__dir__}:/compat/linux/bin\" steam-runtime/setup.sh")
+    EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+    safe_system(File.join(EMUL_PATH, 'bin/bash'), '-c', 'PATH="$SYSTEM_PATH" env -u LD_PRELOAD -u LD_LIBRARY_PATH ./steam-runtime/setup.sh')
   end
 
   # keep previous 2 versions just in case
