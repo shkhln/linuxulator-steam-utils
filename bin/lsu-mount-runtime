@@ -101,7 +101,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
         .find_all{|dir| (dir.start_with?(home_dir) && dir != home_dir) ||
           !(dir =~ /^\/(app|bin|boot|compat|dev|etc|home|lib|lib32|lib64|libexec|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)\//)}
       for dir in dirs
-        mounts << mount('nullfs', dir, File.join(mroot, EMUL_PATH, dir), 'nocover')
+        mounts << mount('nullfs', dir, File.join(mroot, EMUL_PATH, dir.gsub(/^\/usr\/home\//, '/home/')), 'nocover')
       end
     end
 
