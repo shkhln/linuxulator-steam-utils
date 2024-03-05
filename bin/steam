@@ -45,12 +45,19 @@ def check_requirements
   reqs
 end
 
-def linux_run(cmd)
-  `env LD_LIBRARY_PATH='' PATH="#{__dir__}/../lxbin:/#{EMUL_PATH}/bin" #{EMUL_PATH}/bin/bash -c \"#{cmd}\"`.chomp
-end
-
 def safe_system(*args)
   raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
+end
+
+def get_linux_cmd_output(*args)
+  env = {
+    'PATH'            => [File.expand_path('../lxbin', __dir__), File.join(EMUL_PATH, 'bin')].join(':'),
+    'LD_LIBRARY_PATH' => nil,
+    'LD_PRELOAD'      => nil
+  }
+  with_env(env) do
+    IO.popen([File.join(EMUL_PATH, 'bin/bash'), '-c', *args]){|io| io.read.chomp}
+  end
 end
 
 requirements = check_requirements()
@@ -83,20 +90,19 @@ if not requirements.empty?
   exit 1
 end
 
-if not File.readable?(__dir__ + '/../lib32/steamfix/steamfix.so')
+if not File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
   STDERR.puts "Can't find steamfix.so"
   exit 1
 end
 
-steam_root         = ENV['HOME'] + '/.steam/steam'
-steam_runtime_root = ENV['HOME'] + '/.steam/steam/ubuntu12_32/steam-runtime'
-
-if not File.exists?(steam_root)
+if not File.exists?(STEAM_ROOT_PATH)
   STDERR.puts "Steam doesn't appear to be installed for user #{ENV['USER']}. Perhaps you forgot to run steam-install?"
   exit 1
 end
 
-if not File.exists?(steam_runtime_root)
+STEAM_RUNTIME_ROOT_PATH = File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam-runtime')
+
+if not File.exists?(STEAM_RUNTIME_ROOT_PATH)
   STDERR.puts "Can't find steam-runtime"
   exit 1
 end
@@ -108,8 +114,8 @@ end
 # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=248225
 Process.setrlimit(:STACK, 8192 * 1024)
 
-steam_runtime_bin_path = linux_run("#{steam_runtime_root}/setup.sh --print-bin-path")
-steam_runtime_lib_path = linux_run("#{steam_runtime_root}/run.sh   --print-steam-runtime-library-paths")
+steam_runtime_bin_path = get_linux_cmd_output('"$0" --print-bin-path',                    File.join(STEAM_RUNTIME_ROOT_PATH, 'setup.sh'))
+steam_runtime_lib_path = get_linux_cmd_output('"$0" --print-steam-runtime-library-paths', File.join(STEAM_RUNTIME_ROOT_PATH, 'run.sh'))
 
 bin_path = [
   File.expand_path('../lxbin', __dir__),
@@ -128,8 +134,8 @@ client_library_path = [
   File.expand_path('../lib64/protonfix', __dir__),
   File.expand_path('../lib64/webfix',    __dir__),
   File.join(EMUL_PATH,  '/usr/lib64/nss'),
-  File.join(steam_root, '/ubuntu12_32'),
-  File.join(steam_root, '/ubuntu12_32/panorama'),
+  File.join(STEAM_ROOT_PATH, 'ubuntu12_32'),
+  File.join(STEAM_ROOT_PATH, 'ubuntu12_32/panorama'),
   steam_runtime_lib_path
 ].compact.join(':')
 
@@ -172,7 +178,7 @@ ENV['PATH']                                 = bin_path
 ENV['SDL_AUDIODRIVER']                      = 'dsp'
 ENV['STEAM_ENABLE_SHADER_CACHE_MANAGEMENT'] = '0' # ?
 ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']       = [File.expand_path('../tools', __dir__), ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']].compact.join(':')
-ENV['STEAM_RUNTIME']                        = steam_runtime_root
+ENV['STEAM_RUNTIME']                        = STEAM_RUNTIME_ROOT_PATH
 ENV['STEAM_RUNTIME_LIBRARY_PATH']           = games_library_path
 ENV['STEAM_ZENITY']                         = 'zenity'
 ENV['SYSTEM_LD_LIBRARY_PATH']               = games_library_path
@@ -187,15 +193,13 @@ for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
     with_fbsd_env do
       system(File.join(__dir__, 'lsu-kill'))
-    end
-    with_fbsd_env do
       system(File.join(__dir__, 'lsu-umount'))
     end
     exit
   end
 end
 
-system([File.join(steam_root, 'ubuntu12_32/steam')] * 2, *ARGV)
+system([File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam')] * 2, *ARGV)
 
 # normal exit still leaves steamwebhelper processes
 process_list = with_fbsd_env do

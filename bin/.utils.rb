@@ -6,24 +6,39 @@ LSU_DIST_PATH   = File.join(ENV['HOME'], '.steam/dist')
 LSU_TMPDIR_PATH = File.join(ENV['HOME'], '.steam/tmp')
 STEAM_ROOT_PATH = File.join(ENV['HOME'], '.steam/steam')
 
-def with_fbsd_env
-  path            = ENV['PATH']
-  ld_library_path = ENV['LD_LIBRARY_PATH']
-  ld_preload      = ENV['LD_PRELOAD']
+def with_env(vars)
+  temp = {}
 
-  if ENV['LSU_FBSD_PATH']
-    ENV['PATH']            = ENV['LSU_FBSD_PATH']
-    ENV['LD_LIBRARY_PATH'] = ENV['LSU_FBSD_LD_LIBRARY_PATH']
-    ENV['LD_PRELOAD']      = ENV['LSU_FBSD_LD_PRELOAD']
+  for key in vars.keys
+    temp[key] = ENV[key]
+  end
+
+  for key in vars.keys
+    ENV[key] = vars[key]
   end
 
   value = yield
 
-  ENV['PATH']            = path
-  ENV['LD_LIBRARY_PATH'] = ld_library_path
-  ENV['LD_PRELOAD']      = ld_preload
+  for key in vars.keys
+    ENV[key] = temp[key]
+  end
 
   value
+end
+
+def with_fbsd_env
+  if ENV['LSU_FBSD_PATH']
+    env = {
+      'PATH'            => ENV['LSU_FBSD_PATH'],
+      'LD_LIBRARY_PATH' => ENV['LSU_FBSD_LD_LIBRARY_PATH'],
+      'LD_PRELOAD'      => ENV['LSU_FBSD_LD_PRELOAD']
+    }
+    with_env(env) do
+      yield
+    end
+  else
+    yield
+  end
 end
 
 def init_tmp_dir
