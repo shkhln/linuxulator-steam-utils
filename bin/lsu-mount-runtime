@@ -49,7 +49,7 @@ mroot = File.join(LSU_TMPDIR_PATH, SLR_DIR)
 FileUtils.mkdir_p(mroot)
 
 #TODO: there might be mount points under $HOME
-#TODO: STEAM_COMPAT_LIBRARY_PATHS
+#TODO: STEAM_COMPAT_* env vars
 mounts = []
 if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
   mounts << mroot
@@ -87,11 +87,26 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     # placing $HOME under emul_path avoids some redirection issues
     # with Counter-Strike 2, Torchlight 2
     home_dir = File.realpath(ENV['HOME'])
-    mounts << mount('nullfs', home_dir, File.join(mroot, home_dir.gsub(/^\/usr\/home/, '/home')))
-    mounts << mount('nullfs', home_dir, File.join(mroot, EMUL_PATH, home_dir.gsub(/^\/usr\/home/, '/home')))
+    raise if !(home_dir =~ /^(\/usr|)\/home\//)
+    mounts << mount('nullfs', home_dir, File.join(mroot, home_dir.gsub(/^\/usr\/home\//, '/home/')))
+    mounts << mount('nullfs', home_dir, File.join(mroot, EMUL_PATH, home_dir.gsub(/^\/usr\/home\//, '/home/')))
     FileUtils.ln_s('/home', File.join(mroot, 'usr/home'))
 
+    # additional directories
+    if ENV['STEAM_COMPAT_MOUNTS']
+      dirs = ENV['STEAM_COMPAT_MOUNTS']
+        .split(':')
+        .find_all{|dir| dir.start_with?('/')}
+        .map     {|dir| File.realpath(dir)}
+        .find_all{|dir| (dir.start_with?(home_dir) && dir != home_dir) ||
+          !(dir =~ /^\/(app|bin|boot|compat|dev|etc|home|lib|libexec|rescue|root|run|sbin|tmp|usr|var|zroot)\//)}
+      for dir in dirs
+        mounts << mount('nullfs', dir, File.join(mroot, EMUL_PATH, dir), 'nocover')
+      end
+    end
+
     # LSU's lib32/lib64 dirs
+    #TODO: mount this to /app or some other non-shareable path
     lsu_dir = File.realpath(File.join(__dir__, '..'))
     mounts << mount('nullfs', lsu_dir, File.join(mroot, lsu_dir))
 
