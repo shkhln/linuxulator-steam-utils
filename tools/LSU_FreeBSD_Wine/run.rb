@@ -171,7 +171,7 @@ def set_up()
             'lib*/vkd3d',
             'lib*/wine/*/*steam*',
             'lib*/wine/*/vrclient*',
-            'lib*/wine/*/wineopenxr.dll.so',
+            'lib*/wine/*/wineopenxr.dll*',
             'lib*/wine/dxvk',
             'lib*/wine/nvapi',
             'lib*/wine/vkd3d-proton',
