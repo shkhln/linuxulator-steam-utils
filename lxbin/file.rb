@@ -2,7 +2,7 @@
 # encoding: UTF-8
 
 def linux_to_native_path(file)
-  if file.start_with?('/') && File.exists?(File.join('/compat/linux', file))
+  if file.start_with?('/') && File.exist?(File.join('/compat/linux', file))
     File.join('/compat/linux', file)
   else
     file

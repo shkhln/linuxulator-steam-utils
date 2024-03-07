@@ -39,7 +39,7 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
     FileUtils.ln_s("steam-runtime_#{version}", 'steam-runtime')
   end
 
-  if not (File.exists?('steam-runtime/pinned_libs_32') && File.exists?('steam-runtime/pinned_libs_64'))
+  if not (File.exist?('steam-runtime/pinned_libs_32') && File.exist?('steam-runtime/pinned_libs_64'))
     EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
     safe_system(File.join(EMUL_PATH, 'bin/bash'), '-c', 'PATH="$SYSTEM_PATH" env -u LD_PRELOAD -u LD_LIBRARY_PATH ./steam-runtime/setup.sh')
   end
