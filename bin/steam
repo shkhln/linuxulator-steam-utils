@@ -95,14 +95,14 @@ if not File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
   exit 1
 end
 
-if not File.exists?(STEAM_ROOT_PATH)
+if not File.exist?(STEAM_ROOT_PATH)
   STDERR.puts "Steam doesn't appear to be installed for user #{ENV['USER']}. Perhaps you forgot to run steam-install?"
   exit 1
 end
 
 STEAM_RUNTIME_ROOT_PATH = File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam-runtime')
 
-if not File.exists?(STEAM_RUNTIME_ROOT_PATH)
+if not File.exist?(STEAM_RUNTIME_ROOT_PATH)
   STDERR.puts "Can't find steam-runtime"
   exit 1
 end
