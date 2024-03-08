@@ -68,14 +68,26 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     # basic mount point setup
     mounts << mount('linprocfs', 'linprocfs', File.join(mroot, 'proc'))
     mounts << mount('linsysfs',  'linsysfs',  File.join(mroot, 'sys'))
-    mounts << mount('devfs',     'devfs',     File.join(mroot, 'dev'))
     mounts << mount('nullfs',    '/tmp',      File.join(mroot, 'tmp'))     # X11
     mounts << mount('nullfs',    '/var/run',  File.join(mroot, 'var/run')) # Wayland (?)
 
-    # we can't mount anything over devfs from a non-root user,
-    # let's abuse emul_path redirection instead
-    mounts << mount('fdescfs', 'fdescfs',                       File.join(mroot, EMUL_PATH, 'dev/fd'), 'linrdlnk')
-    mounts << mount('nullfs',  File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, EMUL_PATH, 'dev/shm'))
+    # we can't mount fd and shm over devfs from a non-root user, hence the symlink abuse below
+    mounts << mount('devfs', 'devfs', File.join(mroot, 'dev/.dev'))
+
+    # mounting fdescfs at /dev/fd (vs /compat/linux/dev/fd) apparently bothers CEF:
+    # [xxxx/xxxxxx.xxxxxx:FATAL:proc_util.cc(97)] Check failed: . : No such file or directory (2)
+    # mounts << mount('fdescfs', 'fdescfs', File.join(mroot, 'dev/fd'), 'linrdlnk')
+
+    mounts << mount('nullfs',  File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, 'dev/shm'))
+
+    Dir.chdir(File.join(mroot, 'dev')) do
+      for path in Dir['.dev/*']
+        basename = File.basename(path)
+        FileUtils.ln_s(path, basename) if !File.exist?(basename)
+      end
+      FileUtils.ln_s('.dev/dsp',   'dsp')
+      FileUtils.ln_s('.dev/mixer', 'mixer')
+    end
 
     # basic configuration
     FileUtils.cp('/etc/group',       File.join(mroot, 'etc/'))
@@ -84,13 +96,11 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.cp('/etc/passwd',      File.join(mroot, 'etc/')) # getpwuid_r()
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
 
-    # placing $HOME under emul_path avoids some redirection issues
-    # with Counter-Strike 2, Torchlight 2
+    # $HOME
     home_dir = File.realpath(ENV['HOME'])
     raise if !(home_dir =~ /^(\/usr|)\/home\//)
     mounts << mount('nullfs', home_dir, File.join(mroot, home_dir.gsub(/^\/usr\/home\//, '/home/')))
-    mounts << mount('nullfs', home_dir, File.join(mroot, EMUL_PATH, home_dir.gsub(/^\/usr\/home\//, '/home/')))
-    FileUtils.ln_s('/home', File.join(mroot, 'usr/home'))
+    FileUtils.ln_s('../home', File.join(mroot, 'usr/home'))
 
     # additional directories
     if ENV['STEAM_COMPAT_MOUNTS']
@@ -143,10 +153,10 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     end
 
     # eON workaround
-    for i in 0..64 do
-      FileUtils.mkdir_p(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/")) # ?
-      File.write(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
-    end
+    #~ for i in 0..64 do
+      #~ FileUtils.mkdir_p(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/")) # ?
+      #~ File.write(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
+    #~ end
   rescue
     for path in mounts.reverse
       system('umount', '-f', path)
