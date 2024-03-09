@@ -83,15 +83,11 @@ void purge_reaper(const char* command) {
 char* modify_webhelper_command(const char* command) {
 
   char* format_str =
-#if __FreeBSD_version < 1300139
+#if 0
     "LD_PRELOAD=webfix.so "
 #endif
-    "LIBGL_ALWAYS_SOFTWARE=1 "
     "%s.patched' %s"
     " --no-sandbox"
-#if __FreeBSD_version < 1300139
-    " --no-zygote"
-#endif
     //" --enable-logging=stderr"
     //" --v=0"
   ;
