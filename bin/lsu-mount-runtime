@@ -61,7 +61,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.mv(File.join(mroot, 'usr/etc'), File.join(mroot, 'etc')) # ?
 
     # additional packages we'd like to have
-    extract_debs(DPKGS, LSU_DIST_PATH, mroot)
+    for pkgs in DPKGS.partition{|e| e[0] =~ /i386\.deb$/}
+      extract_debs(pkgs, LSU_DIST_PATH, mroot)
+    end
 
     FileUtils.ln_s('usr/bin', File.join(mroot, 'bin')) # ?
 
