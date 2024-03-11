@@ -80,7 +80,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     # [xxxx/xxxxxx.xxxxxx:FATAL:proc_util.cc(97)] Check failed: . : No such file or directory (2)
     # mounts << mount('fdescfs', 'fdescfs', File.join(mroot, 'dev/fd'), 'linrdlnk')
 
-    mounts << mount('nullfs',  File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, 'dev/shm'))
+    mounts << mount('nullfs', File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, 'dev/shm'))
 
     Dir.chdir(File.join(mroot, 'dev')) do
       for path in Dir['.dev/*']
@@ -99,12 +99,15 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
 
     # $HOME, $STEAM_COMPAT_LIBRARY_PATHS, $STEAM_COMPAT_MOUNTS
+    HIER_HOME_PATH = /^(\/usr|)\/home\/[^\/]+/
+    RESERVED_PATHS = /^\/(app|bin|boot|compat|dev|etc|lib(32|64|exec|)|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)\/?/
+
     def try_mount_user_dir(mroot, path)
       if path.start_with?('/')
         path = File.realpath(path)
-        path.gsub!(/^\/usr\/home\//, '/home/')
-        if !(path =~ /^\/(app|bin|boot|compat|dev|etc|lib(32|64|exec|)|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)\/?/)
-          try_mount('nullfs', path, File.join(mroot, path), 'nocover')
+        if path =~ HIER_HOME_PATH || !(path =~ RESERVED_PATHS)
+          target = File.join(mroot, path.gsub(/^\/usr\/home\//, '/home/'))
+          try_mount('nullfs', path, target, 'nocover')
         else
           STDERR.puts "skipping #{path.inspect}, path is not allowed"
           nil
@@ -115,12 +118,23 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       end
     end
 
-    #TODO: there might be mount points under $HOME
     home_dir = File.realpath(ENV['HOME'])
-    raise if !(home_dir =~ /^(\/usr|)\/home\//)
-    raise if !try_mount_user_dir(mroot, home_dir)
-    mounts << home_dir
+    raise if !(home_dir =~ HIER_HOME_PATH)
+    home_dir_mount = try_mount_user_dir(mroot, home_dir)
+    raise if !home_dir_mount
+    mounts << home_dir_mount
+
     FileUtils.ln_s('../home', File.join(mroot, 'usr/home'))
+
+    lsu_tmp_dir = File.realpath(LSU_TMPDIR_PATH)
+    home_mounts = JSON.parse(`mount --libxo json`)['mount']['mounted']
+      .map     {|m| m['node']}
+      .find_all{|path| path.start_with?(home_dir) && path != home_dir && !path.start_with?(lsu_tmp_dir)}
+      .sort
+    for dir in home_mounts
+      path = try_mount_user_dir(mroot, dir)
+      mounts << path if path
+    end
 
     #TODO: this doesn't really work due to chroot being shared with steamwebhelper
     if ENV['STEAM_COMPAT_LIBRARY_PATHS']
