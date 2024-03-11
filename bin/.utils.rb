@@ -126,16 +126,23 @@ def download_debs(dpkgs, dist_path)
 
   FileUtils.mkdir_p(dist_path)
 
-  if !File.exist?(File.join(dist_path, 'mirrors.txt'))
-    system('fetch', '-o', File.join(dist_path, 'mirrors.txt'), 'http://mirrors.ubuntu.com/mirrors.txt')
+  mirror_list_path = File.join(dist_path, 'mirrors.txt')
+
+  if !File.exist?(mirror_list_path) || File.mtime(mirror_list_path) < Time.now - 3600
+    system('fetch', '--no-mtime', '-o', mirror_list_path, 'http://mirrors.ubuntu.com/mirrors.txt')
   end
 
   mirrors = begin
-    File.readlines(File.join(dist_path, 'mirrors.txt'), chomp: true)
-  rescue
-    ['https://mirrors.kernel.org/ubuntu', 'https://nl.archive.ubuntu.com/ubuntu']
+    File.readlines(mirror_list_path, chomp: true)
+  rescue Errno::ENOENT
+    []
   end
-  mirrors.shuffle! # ?
+
+  # fallback list
+  mirrors.concat([
+    'https://mirrors.kernel.org/ubuntu',
+    'https://nl.archive.ubuntu.com/ubuntu'
+  ].shuffle)
 
   threads = []
   4.times do
