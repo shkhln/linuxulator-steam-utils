@@ -2,6 +2,7 @@ require 'json'
 
 raise '$HOME is undefined.' if !ENV['HOME']
 
+LSU_IN_CHROOT   = '/usr/steam-utils'
 LSU_DIST_PATH   = File.join(ENV['HOME'], '.steam/dist')
 LSU_TMPDIR_PATH = File.join(ENV['HOME'], '.steam/tmp')
 STEAM_ROOT_PATH = File.join(ENV['HOME'], '.steam/steam')

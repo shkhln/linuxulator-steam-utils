@@ -14,14 +14,14 @@ def run(args)
   end
 
   library_path = [
-    File.expand_path('../../lib32/fakepulse', __dir__),
-    File.expand_path('../../lib64/fakepulse', __dir__),
-    File.expand_path('../../lib32/fakeudev',  __dir__),
-    File.expand_path('../../lib64/fakeudev',  __dir__),
-    File.expand_path('../../lib32/protonfix', __dir__),
-    File.expand_path('../../lib64/protonfix', __dir__),
-    File.expand_path('../../lib32/shmfix',    __dir__),
-    File.expand_path('../../lib64/shmfix',    __dir__),
+    File.join(LSU_IN_CHROOT, 'lib32/fakepulse'),
+    File.join(LSU_IN_CHROOT, 'lib64/fakepulse'),
+    File.join(LSU_IN_CHROOT, 'lib32/fakeudev'),
+    File.join(LSU_IN_CHROOT, 'lib64/fakeudev'),
+    File.join(LSU_IN_CHROOT, 'lib32/protonfix'),
+    File.join(LSU_IN_CHROOT, 'lib64/protonfix'),
+    File.join(LSU_IN_CHROOT, 'lib32/shmfix'),
+    File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
     '/lib/i386-linux-gnu',
     '/lib/x86_64-linux-gnu',
     '/usr/lib/i386-linux-gnu',

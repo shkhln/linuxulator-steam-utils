@@ -117,10 +117,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       end
     end
 
-    # LSU's lib32/lib64 dirs
-    #TODO: mount this to /app or some other non-shareable path
+    # LSU's bin/lib dirs
     lsu_dir = File.realpath(File.join(__dir__, '..'))
-    mounts << mount('nullfs', lsu_dir, File.join(mroot, lsu_dir))
+    mounts << mount('nullfs', lsu_dir, File.join(mroot, LSU_IN_CHROOT))
 
     # Nvidia libs
     for source_dir, dest_dir in {
