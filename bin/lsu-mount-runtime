@@ -39,7 +39,8 @@ if reqs.size > 0
   exit(1)
 end
 
-platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")].first
+platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")]
+  .sort.find{|dir| File.exist?(File.join(dir, 'metadata'))}
 raise if not platform
 
 download_debs(DPKGS, LSU_DIST_PATH)
@@ -48,7 +49,6 @@ init_tmp_dir()
 mroot = File.join(LSU_TMPDIR_PATH, SLR_DIR)
 FileUtils.mkdir_p(mroot)
 
-#TODO: there might be mount points under $HOME
 #TODO: STEAM_COMPAT_* env vars
 mounts = []
 if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
@@ -98,22 +98,42 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.cp('/etc/passwd',      File.join(mroot, 'etc/')) # getpwuid_r()
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
 
-    # $HOME
+    # $HOME, $STEAM_COMPAT_LIBRARY_PATHS, $STEAM_COMPAT_MOUNTS
+    def try_mount_user_dir(mroot, path)
+      if path.start_with?('/')
+        path = File.realpath(path)
+        path.gsub!(/^\/usr\/home\//, '/home/')
+        if !(path =~ /^\/(app|bin|boot|compat|dev|etc|lib(32|64|exec|)|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)\/?/)
+          try_mount('nullfs', path, File.join(mroot, path), 'nocover')
+        else
+          STDERR.puts "skipping #{path.inspect}, path is not allowed"
+          nil
+        end
+      else
+        STDERR.puts "skipping #{path.inspect}, expected an absolute path"
+        nil
+      end
+    end
+
+    #TODO: there might be mount points under $HOME
     home_dir = File.realpath(ENV['HOME'])
     raise if !(home_dir =~ /^(\/usr|)\/home\//)
-    mounts << mount('nullfs', home_dir, File.join(mroot, home_dir.gsub(/^\/usr\/home\//, '/home/')))
+    raise if !try_mount_user_dir(mroot, home_dir)
+    mounts << home_dir
     FileUtils.ln_s('../home', File.join(mroot, 'usr/home'))
 
-    # additional directories
+    #TODO: this doesn't really work due to chroot being shared with steamwebhelper
+    if ENV['STEAM_COMPAT_LIBRARY_PATHS']
+      for dir in ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':')
+        path = try_mount_user_dir(mroot, dir)
+        mounts << path if path
+      end
+    end
+
     if ENV['STEAM_COMPAT_MOUNTS']
-      dirs = ENV['STEAM_COMPAT_MOUNTS']
-        .split(':')
-        .find_all{|dir| dir.start_with?('/')}
-        .map     {|dir| File.realpath(dir)}
-        .find_all{|dir| (dir.start_with?(home_dir) && dir != home_dir) ||
-          !(dir =~ /^\/(app|bin|boot|compat|dev|etc|home|lib|lib32|lib64|libexec|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)\//)}
-      for dir in dirs
-        mounts << mount('nullfs', dir, File.join(mroot, EMUL_PATH, dir.gsub(/^\/usr\/home\//, '/home/')), 'nocover')
+      for dir in ENV['STEAM_COMPAT_MOUNTS'].split(':')
+        path = try_mount_user_dir(mroot, dir)
+        mounts << path if path
       end
     end
 
