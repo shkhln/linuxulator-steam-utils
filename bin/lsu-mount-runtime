@@ -98,6 +98,48 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.cp('/etc/passwd',      File.join(mroot, 'etc/')) # getpwuid_r()
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
 
+    # LSU's bin/lib dirs
+    lsu_dir = File.realpath(File.join(__dir__, '..'))
+    mounts << mount('nullfs', lsu_dir, File.join(mroot, LSU_IN_CHROOT))
+
+    # Nvidia libs
+    for source_dir, dest_dir in {
+      File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
+      File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
+    }
+      libs = Dir[File.join(source_dir, 'lib{nvidia-*.so*,EGL_nvidia.so*,GLX_nvidia.so*}')]
+      if libs.size > 0
+        mounts << mount('nullfs', source_dir, File.join(dest_dir, '.nvidia'))
+        for path in libs
+          FileUtils.ln_s(File.join('.nvidia', File.basename(path)), File.join(dest_dir, File.basename(path)))
+        end
+      end
+    end
+
+    if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
+      FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', File.join(mroot, 'etc/vulkan/icd.d/'))
+    end
+
+    # sound
+    FileUtils.rm_r(File.join(mroot, 'etc/alsa'))
+    FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), File.join(mroot, 'etc/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
+    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
+    mounts << mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), File.join(mroot, 'usr/share/alsa'))
+
+    # glxgears
+    if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
+      FileUtils.cp(File.join(EMUL_PATH, 'bin/glxgears'), File.join(mroot, 'usr/bin/'))
+    end
+
+    # eON workaround
+    #~ for i in 0..64 do
+      #~ FileUtils.mkdir_p(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/")) # ?
+      #~ File.write(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
+    #~ end
+
     # $HOME, $STEAM_COMPAT_LIBRARY_PATHS, $STEAM_COMPAT_MOUNTS
     HIER_HOME_PATH = /^(\/usr|)\/home\/[^\/]+/
     RESERVED_PATHS = /^\/(app|bin|boot|compat|dev|etc|lib(32|64|exec|)|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)\/?/
@@ -150,48 +192,6 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
         mounts << path if path
       end
     end
-
-    # LSU's bin/lib dirs
-    lsu_dir = File.realpath(File.join(__dir__, '..'))
-    mounts << mount('nullfs', lsu_dir, File.join(mroot, LSU_IN_CHROOT))
-
-    # Nvidia libs
-    for source_dir, dest_dir in {
-      File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
-      File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
-    }
-      libs = Dir[File.join(source_dir, 'lib{nvidia-*.so*,EGL_nvidia.so*,GLX_nvidia.so*}')]
-      if libs.size > 0
-        mounts << mount('nullfs', source_dir, File.join(dest_dir, '.nvidia'))
-        for path in libs
-          FileUtils.ln_s(File.join('.nvidia', File.basename(path)), File.join(dest_dir, File.basename(path)))
-        end
-      end
-    end
-
-    if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
-      FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', File.join(mroot, 'etc/vulkan/icd.d/'))
-    end
-
-    # sound
-    FileUtils.rm_r(File.join(mroot, 'etc/alsa'))
-    FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), File.join(mroot, 'etc/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
-    mounts << mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), File.join(mroot, 'usr/share/alsa'))
-
-    # glxgears
-    if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
-      FileUtils.cp(File.join(EMUL_PATH, 'bin/glxgears'), File.join(mroot, 'usr/bin/'))
-    end
-
-    # eON workaround
-    #~ for i in 0..64 do
-      #~ FileUtils.mkdir_p(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/")) # ?
-      #~ File.write(File.join(mroot, EMUL_PATH, "sys/devices/system/cpu/cpu#{i}/topology/core_id"), i.to_s)
-    #~ end
   rescue
     for path in mounts.reverse
       system('umount', '-f', path)
