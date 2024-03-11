@@ -40,7 +40,9 @@ def check_requirements
   reqs << [:dbus,    '/var/lib/dbus/machine-id existence']   if not File.exist?('/var/lib/dbus/machine-id')
   reqs << [:uchroot, 'Unprivileged chroot must be enabled']  if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
   reqs << [:umount,  'Unprivileged mounts must be enabled']  if `sysctl -nq vfs.usermount`.to_i != 1
-  reqs << [:nullfs,  'nullfs.ko must be loaded']             if not system('kldstat -q -m nullfs')
+
+  # without nullfs.ko mount fails with an unhelpful error message: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=274600#c5
+  reqs << [:nullfs, 'nullfs.ko must be loaded'] if not system('kldstat -q -m nullfs')
 
   reqs
 end

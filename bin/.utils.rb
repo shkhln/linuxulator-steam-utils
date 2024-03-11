@@ -88,7 +88,7 @@ def print_cmd(cmd)
   STDERR.puts cmd.map{|s| s =~ /\s/ ? s.inspect : s}.join(' ')
 end
 
-class MountError < ::StandardError
+class MountError < StandardError
 end
 
 def mount(fs, from, to, options = nil)
