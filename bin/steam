@@ -152,7 +152,6 @@ games_library_path = [
   File.expand_path('../lib64/protonfix',   __dir__),
   File.expand_path('../lib32/shmfix',      __dir__),
   File.expand_path('../lib64/shmfix',      __dir__),
-  File.expand_path('../lib64/webfix',      __dir__),
   File.join(EMUL_PATH, 'usr/lib64/nss'),
   steam_runtime_lib_path
 ].compact.join(':')

@@ -13,8 +13,24 @@ def run(args)
     exit(1)
   end
 
+  library_path = [
+    File.expand_path('../../lib32/fakepulse', __dir__),
+    File.expand_path('../../lib64/fakepulse', __dir__),
+    File.expand_path('../../lib32/fakeudev',  __dir__),
+    File.expand_path('../../lib64/fakeudev',  __dir__),
+    File.expand_path('../../lib32/protonfix', __dir__),
+    File.expand_path('../../lib64/protonfix', __dir__),
+    File.expand_path('../../lib32/shmfix',    __dir__),
+    File.expand_path('../../lib64/shmfix',    __dir__),
+    '/lib/i386-linux-gnu',
+    '/lib/x86_64-linux-gnu',
+    '/usr/lib/i386-linux-gnu',
+    '/usr/lib/x86_64-linux-gnu',
+    '/usr/lib/x86_64-linux-gnu/nss',
+  ].compact.join(':')
+
   ENV['LSU_LINUX_LD_PRELOAD']      = ['protonfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
-  ENV['LSU_LINUX_LD_LIBRARY_PATH'] = ENV['LSU_LINUX_LD_LIBRARY_PATH'].gsub(/[^:]+steam-runtime[^:]+:/, '')
+  ENV['LSU_LINUX_LD_LIBRARY_PATH'] = library_path
   ENV['LSU_LINUX_PATH']            = '/bin:/usr/bin'
   ENV['PROTON_NO_ESYNC']           = '1'
   ENV['PROTON_NO_FSYNC']           = '1'
