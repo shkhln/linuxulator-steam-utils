@@ -56,8 +56,8 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
   begin
     # SteamLinuxRuntime
     FileUtils.mkdir_p(File.join(mroot, 'usr'))
-    system('sh', '-c', 'set -o pipefail && tar --cd "$0" -c @../usr-mtree.txt.gz | tar --cd "$1" -x', '-',
-      File.join(platform, 'files'), File.join(mroot, 'usr')) || raise
+    system('sh', '-c', 'set -o pipefail && tar --cd "$0" -c @../usr-mtree.txt.gz | tar --cd "$1" -x',
+      '-', File.join(platform, 'files'), File.join(mroot, 'usr')) || raise
     system('chmod', '-R', 'u+rwX', mroot) || raise
 
     FileUtils.mv(File.join(mroot, 'usr/etc'), File.join(mroot, 'etc')) # ?
@@ -127,16 +127,31 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
 
     # sound
     FileUtils.rm_r(File.join(mroot, 'etc/alsa'))
-    FileUtils.cp(File.join(EMUL_PATH, 'etc/asound.conf'), File.join(mroot, 'etc/'))
+    FileUtils.rm_r(File.join(mroot, 'usr/share/alsa'))
+
+    # https://github.com/libsdl-org/SDL/blob/d79f8652510b8bd1f89c90be2ab65fc8940056eb/src/audio/alsa/SDL_alsa_audio.c#L791
+    alsa_conf = <<~ALSA_CONF
+      pcm.default {
+        type oss
+        hint.description "Open Sound System"
+      }
+
+      ctl.default {
+        type oss
+      }
+    ALSA_CONF
+    FileUtils.mkdir_p(File.join(mroot, 'usr/share/alsa'))
+    File.write(File.join(mroot, 'usr/share/alsa/alsa.conf'), alsa_conf)
+
     FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
     FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
     FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
     FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
-    mounts << mount('nullfs', File.join(EMUL_PATH, 'usr/share/alsa'), File.join(mroot, 'usr/share/alsa'))
 
-    # glxgears
-    if File.exist?(File.join(EMUL_PATH, 'bin/glxgears'))
-      FileUtils.cp(File.join(EMUL_PATH, 'bin/glxgears'), File.join(mroot, 'usr/bin/'))
+    # misc diagnostic utilities
+    for exe in ['aplay', 'glxgears']
+      path = File.join(EMUL_PATH, 'bin', exe)
+      FileUtils.cp(path, File.join(mroot, 'usr/bin/')) if File.exist?(path)
     end
 
     # eON workaround
