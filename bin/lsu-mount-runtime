@@ -143,10 +143,13 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.mkdir_p(File.join(mroot, 'usr/share/alsa'))
     File.write(File.join(mroot, 'usr/share/alsa/alsa.conf'), alsa_conf)
 
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_ctl_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib64/alsa-lib/libasound_module_pcm_oss.so'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/alsa-lib/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_ctl_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
-    FileUtils.cp(File.join(EMUL_PATH, 'usr/lib/alsa-lib/libasound_module_pcm_oss.so'),   File.join(mroot, 'usr/lib/i386-linux-gnu/alsa-lib/'))
+    for source_dir, dest_dir in {
+      File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
+      File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
+    }
+      FileUtils.cp(File.join(source_dir, 'alsa-lib/libasound_module_ctl_oss.so'), File.join(dest_dir, 'alsa-lib/'))
+      FileUtils.cp(File.join(source_dir, 'alsa-lib/libasound_module_pcm_oss.so'), File.join(dest_dir, 'alsa-lib/'))
+    end
 
     # misc diagnostic utilities
     for exe in ['aplay', 'glxgears']
