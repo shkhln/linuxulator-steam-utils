@@ -56,8 +56,10 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
   begin
     # SteamLinuxRuntime
     FileUtils.mkdir_p(File.join(mroot, 'usr'))
-    system('sh', '-c', 'set -o pipefail && tar --cd "$0" -c @../usr-mtree.txt.gz | tar --cd "$1" -x', '-', File.join(platform, 'files'), File.join(mroot, 'usr')) || raise
+    system('sh', '-c', 'set -o pipefail && tar --cd "$0" -c @../usr-mtree.txt.gz | tar --cd "$1" -x', '-',
+      File.join(platform, 'files'), File.join(mroot, 'usr')) || raise
     system('chmod', '-R', 'u+rwX', mroot) || raise
+
     FileUtils.mv(File.join(mroot, 'usr/etc'), File.join(mroot, 'etc')) # ?
 
     # additional packages we'd like to have
@@ -119,6 +121,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
       FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', File.join(mroot, 'etc/vulkan/icd.d/'))
     end
+
+    # fonts
+    mounts << mount('nullfs', '/usr/local/share/fonts', File.join(mroot, 'usr/share/fonts'), 'union')
 
     # sound
     FileUtils.rm_r(File.join(mroot, 'etc/alsa'))
