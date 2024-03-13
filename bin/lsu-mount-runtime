@@ -118,8 +118,22 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       end
     end
 
-    if File.exist?('/usr/local/share/vulkan/icd.d/nvidia_icd.json')
-      FileUtils.cp('/usr/local/share/vulkan/icd.d/nvidia_icd.json', File.join(mroot, 'etc/vulkan/icd.d/'))
+    def copy_if_exists(source, destination)
+      if File.exist?(source)
+        FileUtils.mkdir_p(File.dirname(destination))
+        FileUtils.cp(source, destination)
+      end
+    end
+
+    nvidia_icds = [
+      'egl/egl_external_platform.d/15_nvidia_gbm.json',
+      'glvnd/egl_vendor.d/10_nvidia.json',
+      'vulkan/icd.d/nvidia_icd.json',
+      'vulkan/implicit_layer.d/nvidia_layers.json'
+    ]
+
+    for icd in nvidia_icds
+      copy_if_exists(File.join('/usr/local/share', icd), File.join(mroot, 'usr/share', icd))
     end
 
     # fonts
