@@ -16,8 +16,6 @@ case ARGV[0]
       File.join(LSU_IN_CHROOT, 'lib64/noepollexcl'),
       File.join(LSU_IN_CHROOT, 'lib32/shmfix'),
       File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
-      '/lib/i386-linux-gnu',
-      '/lib/x86_64-linux-gnu',
       '/usr/lib/i386-linux-gnu',
       '/usr/lib/x86_64-linux-gnu',
       '/usr/lib/x86_64-linux-gnu/nss',
