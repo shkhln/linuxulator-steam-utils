@@ -397,3 +397,69 @@ ssize_t sendfile64(int out_fd, int in_fd, off64_t* offset, size_t count) {
 }
 
 #endif // __FreeBSD_version < 1400097
+
+/* Steam's "add a new library folder" logic is dumber than an average /r/freebsd poster,
+ so we have to sanitize things a bit. */
+
+#include <mntent.h>
+
+struct mntent* (*libc_getmntent)(FILE*) = NULL;
+
+struct mntent* getmntent(FILE* stream) {
+
+  if (!libc_getmntent) {
+    libc_getmntent = dlsym(RTLD_NEXT, "getmntent");
+  }
+
+  struct mntent* entry = libc_getmntent(stream);
+  if (entry != NULL) {
+    //~ fprintf(stderr, "%s: mnt_fsname = %s\n", __func__, entry->mnt_fsname);
+    //~ fprintf(stderr, "%s: mnt_dir    = %s\n", __func__, entry->mnt_dir);
+    //~ fprintf(stderr, "%s: mnt_type   = %s\n", __func__, entry->mnt_type);
+    //~ fprintf(stderr, "%s: mnt_opts   = %s\n", __func__, entry->mnt_opts);
+    //~ fprintf(stderr, "%s: mnt_freq   = %d\n", __func__, entry->mnt_freq);
+    //~ fprintf(stderr, "%s: mnt_passno = %d\n", __func__, entry->mnt_passno);
+
+    // linprocfs bug
+    if (strcmp(entry->mnt_fsname, "/sys") == 0) {
+      entry->mnt_fsname = "sysfs";
+      goto done;
+    }
+
+    // none of these paths will be a good library location, ffs
+    if (
+      strcmp (entry->mnt_dir, "/")          == 0 ||
+      strcmp (entry->mnt_dir, "/home")      == 0 ||
+      strcmp (entry->mnt_dir, "/tmp")       == 0 ||
+      strcmp (entry->mnt_dir, "/usr/home")  == 0 ||
+      strcmp (entry->mnt_dir, "/usr/ports") == 0 ||
+      strcmp (entry->mnt_dir, "/usr/src")   == 0 ||
+      strcmp (entry->mnt_dir, "/var")       == 0 ||
+      strncmp(entry->mnt_dir, "/var/", sizeof("/var/") - 1) == 0 ||
+      strcmp (entry->mnt_dir, "/zroot")     == 0
+    ) {
+      entry->mnt_fsname = "nope";
+      goto done;
+    }
+
+    // same goes for in-memory filesystems
+    if (strcmp(entry->mnt_type, "tmpfs") == 0) {
+      entry->mnt_fsname = "nope";
+      goto done;
+    }
+
+    // that is our tmp dir for chroots and stuff
+    if (strstr(entry->mnt_dir, ".steam/tmp") != NULL) {
+      entry->mnt_fsname = "nope";
+      goto done;
+    }
+
+    // on the other hand Steam skips entries not starting with /
+    if (strcmp(entry->mnt_type, "zfs") == 0) {
+      entry->mnt_fsname = "/y/e/s";
+    }
+  }
+
+done:
+  return entry;
+}
