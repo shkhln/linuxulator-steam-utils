@@ -356,3 +356,44 @@ int setsockopt(int s, int level, int optname, const void *optval, socklen_t optl
 
   return libc_setsockopt(s, level, optname, optval, optlen);
 }
+
+/* ye olde werkshoppe amendement */
+
+#if __FreeBSD_version < 1400097
+
+#include <sys/sendfile.h>
+#include <sys/syscall.h>
+
+static ssize_t (*libc_sendfile64)(int out_fd, int in_fd, off64_t* offset, size_t count) = NULL;
+
+ssize_t sendfile64(int out_fd, int in_fd, off64_t* offset, size_t count) {
+
+  if (!libc_sendfile64) {
+    libc_sendfile64 = dlsym(RTLD_NEXT, "sendfile64");
+  }
+
+  //~ fprintf(stderr, "%s(%d, %d, %p (%lld), %d)\n", __func__, out_fd, in_fd, offset, offset != NULL ? *offset : 0, count);
+
+  int nbytes = libc_sendfile64(out_fd, in_fd, offset, count);
+  if (nbytes == -1 && errno == EINVAL && offset == NULL) {
+
+    off64_t in_offset = lseek(in_fd, 0, SEEK_CUR);
+    assert(in_offset != -1);
+
+    off64_t out_offset = lseek(out_fd, 0, SEEK_CUR);
+    assert(out_offset != -1);
+
+    //~ fprintf(stderr, "%s: fallback to copy_file_range(%d, %p (%lld), %d, %p (%lld), %d, 0)\n",
+      //~ __func__, in_fd, &in_offset, in_offset, out_fd, &out_offset, out_offset, count);
+
+    nbytes = syscall(SYS_copy_file_range, in_fd, &in_offset, out_fd, &out_offset, count, 0);
+    if (nbytes != -1) {
+      lseek(in_fd, in_offset + nbytes, SEEK_SET);
+    }
+  }
+
+  //~ fprintf(stderr, "%s -> %d (errno = %d)\n", __func__, nbytes, errno);
+  return nbytes;
+}
+
+#endif // __FreeBSD_version < 1400097
