@@ -216,14 +216,22 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
 
     FileUtils.ln_s('../home', File.join(mroot, 'usr/home'))
 
-    lsu_tmp_dir = File.realpath(LSU_TMPDIR_PATH)
     home_mounts = JSON.parse(`mount --libxo json`)['mount']['mounted']
-      .map     {|m| m['node']}
-      .find_all{|path| path.start_with?(home_dir) && path != home_dir && !path.start_with?(lsu_tmp_dir)}
-      .sort
-    for dir in home_mounts
-      path = try_mount_user_dir(mroot, dir)
-      mounts << path if path
+      .find_all{|m| m['node'].start_with?(home_dir) && m['node'] != home_dir}
+      .sort_by {|m| m['node']}
+    node_to_skip = nil # that includes nested mounts
+    for m in home_mounts
+      if node_to_skip && m['node'].start_with?(node_to_skip)
+        next
+      else
+        if m['fstype'] =~ /^(dev|fdesc|tmp|(lin|)proc|linsys)fs$/
+          node_to_skip = m['node']
+        else
+          path = try_mount_user_dir(mroot, m['node'])
+          mounts << path if path
+          node_to_skip = nil
+        end
+      end
     end
 
     #TODO: this doesn't really work due to chroot being shared with steamwebhelper

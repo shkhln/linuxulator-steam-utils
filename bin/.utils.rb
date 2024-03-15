@@ -92,10 +92,14 @@ class MountError < StandardError
 end
 
 def mount(fs, from, to, options = nil)
-  if fs == 'nullfs' && File.file?(from)
-    FileUtils.touch(to)
-  else
-    FileUtils.mkdir_p(to)
+  begin
+    if fs == 'nullfs' && File.file?(from)
+      FileUtils.touch(to)
+    else
+      FileUtils.mkdir_p(to)
+    end
+  rescue Errno::EROFS
+    # do nothing
   end
   cmd = ['mount']
   if options
