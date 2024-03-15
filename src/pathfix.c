@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +29,12 @@ static const char* redirect(const char* path) {
     return "/usr/local/..";
   }
 
+  // Steam calls this from ubuntu12_32/steam(CanSetClientBeta+0x2d) 44 times.
+  // Since this is apparently a very important check, it's only natural that we ignore it.
+  if (strcmp(path, "./.writable") == 0) {
+    return "/dev/null";
+  }
+
   return path;
 }
 
@@ -39,7 +46,13 @@ int access(const char* path, int mode) {
     libc_access = dlsym(RTLD_NEXT, "access");
   }
 
-  return libc_access(redirect(path), mode);
+  const char* p = redirect(path);
+  if (p != NULL) {
+    return libc_access(p, mode);
+  } else {
+    errno = EACCES;
+    return -1;
+  }
 }
 
 static FILE* (*libc_fopen64)(const char*, const char*) = NULL;
@@ -50,7 +63,34 @@ FILE* fopen64(const char* path, const char* mode) {
     libc_fopen64 = dlsym(RTLD_NEXT, "fopen64");
   }
 
-  return libc_fopen64(redirect(path), mode);
+  const char* p = redirect(path);
+  if (p != NULL) {
+    FILE* f = libc_fopen64(p, mode);
+    //~ fprintf(stderr, "%s(%s, %s) -> %p\n", __func__, path, mode, f);
+    return f;
+  } else {
+    errno = EACCES;
+    return NULL;
+  }
+}
+
+static FILE* (*libc_fopen)(const char*, const char*) = NULL;
+
+FILE* fopen(const char* path, const char* mode) {
+
+  if (!libc_fopen) {
+    libc_fopen = dlsym(RTLD_NEXT, "fopen");
+  }
+
+  const char* p = redirect(path);
+  if (p != NULL) {
+    FILE* f = libc_fopen(p, mode);
+    //~ fprintf(stderr, "%s(%s, %s) -> %p\n", __func__, path, mode, f);
+    return f;
+  } else {
+    errno = EACCES;
+    return NULL;
+  }
 }
 
 #include <sys/stat.h>
@@ -63,7 +103,13 @@ int __lxstat64(int ver, const char* path, struct stat64* stat_buf) {
     libc_lxstat64 = dlsym(RTLD_NEXT, "__lxstat64");
   }
 
-  return libc_lxstat64(ver, redirect(path), stat_buf);
+  const char* p = redirect(path);
+  if (p != NULL) {
+    return libc_lxstat64(ver, p, stat_buf);
+  } else {
+    errno = EACCES;
+    return -1;
+  }
 }
 
 #include <dirent.h>
@@ -78,7 +124,13 @@ int scandir64(const char* dir, struct dirent64*** namelist,
     libc_scandir64 = dlsym(RTLD_NEXT, "scandir64");
   }
 
-  return libc_scandir64(redirect(dir), namelist, sel, cmp);
+  const char* p = redirect(dir);
+  if (p != NULL) {
+    return libc_scandir64(p, namelist, sel, cmp);
+  } else {
+    errno = EACCES;
+    return -1;
+  }
 }
 
 /*

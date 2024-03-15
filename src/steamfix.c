@@ -463,3 +463,27 @@ struct mntent* getmntent(FILE* stream) {
 done:
   return entry;
 }
+
+/* XOpenDisplay spam */
+
+void* (*orig_xcb_connect)(const char*, int*) = NULL;
+
+void* xcb_connect(const char* displayname, int* screen) {
+
+  if (!orig_xcb_connect) {
+    orig_xcb_connect = dlsym(RTLD_NEXT, "xcb_connect");
+    assert(orig_xcb_connect != NULL);
+  }
+
+  static int attempts = 0;
+  static __thread void* fail = NULL;
+
+  if (__atomic_fetch_add(&attempts, 1, __ATOMIC_SEQ_CST) > 50) {
+    if (fail == NULL) {
+      fail = orig_xcb_connect("nope", NULL);
+    }
+    return fail;
+  }
+
+  return orig_xcb_connect(displayname, screen);
+}
