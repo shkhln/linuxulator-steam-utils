@@ -29,6 +29,7 @@ def run(args)
   ENV['LSU_LINUX_PATH']            = '/bin:/usr/bin'
   ENV['PROTON_NO_ESYNC']           = '1'
   ENV['PROTON_NO_FSYNC']           = '1'
+  ENV['STEAM_COMPAT_MOUNTS']       = [proton_path, ENV['STEAM_COMPAT_MOUNTS']].compact.join(':')
 
   exec(File.expand_path('../../bin/lsu-run-in-chroot', __dir__), SLR_DIR, File.join(proton_path, 'proton'), *args)
 end

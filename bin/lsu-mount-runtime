@@ -265,6 +265,7 @@ if game_dir && !File.exist?(File.join(mroot, game_dir))
   dirs = [game_dir]
   dirs << ENV['STEAM_COMPAT_DATA_PATH'] if ENV['STEAM_COMPAT_DATA_PATH']
   dirs.concat(ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':')) if ENV['STEAM_COMPAT_LIBRARY_PATHS']
+  dirs.concat(ENV['STEAM_COMPAT_MOUNTS']       .split(':')) if ENV['STEAM_COMPAT_MOUNTS']
 
   mounts = JSON.parse(`mount --libxo json`)['mount']['mounted'].sort_by{|m| m['node']}
 
