@@ -239,12 +239,12 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     end
 
     #TODO: this doesn't really work due to chroot being shared with steamwebhelper
-    if ENV['STEAM_COMPAT_LIBRARY_PATHS']
-      for dir in ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':')
-        path = try_mount_user_dir(mroot, dir)
-        mounts << path if path
-      end
-    end
+    #if ENV['STEAM_COMPAT_LIBRARY_PATHS']
+    #  for dir in ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':')
+    #    path = try_mount_user_dir(mroot, dir)
+    #    mounts << path if path
+    #  end
+    #end
 
     if ENV['STEAM_COMPAT_MOUNTS']
       for dir in ENV['STEAM_COMPAT_MOUNTS'].split(':')
@@ -277,23 +277,18 @@ if ENV['STEAM_COMPAT_TOOL_PATHS']
   dirs.concat(ENV['STEAM_COMPAT_TOOL_PATHS'].split(':'))
 end
 
-if dirs.find{|dir| !File.exist?(File.join(mroot, dir))}
+mounts = nil
+for dir in dirs.sort
+  next if File.exist?(File.join(mroot, dir))
 
-  mounts = JSON.parse(`mount --libxo json`)['mount']['mounted'].sort_by{|m| m['node']}
-  for m in mounts
-    for dir in dirs
-      if dir.start_with?(m['node'])
-        target = File.join(mroot, m['node'])
-        if !File.exist?(target) || Dir.empty?(target)
-          try_mount_user_dir(mroot, m['node'])
-          break
-        end
-      end
+  mounts ||= JSON.parse(`mount --libxo json`)['mount']['mounted'].map{|m| m['node']}.sort
+
+  ancestors = mounts.find_all{|m| m != '/' && dir.start_with?(m)}
+  if ancestors.empty?
+    try_mount_user_dir(mroot, dir)
+  else
+    for m in ancestors.find_all{|m| !mounts.include?(File.join(mroot, m))}
+      break if !try_mount_user_dir(mroot, m)
     end
-  end # mounts
-
-  for dir in dirs.sort
-    target = File.join(mroot, dir)
-    try_mount_user_dir(mroot, dir) if !File.exist?(target) || Dir.empty?(target)
   end
 end
