@@ -98,7 +98,7 @@ def mount(fs, from, to, options = nil)
     else
       FileUtils.mkdir_p(to)
     end
-  rescue Errno::EROFS
+  rescue Errno::EACCES, Errno::EROFS
     # do nothing
   end
   cmd = ['mount']
