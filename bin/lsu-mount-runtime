@@ -259,16 +259,23 @@ else
 end
 
 # last-ditch attempt to ensure the game files are accessible in chroot
-game_dir = ENV['STEAM_COMPAT_INSTALL_PATH']
-if game_dir && !File.exist?(File.join(mroot, game_dir))
+dirs = []
+if ENV['STEAM_COMPAT_INSTALL_PATH']
+  dirs << ENV['STEAM_COMPAT_INSTALL_PATH']
+end
+if ENV['STEAM_COMPAT_DATA_PATH']
+  dirs << ENV['STEAM_COMPAT_DATA_PATH']
+end
+if ENV['STEAM_COMPAT_LIBRARY_PATHS']
+  dirs.concat(ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':'))
+end
+if ENV['STEAM_COMPAT_TOOL_PATHS']
+  dirs.concat(ENV['STEAM_COMPAT_TOOL_PATHS'].split(':'))
+end
 
-  dirs = [game_dir]
-  dirs << ENV['STEAM_COMPAT_DATA_PATH'] if ENV['STEAM_COMPAT_DATA_PATH']
-  dirs.concat(ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':')) if ENV['STEAM_COMPAT_LIBRARY_PATHS']
-  dirs.concat(ENV['STEAM_COMPAT_MOUNTS']       .split(':')) if ENV['STEAM_COMPAT_MOUNTS']
+if dirs.find{|dir| !File.exist?(File.join(mroot, dir))}
 
   mounts = JSON.parse(`mount --libxo json`)['mount']['mounted'].sort_by{|m| m['node']}
-
   for m in mounts
     for dir in dirs
       if dir.start_with?(m['node'])
@@ -280,4 +287,9 @@ if game_dir && !File.exist?(File.join(mroot, game_dir))
       end
     end
   end # mounts
+
+  for dir in dirs.sort
+    target = File.join(mroot, dir)
+    try_mount_user_dir(mroot, dir) if !File.exist?(target) || Dir.empty?(target)
+  end
 end

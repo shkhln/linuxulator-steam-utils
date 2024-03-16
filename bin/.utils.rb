@@ -3,9 +3,9 @@ require 'json'
 raise '$HOME is undefined.' if !ENV['HOME']
 
 LSU_IN_CHROOT   = '/usr/steam-utils'
-LSU_DIST_PATH   = File.join(ENV['HOME'], '.steam/dist')
-LSU_TMPDIR_PATH = File.join(ENV['HOME'], '.steam/tmp')
-STEAM_ROOT_PATH = File.join(ENV['HOME'], '.steam/steam')
+LSU_DIST_PATH   = File.join(File.realpath(ENV['HOME']), '.steam/dist')
+LSU_TMPDIR_PATH = File.join(File.realpath(ENV['HOME']), '.steam/tmp')
+STEAM_ROOT_PATH = File.join(File.realpath(ENV['HOME']), '.steam/steam')
 
 def with_env(vars)
   temp = {}
@@ -63,7 +63,7 @@ def read_tmp_dir_cookie
   File.exist?(cookie_path) ? File.read(cookie_path).chomp : nil
 end
 
-def find_steamapp_dir(name)
+def find_steam_library_folders
   library_folders = [STEAM_ROOT_PATH]
 
   vdf = File.read(File.join(STEAM_ROOT_PATH, 'steamapps/libraryfolders.vdf'))
@@ -81,7 +81,23 @@ def find_steamapp_dir(name)
     end
   end
 
-  library_folders.map{|dir| File.join(dir, 'steamapps/common', name)}.find{|dir| File.exist?(dir)}
+  library_folders.uniq
+end
+
+def find_steamapp_with_library_path(name)
+  library_folders = find_steam_library_folders()
+  for dir in library_folders
+    target = File.join(dir, 'steamapps/common', name)
+    if File.exist?(target)
+      return [target, dir]
+    end
+  end
+  nil
+end
+
+def find_steamapp_dir(name)
+  game_dir, _ = find_steamapp_with_library_path(name)
+  game_dir
 end
 
 def print_cmd(cmd)

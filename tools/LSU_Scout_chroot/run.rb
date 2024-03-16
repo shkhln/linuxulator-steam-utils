@@ -45,7 +45,8 @@ case ARGV[0]
     ].compact.join(':')
 
     ENV['LSU_LINUX_LD_LIBRARY_PATH'] = library_path
-    ENV['LSU_LINUX_PATH']            = '/bin:/usr/bin'
+    ENV['LSU_LINUX_PATH']            = '/bin'
+    ENV['STEAM_COMPAT_TOOL_PATHS']   = nil
 
     exec(File.expand_path('../../bin/lsu-run-in-chroot', __dir__), SLR_DIR, *ARGV[1..-1])
   else

@@ -7,7 +7,7 @@ PROTON_DIR = 'Proton 8.0'
 SLR_DIR    = 'SteamLinuxRuntime_sniper'
 
 def run(args)
-  proton_path = find_steamapp_dir(PROTON_DIR)
+  proton_path, steamapp_lib_path = find_steamapp_with_library_path(PROTON_DIR)
   if not proton_path
     STDERR.puts "Can't find #{PROTON_DIR}."
     exit(1)
@@ -24,12 +24,13 @@ def run(args)
     File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
   ].compact.join(':')
 
-  ENV['LSU_LINUX_LD_PRELOAD']      = ['protonfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
-  ENV['LSU_LINUX_LD_LIBRARY_PATH'] = library_path
-  ENV['LSU_LINUX_PATH']            = '/bin:/usr/bin'
-  ENV['PROTON_NO_ESYNC']           = '1'
-  ENV['PROTON_NO_FSYNC']           = '1'
-  ENV['STEAM_COMPAT_MOUNTS']       = [proton_path, ENV['STEAM_COMPAT_MOUNTS']].compact.join(':')
+  ENV['LSU_LINUX_LD_PRELOAD']       = ['protonfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
+  ENV['LSU_LINUX_LD_LIBRARY_PATH']  = library_path
+  ENV['LSU_LINUX_PATH']             = '/bin'
+  ENV['PROTON_NO_ESYNC']            = '1'
+  ENV['PROTON_NO_FSYNC']            = '1'
+  ENV['STEAM_COMPAT_LIBRARY_PATHS'] = [File.join(steamapp_lib_path, 'steamapps'), ENV['STEAM_COMPAT_LIBRARY_PATHS']].compact.uniq.join(':')
+  ENV['STEAM_COMPAT_TOOL_PATHS']    = proton_path
 
   exec(File.expand_path('../../bin/lsu-run-in-chroot', __dir__), SLR_DIR, File.join(proton_path, 'proton'), *args)
 end
