@@ -113,6 +113,7 @@ def mount(fs, from, to, options = nil)
       FileUtils.touch(to)
     else
       FileUtils.mkdir_p(to)
+      FileUtils.touch(File.join(to, '.mountpoint'))
     end
   rescue Errno::EACCES, Errno::EROFS
     # do nothing

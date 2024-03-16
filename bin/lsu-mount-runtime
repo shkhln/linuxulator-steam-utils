@@ -279,7 +279,7 @@ end
 
 mounts = nil
 for dir in dirs.sort
-  next if File.exist?(File.join(mroot, dir))
+  next if File.exist?(File.join(mroot, dir)) && !File.exist?(File.join(mroot, dir, '.mountpoint'))
 
   mounts ||= JSON.parse(`mount --libxo json`)['mount']['mounted'].map{|m| m['node']}.sort
 
