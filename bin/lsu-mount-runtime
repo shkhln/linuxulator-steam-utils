@@ -126,6 +126,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     # basic configuration
     FileUtils.cp('/etc/group',       File.join(mroot, 'etc/'))
     FileUtils.cp('/etc/hosts',       File.join(mroot, 'etc/'))
+    FileUtils.cp('/etc/localtime',   File.join(mroot, 'etc/'))
     FileUtils.cp('/etc/machine-id',  File.join(mroot, 'etc/')) # dbus
     FileUtils.cp('/etc/passwd',      File.join(mroot, 'etc/')) # getpwuid_r()
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
@@ -196,10 +197,11 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     end
 
     # misc diagnostic utilities
-    for exe in ['aplay', 'glxgears']
-      path = File.join(EMUL_PATH, 'bin', exe)
-      FileUtils.cp(path, File.join(mroot, 'usr/bin/')) if File.exist?(path)
+    for exe in ['aplay', 'glxgears', 'strace']
+      copy_if_exists(File.join(EMUL_PATH, 'bin', exe), File.join(mroot, 'usr/bin', exe))
     end
+
+    copy_if_exists(File.join(EMUL_PATH, 'lib64/libdw.so.1'), File.join(mroot, 'usr/lib/x86_64-linux-gnu/libdw.so.1'))
 
     # eON workaround
     #~ for i in 0..64 do
