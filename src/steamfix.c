@@ -16,18 +16,15 @@
   (largely to avoid those "object cannot be preloaded" ld.so complaints)
 */
 
-static char* ld_preload = NULL;
-
 __attribute__((constructor))
 static void clear_ld_preload() {
 
   char* keep = getenv("LSU_KEEP_LD_PRELOAD");
-  if (keep && strcmp(keep, "1") == 0)
+  if (keep && strcmp(keep, "1") == 0) {
     return;
+  }
 
-  char* s = getenv("LD_PRELOAD");
-  if (s) {
-    ld_preload = strdup(s);
+  if (getenv("LD_PRELOAD") != NULL) {
     unsetenv("LD_PRELOAD");
   }
 }
@@ -219,119 +216,6 @@ int execv(const char* file, char* const argv[]) {
   } else {
     return libc_execv(file, argv);
   }
-}
-
-/* Handle Steam restart */
-
-#include <stdbool.h>
-#include <linux/limits.h>
-
-static int    program_argc;
-static char** program_argv;
-static char   program_path[PATH_MAX];
-
-__attribute__((constructor))
-static void restart_fix_init(int argc, char** argv, char** env) {
-
-  program_argc = argc;
-  program_argv = argv;
-
-  ssize_t nchars = readlink("/proc/self/exe", program_path, sizeof(program_path));
-  assert(nchars > 0);
-  program_path[nchars] = '\0';
-}
-
-extern char** environ;
-
-static bool drop_urls_on_restart = false;
-
-static __attribute__((__noreturn__)) void restart() {
-
-  printf("Restarting Steam...\n");
-
-  char pidfile_path[PATH_MAX];
-  snprintf(pidfile_path, sizeof(pidfile_path), "%s/%s", getenv("HOME"), ".steam/steam.pid");
-
-  unlink(pidfile_path);
-
-  if (ld_preload) {
-    setenv("LD_PRELOAD", ld_preload, 1);
-  }
-
-  if (drop_urls_on_restart) {
-
-    char** argv = malloc(sizeof(char*) * (program_argc + 1));
-
-    int j = 0;
-    for (int i = 0; i < program_argc; i++) {
-      char* arg = program_argv[i];
-      if (strncmp(arg, "steam://", sizeof("steam://") - 1) != 0) {
-        argv[j] = arg; j++;
-      }
-    }
-    argv[j] = NULL;
-
-    execve(program_path, argv, environ);
-
-  } else {
-    execve(program_path, program_argv, environ);
-  }
-
-  perror("execve");
-  abort();
-}
-
-static __attribute__((__noreturn__)) void (*libc_exit)(int) = NULL;
-
-void exit(int status) {
-
-  if (status == 42) {
-
-    int err;
-
-    err = system(". lsu-linux-to-freebsd-env.sh && \"$LSU_BIN_PATH/lsu-umount\"");
-    if (err != 0) {
-      fprintf(stderr, "lsu-umount failed with exit code: %d\n", err);
-      libc_exit(EXIT_FAILURE);
-    }
-
-    err = system(". lsu-linux-to-freebsd-env.sh && \"$LSU_BIN_PATH/lsu-patch-steam\"");
-    if (err != 0) {
-      fprintf(stderr, "lsu-patch-steam failed with exit code: %d\n", err);
-      libc_exit(EXIT_FAILURE);
-    }
-
-    err = system(". lsu-linux-to-freebsd-env.sh && \"$LSU_BIN_PATH/lsu-upgrade-steam-runtime\"");
-    if (err != 0) {
-      fprintf(stderr, "lsu-upgrade-steam-runtime failed with exit code: %d\n", err);
-      libc_exit(EXIT_FAILURE);
-    }
-
-    restart();
-
-  } else {
-
-    if (!libc_exit) {
-      libc_exit = dlsym(RTLD_NEXT, "exit");
-    }
-
-    libc_exit(status);
-  }
-}
-
-static int (*libc_fputs)(const char*, FILE*) = NULL;
-
-int fputs(const char* str, FILE* stream) {
-
-  if (!libc_fputs) {
-    libc_fputs = dlsym(RTLD_NEXT, "fputs");
-  }
-
-  if (stream == stderr && strncmp(str, "ExecuteSteamURL:", sizeof("ExecuteSteamURL:") - 1) == 0) {
-    drop_urls_on_restart = true;
-  }
-
-  return libc_fputs(str, stream);
 }
 
 /* Steam doesn't have the ability to detach anything, but this action must succeed, otherwise Steam won't see any devices */

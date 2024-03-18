@@ -186,35 +186,47 @@ ENV['STEAM_ZENITY']                         = 'zenity'
 ENV['SYSTEM_LD_LIBRARY_PATH']               = games_library_path
 ENV['SYSTEM_PATH']                          = bin_path
 
-with_fbsd_env do
-  safe_system(File.join(__dir__, 'lsu-patch-steam'))
-  safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
-end
-
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
     with_fbsd_env do
-      system(File.join(__dir__, 'lsu-kill'))
-      system(File.join(__dir__, 'lsu-umount'))
+      opts = STDOUT.tty? ? {} : {[:err, :out] => '/dev/null'}
+      system(File.join(__dir__, 'lsu-kill'),   opts)
+      system(File.join(__dir__, 'lsu-umount'), opts)
     end
     exit
   end
 end
 
-system([File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam')] * 2, *ARGV)
-
-# normal exit still leaves steamwebhelper processes
-process_list = with_fbsd_env do
-  JSON.parse(`ps eauxww -U \`id -u\` --libxo json`)['process-information']['process']
-end
-for process in process_list
-  if process['command'] =~ /\s?LSU_COOKIE=([\w\d]+).*steamwebhelper/ && $1 == ENV['LSU_COOKIE'] && process['state'] != 'Z'
-    pid = process['pid'].to_i
-    STDERR.puts "Killing leftover steamwebhelper process: #{pid}."
-    Process.kill(:KILL, pid)
+loop do
+  with_fbsd_env do
+    safe_system(File.join(__dir__, 'lsu-patch-steam'))
+    safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
   end
-end
 
-with_fbsd_env do
-  system(File.join(__dir__, 'lsu-umount'))
+  system([File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam')] * 2, *ARGV)
+  status = $?.exitstatus
+
+  PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
+
+  was_main_instance = begin
+    Process.kill(0, File.read(PID_FILE).to_i)
+    false
+  rescue Errno::ESRCH
+    true
+  end
+
+  if was_main_instance
+    File.unlink(PID_FILE)
+    with_fbsd_env do
+      # normal exit still leaves steamwebhelper processes
+      system(File.join(__dir__, 'lsu-kill'))
+      system(File.join(__dir__, 'lsu-umount'))
+    end
+  end
+
+  if status == 42
+    STDERR.puts "Restarting Steam..."
+  else
+    exit(status)
+  end
 end

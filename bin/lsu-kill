@@ -3,8 +3,10 @@
 
 require 'json'
 
+PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
+
 pid = begin
-  File.read(File.join(ENV['HOME'], '.steam/steam.pid')).to_i
+  File.read(PID_FILE).to_i
 rescue Errno::ENOENT
   STDERR.puts 'No pid file found.'
   nil
@@ -13,11 +15,14 @@ end
 if pid
   begin
     Process.kill(:KILL, pid)
-    Process.wait(pid)
+    begin
+      Process.wait(pid)
+    rescue Errno::ECHILD
+      # ?
+    end
+    File.unlink(PID_FILE)
   rescue Errno::ESRCH
     STDERR.puts 'Steam is not running.'
-  rescue Errno::ECHILD
-    # ?
   end
 end
 
