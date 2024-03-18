@@ -68,6 +68,38 @@ def try_mount_user_dir(mroot, path)
   end
 end
 
+def get_all_mounts(reset = false)
+  $get_all_mounts = nil if reset
+  $get_all_mounts ||= JSON.parse(`mount --libxo json`)['mount']['mounted']
+  $get_all_mounts
+end
+
+def mirror_mounts(mroot, dir)
+  mounts = []
+  source_mounts = get_all_mounts()
+    .find_all{|m| m['node'].start_with?(File.join(dir, '/'))}
+    .sort_by {|m| m['node']}
+  node_to_skip = nil # that includes nested mounts
+  for m in source_mounts
+    if node_to_skip && m['node'].start_with?(node_to_skip)
+      next
+    else
+      if m['fstype'] =~ /^(dev|fdesc|tmp|(lin|)proc|linsys)fs$/
+        node_to_skip = m['node']
+      else
+        path = try_mount_user_dir(mroot, m['node'])
+        if path
+          mounts << path
+          node_to_skip = nil
+        else
+          node_to_skip = m['node'] # skip this entire subtree
+        end
+      end
+    end
+  end
+  mounts
+end
+
 #TODO: STEAM_COMPAT_* env vars
 mounts = []
 if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
@@ -215,43 +247,28 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     home_dir_mount = try_mount_user_dir(mroot, home_dir)
     raise if !home_dir_mount
     mounts << home_dir_mount
+    mounts.concat(mirror_mounts(mroot, home_dir))
 
     FileUtils.ln_s('../home', File.join(mroot, 'usr/home'))
-
-    home_mounts = JSON.parse(`mount --libxo json`)['mount']['mounted']
-      .find_all{|m| m['node'].start_with?(home_dir) && m['node'] != home_dir}
-      .sort_by {|m| m['node']}
-    node_to_skip = nil # that includes nested mounts
-    for m in home_mounts
-      if node_to_skip && m['node'].start_with?(node_to_skip)
-        next
-      else
-        if m['fstype'] =~ /^(dev|fdesc|tmp|(lin|)proc|linsys)fs$/
-          node_to_skip = m['node']
-        else
-          path = try_mount_user_dir(mroot, m['node'])
-          if path
-            mounts << path
-            node_to_skip = nil
-          else
-            node_to_skip = m['node'] # skip this entire subtree
-          end
-        end
-      end
-    end
 
     #TODO: this doesn't really work due to chroot being shared with steamwebhelper
     #if ENV['STEAM_COMPAT_LIBRARY_PATHS']
     #  for dir in ENV['STEAM_COMPAT_LIBRARY_PATHS'].split(':')
     #    path = try_mount_user_dir(mroot, dir)
-    #    mounts << path if path
+    #    if path
+    #      mounts << path
+    #      mounts.concat(mirror_mounts(mroot, dir))
+    #    end
     #  end
     #end
 
     if ENV['STEAM_COMPAT_MOUNTS']
       for dir in ENV['STEAM_COMPAT_MOUNTS'].split(':')
         path = try_mount_user_dir(mroot, dir)
-        mounts << path if path
+        if path
+          mounts << path
+          mounts.concat(mirror_mounts(mroot, dir))
+        end
       end
     end
   rescue
@@ -279,18 +296,9 @@ if ENV['STEAM_COMPAT_TOOL_PATHS']
   dirs.concat(ENV['STEAM_COMPAT_TOOL_PATHS'].split(':'))
 end
 
-mounts = nil
 for dir in dirs.sort
-  next if File.exist?(File.join(mroot, dir)) && !File.exist?(File.join(mroot, dir, '.mountpoint'))
-
-  mounts ||= JSON.parse(`mount --libxo json`)['mount']['mounted'].map{|m| m['node']}.sort
-
-  ancestors = mounts.find_all{|m| m != '/' && dir.start_with?(m)}
-  if ancestors.empty?
+  if !File.exist?(File.join(mroot, dir)) || File.exist?(File.join(mroot, dir, '.mountpoint'))
     try_mount_user_dir(mroot, dir)
-  else
-    for m in ancestors.find_all{|m| !mounts.include?(File.join(mroot, m))}
-      break if !try_mount_user_dir(mroot, m)
-    end
+    mirror_mounts(mroot, dir)
   end
 end
