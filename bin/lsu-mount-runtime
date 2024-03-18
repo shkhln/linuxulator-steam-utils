@@ -199,6 +199,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       copy_if_exists(File.join('/usr/local/share', icd), File.join(mroot, 'usr/share', icd))
     end
 
+    # cursor themes
+    mounts << mount('nullfs', '/usr/local/share/icons', File.join(mroot, 'usr/share/icons'), 'union')
+
     # fonts
     mounts << mount('nullfs', '/usr/local/share/fonts', File.join(mroot, 'usr/share/fonts'), 'union')
 
