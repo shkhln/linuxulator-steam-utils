@@ -147,12 +147,10 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     mounts << mount('nullfs', File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, 'dev/shm'))
 
     Dir.chdir(File.join(mroot, 'dev')) do
-      for path in Dir['.dev/*']
+      for path in Dir['.dev/*'] + ['.dev/dsp', '.dev/mixer']
         basename = File.basename(path)
         FileUtils.ln_s(path, basename) if !File.exist?(basename)
       end
-      FileUtils.ln_s('.dev/dsp',   'dsp')
-      FileUtils.ln_s('.dev/mixer', 'mixer')
     end
 
     # basic configuration
@@ -164,7 +162,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
 
     # LSU's bin/lib dirs
-    lsu_dir = File.realpath(File.join(__dir__, '..'))
+    lsu_dir = File.expand_path('..', __dir__)
     mounts << mount('nullfs', lsu_dir, File.join(mroot, LSU_IN_CHROOT))
 
     # Nvidia libs
