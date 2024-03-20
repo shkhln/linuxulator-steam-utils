@@ -7,6 +7,29 @@ LSU_DIST_PATH   = File.join(File.realpath(ENV['HOME']), '.steam/dist')
 LSU_TMPDIR_PATH = File.join(File.realpath(ENV['HOME']), '.steam/tmp')
 STEAM_ROOT_PATH = File.join(File.realpath(ENV['HOME']), '.steam/steam')
 
+PWARN_PROGRAM_NAME = if ENV['LSU_COOKIE'] # ?
+  name = File.basename($PROGRAM_NAME)
+  name.start_with?('lsu-') ? name : $PROGRAM_NAME
+else
+  nil
+end
+
+def perr(msg)
+  if PWARN_PROGRAM_NAME
+    STDERR.puts "\e[7m#{PWARN_PROGRAM_NAME}: #{msg}\e[27m"
+  else
+    STDERR.puts msg
+  end
+end
+
+def pwarn(msg)
+  if PWARN_PROGRAM_NAME
+    STDERR.puts "#{PWARN_PROGRAM_NAME}: #{msg}"
+  else
+    STDERR.puts msg
+  end
+end
+
 def with_env(vars)
   temp = {}
 
@@ -100,8 +123,8 @@ def find_steamapp_dir(name)
   game_dir
 end
 
-def print_cmd(cmd)
-  STDERR.puts cmd.map{|s| s =~ /\s/ ? s.inspect : s}.join(' ')
+def format_cmd(cmd)
+  cmd.map{|s| s =~ /\s/ ? s.inspect : s}.join(' ')
 end
 
 class MountError < StandardError
@@ -125,7 +148,7 @@ def mount(fs, from, to, options = nil)
   cmd << '-t' << fs
   cmd << from
   cmd << to
-  print_cmd(cmd)
+  pwarn format_cmd(cmd)
   system(*cmd) || raise(MountError.new("unable to mount #{from.inspect} to #{to.inspect}"))
   File.realpath(to)
 end
@@ -172,7 +195,7 @@ def download_debs(dpkgs, dist_path)
         pkg, meta  = e
         downloaded = false
         for mirror in mirrors
-          STDERR.puts "Downloading #{pkg} from #{mirror}..."
+          pwarn "Downloading #{pkg} from #{mirror}..."
           if system('fetch', '-o', File.join(dist_path, "#{pkg}.tmp"), "#{mirror}/#{meta[:path]}/#{pkg}")
             downloaded = true
             break

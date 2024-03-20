@@ -28,6 +28,6 @@ case ARGV[0]
 
     exec(File.expand_path('../../bin/lsu-run-in-chroot', __dir__), SLR_DIR, *ARGV[1..-1])
   else
-    puts "Unknown command #{ARGV[0]}"
+    perr "Unknown command #{ARGV[0]}"
     exit(1)
 end

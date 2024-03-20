@@ -10,38 +10,38 @@ SLR_NAME_OR_PATH = ARGV[0] || 'SteamLinuxRuntime_sniper'
 reqs = []
 
 EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
-if not EMUL_PATH =~ /\/compat\/\w[\w\d]*/
-  reqs << "This script doesn't like your compat.linux.emul_path."
+if !(EMUL_PATH =~ /\/compat\/\w[\w\d]*/)
+  reqs << "This script doesn't like your compat.linux.emul_path"
 end
 
 SLR_DIR = File.basename(SLR_NAME_OR_PATH)
-if not SLR_DIR =~ /SteamLinuxRuntime_\w+/
-  reqs << "Expected the directory name starting with SteamLinuxRuntime_."
+if !(SLR_DIR =~ /SteamLinuxRuntime_\w+/)
+  reqs << "Expected the directory name starting with SteamLinuxRuntime_"
 end
 
 if `sysctl -nq vfs.usermount`.to_i != 1
-  reqs << "This script requires vfs.usermount=1."
+  reqs << "This script requires vfs.usermount=1"
 end
 
-if not system('kldstat -q -m nullfs')
-  reqs << "nullfs.ko must be loaded."
+if !system('kldstat -q -m nullfs')
+  reqs << "nullfs.ko must be loaded"
 end
 
 steam_linux_runtime_path = SLR_NAME_OR_PATH.start_with?('/') ? SLR_NAME_OR_PATH : find_steamapp_dir(SLR_DIR)
-if not steam_linux_runtime_path
-  reqs << "Can't find #{SLR_DIR}."
+if !steam_linux_runtime_path
+  reqs << "Can't find #{SLR_DIR}"
 end
 
 if reqs.size > 0
   for msg in reqs
-    STDERR.puts msg
+    perr msg
   end
   exit(1)
 end
 
 platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")]
   .sort.find{|dir| File.exist?(File.join(dir, 'metadata'))}
-raise if not platform
+raise if !platform
 
 download_debs(DPKGS, LSU_DIST_PATH)
 
@@ -59,11 +59,11 @@ def try_mount_user_dir(mroot, path)
       target = File.join(mroot, path.gsub(/^\/usr\/home\//, '/home/'))
       try_mount('nullfs', path, target, 'nocover')
     else
-      STDERR.puts "skipping #{path.inspect}, path is not allowed"
+      pwarn "Skipping #{path.inspect}, path is not allowed"
       nil
     end
   else
-    STDERR.puts "skipping #{path.inspect}, expected an absolute path"
+    pwarn "Skipping #{path.inspect}, expected an absolute path"
     nil
   end
 end
@@ -279,7 +279,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     raise
   end
 else
-  STDERR.puts "Assuming #{mroot} is already set up."
+  pwarn "Assuming #{mroot} is already set up"
 end
 
 # last-ditch attempt to ensure the game files are accessible in chroot

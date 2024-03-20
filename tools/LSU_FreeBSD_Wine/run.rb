@@ -37,33 +37,25 @@ wine64_bin = '/usr/local/wine-proton/bin/wine64'
 wine32_bin = File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine')
 
 if not File.exist?(wine64_bin)
-  STDERR.puts "\e[7m"
-  STDERR.puts "#{wine64_bin} doesn't exist!"
-  STDERR.puts "Install emulators/wine-proton first."
-  STDERR.puts "\e[27m"
+  perr "#{wine64_bin} doesn't exist!"
+  perr "Install emulators/wine-proton first."
   exit(1)
 end
 
 if not File.exist?(wine32_bin)
-  STDERR.puts "\e[7m"
-  STDERR.puts "#{wine32_bin} doesn't exist!"
-  STDERR.puts "\e[27m"
+  perr "#{wine32_bin} doesn't exist!"
   exit(1)
 end
 
 wine64_version = `#{wine64_bin} --version`.chomp.delete_prefix("wine-")
 if not KNOWN_VERSIONS[wine64_version]
-  STDERR.puts "\e[7m"
-  STDERR.puts "Found #{wine64_bin} version #{wine64_version}, expected#{KNOWN_VERSIONS.keys.size > 1 ? ':' : ''} #{KNOWN_VERSIONS.keys.join(', ')}."
-  STDERR.puts "\e[27m"
+  perr "Found #{wine64_bin} version #{wine64_version}, expected#{KNOWN_VERSIONS.keys.size > 1 ? ':' : ''} #{KNOWN_VERSIONS.keys.join(', ')}."
   exit(1)
 end
 
 wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
 if wine64_version != wine32_version
-  STDERR.puts "\e[7m"
-  STDERR.puts "#{wine64_bin} (#{wine64_version}) and #{wine32_bin} (#{wine32_version}) versions must match each other."
-  STDERR.puts "\e[27m"
+  perr "#{wine64_bin} (#{wine64_version}) and #{wine32_bin} (#{wine32_version}) versions must match each other."
   exit(1)
 end
 
@@ -75,10 +67,8 @@ PROTON_VERSION = wine64_version
 
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}")
 if not PROTON_DIR
-  STDERR.puts "\e[7m"
-  STDERR.puts "Can't find the Proton #{PROTON_VERSION} directory!"
-  STDERR.puts "Try `steam \"steam://install/#{KNOWN_VERSIONS[PROTON_VERSION][:appId]}\"` if it's not installed."
-  STDERR.puts "\e[27m"
+  perr "Can't find the Proton #{PROTON_VERSION} directory!"
+  perr "Try `steam \"steam://install/#{KNOWN_VERSIONS[PROTON_VERSION][:appId]}\"` if it's not installed."
   exit(1)
 end
 
@@ -92,20 +82,20 @@ def set_up()
     if state != $setup_state
       case state
         when :proton
-          puts "Found Proton #{PROTON_VERSION} at #{PROTON_DIR}"
-          puts "Copying files from Proton #{PROTON_VERSION}..."
+          pwarn "Found Proton #{PROTON_VERSION} at #{PROTON_DIR}"
+          pwarn "Copying files from Proton #{PROTON_VERSION}..."
         when :steamrt
-          puts "Found Steam Linux Runtime at #{STEAMRT_DIR}"
-          puts "Copying files from Steam Runtime..."
+          pwarn "Found Steam Linux Runtime at #{STEAMRT_DIR}"
+          pwarn "Copying files from Steam Runtime..."
         when :symlinks
-          puts "Creating symlinks..."
+          pwarn "Creating symlinks..."
         when :manifest
-          puts "Registering emulators/wine-proton as a compatibility tool..."
+          pwarn "Registering emulators/wine-proton as a compatibility tool..."
         when :done
           if $setup_steps.empty?
-            puts "Nothing to do"
+            pwarn "Nothing to do"
           else
-            puts "Done"
+            pwarn "Done"
           end
       end
       if not $setup_steps.include?(state)
@@ -231,7 +221,7 @@ def run(args)
       File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/proton"),
       *args
     ]
-    print_cmd(cmd)
+    pwarn format_cmd(cmd)
     exec(*cmd)
 end
 
@@ -240,6 +230,6 @@ case ARGV[0]
     set_up()
     run(ARGV[0..-1])
   else
-    puts "Unknown command #{ARGV[0]}"
+    perr "Unknown command #{ARGV[0]}"
     exit(1)
 end

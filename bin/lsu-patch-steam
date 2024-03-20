@@ -2,6 +2,7 @@
 # encoding: UTF-8
 
 require 'fileutils'
+require_relative '.utils'
 
 def same_size(a, b); File.lstat(a).size == File.lstat(b).size; end
 def is_older (a, b); File.mtime(a)      <  File.mtime(b);      end
@@ -9,7 +10,7 @@ def is_older (a, b); File.mtime(a)      <  File.mtime(b);      end
 def patch_executable(path, out_path, check_size = true)
 
   if not File.exist?(path)
-    STDERR.puts "#{$PROGRAM_NAME}: #{path} not found, nothing to patch"
+    pwarn "#{path} not found, nothing to patch"
     return
   end
 

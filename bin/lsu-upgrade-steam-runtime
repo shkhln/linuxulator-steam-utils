@@ -2,14 +2,13 @@
 # encoding: UTF-8
 
 require 'fileutils'
-
-steam_root = ENV['HOME'] + '/.steam/steam'
+require_relative '.utils'
 
 def safe_system(*args)
   raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
 end
 
-Dir.chdir(steam_root + '/ubuntu12_32') do
+Dir.chdir(File.join(STEAM_ROOT_PATH, 'ubuntu12_32')) do
 
   runtime_md5 = File.exist?('steam-runtime/checksum')        ? File.read('steam-runtime/checksum').split(' ').first        : nil
   archive_md5 = File.exist?('steam-runtime.tar.xz.checksum') ? File.read('steam-runtime.tar.xz.checksum').split(' ').first : nil
@@ -27,7 +26,7 @@ Dir.chdir(steam_root + '/ubuntu12_32') do
     raise if not version
 
     if not File.exist?("steam-runtime_#{version}")
-      puts 'Extracting steam-runtime...'
+      pwarn 'Extracting steam-runtime...'
 
       FileUtils.mkdir('steam-runtime_' + version)
       safe_system("tar -C steam-runtime_#{version} -xf steam-runtime.tar.xz --strip-components 1")

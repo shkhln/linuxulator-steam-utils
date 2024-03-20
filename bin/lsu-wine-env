@@ -2,6 +2,7 @@
 # encoding: UTF-8
 
 require 'fileutils'
+require_relative '.utils'
 
 raise 'Don\'t run this script as root!' if `id -u`.chomp == '0'
 
@@ -30,7 +31,7 @@ def exec_with_wine_env(args)
 end
 
 if ARGV.length == 0
-  STDERR.puts "#{File.basename($PROGRAM_NAME)} <application> [application args]"
+  perr "#{File.basename($PROGRAM_NAME)} <application> [application args]"
   exit(1)
 end
 

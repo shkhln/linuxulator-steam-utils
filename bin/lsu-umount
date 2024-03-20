@@ -19,12 +19,12 @@ def unmount
 
   for path in paths
     cmd = ['umount', path]
-    print_cmd(cmd)
+    pwarn format_cmd(cmd)
     if !system(*cmd)
       cmd = ['umount', '-f', path]
-      print_cmd(cmd)
+      pwarn format_cmd(cmd)
       if !system(*cmd)
-        STDERR.puts "Failed to unmount #{path}"
+        pwarn "Failed to unmount #{path}"
       end
     end
   end

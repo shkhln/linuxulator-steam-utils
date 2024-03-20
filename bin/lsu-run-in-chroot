@@ -4,19 +4,19 @@
 require_relative '.utils'
 
 if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
-  STDERR.puts "This script requires security.bsd.unprivileged_chroot=1."
+  perr "This script requires security.bsd.unprivileged_chroot=1"
   exit(1)
 end
 
 if ARGV.length < 2
-  STDERR.puts "lsu-run-in-chroot <steam runtime dir> <executable>"
+  perr "lsu-run-in-chroot <steam runtime dir> <executable>"
   exit(1)
 end
 
 SLR_NAME_OR_PATH = ARGV[0]
 
-if not system(File.join(__dir__, 'lsu-mount-runtime'), SLR_NAME_OR_PATH)
-  STDERR.puts "Unable to prepare chroot dir."
+if !system(File.join(__dir__, 'lsu-mount-runtime'), SLR_NAME_OR_PATH)
+  perr "Unable to prepare chroot dir"
   exit(1)
 end
 
@@ -25,7 +25,7 @@ mroot = File.join(LSU_TMPDIR_PATH, File.basename(SLR_NAME_OR_PATH))
 ENV['LSU_LINUX_PATH'] ||= '/bin:/usr/bin'
 Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do
   if `readelf -s libc.so.6 | grep GLIBC_2.34`.chomp == ''
-    STDERR.puts 'Found glibc < 2.34, preloading shmfix.so.'
+    pwarn 'Found glibc < 2.34, preloading shmfix.so'
     ENV['LSU_LINUX_LD_PRELOAD'] = ['shmfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
   end
 end

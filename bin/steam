@@ -36,19 +36,19 @@ def check_requirements
     reqs << [:linux, '#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/fd' ] if fd [:line] < dev[:line]
   end
 
-  reqs << [:linux,   "write access to #{EMUL_PATH}/dev/shm"] if not File.writable?("#{EMUL_PATH}/dev/shm")
-  reqs << [:dbus,    '/var/lib/dbus/machine-id existence']   if not File.exist?('/var/lib/dbus/machine-id')
+  reqs << [:linux,   "write access to #{EMUL_PATH}/dev/shm"] if !File.writable?("#{EMUL_PATH}/dev/shm")
+  reqs << [:dbus,    '/var/lib/dbus/machine-id existence']   if !File.exist?('/var/lib/dbus/machine-id')
   reqs << [:uchroot, 'Unprivileged chroot must be enabled']  if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
   reqs << [:umount,  'Unprivileged mounts must be enabled']  if `sysctl -nq vfs.usermount`.to_i != 1
 
   # without nullfs.ko mount fails with an unhelpful error message: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=274600#c5
-  reqs << [:nullfs, 'nullfs.ko must be loaded'] if not system('kldstat -q -m nullfs')
+  reqs << [:nullfs, 'nullfs.ko must be loaded'] if !system('kldstat -q -m nullfs')
 
   reqs
 end
 
 def safe_system(*args)
-  raise "Command failed: #{args.join(' ').inspect}" if not system(*args)
+  raise "Command failed: #{args.join(' ').inspect}" if !system(*args)
 end
 
 def get_linux_cmd_output(*args)
@@ -63,50 +63,50 @@ def get_linux_cmd_output(*args)
 end
 
 requirements = check_requirements()
-if not requirements.empty?
-  STDERR.puts 'Please, make sure the following requirements are satisfied:'
+if !requirements.empty?
+  perr 'Please, make sure the following requirements are satisfied:'
   for req in requirements
-    STDERR.puts "  * #{req[1]}"
+    perr "  * #{req[1]}"
   end
 
   if requirements.find{|req| req[0] == :linux}
-    STDERR.puts "\nRun (as root) `sysrc linux_enable=YES && service linux start` to enable Linux emulation."
+    perr "\nRun (as root) `sysrc linux_enable=YES && service linux start` to enable Linux emulation."
   end
 
   if requirements.find{|req| req[0] == :dbus}
-    STDERR.puts "\nRun (as root) `mkdir -p /var/lib/dbus && /usr/local/bin/dbus-uuidgen --ensure` to generate a machine id."
+    perr "\nRun (as root) `mkdir -p /var/lib/dbus && /usr/local/bin/dbus-uuidgen --ensure` to generate a machine id."
   end
 
   if requirements.find{|req| req[0] == :uchroot}
-    STDERR.puts "\nRun (as root) `sysctl security.bsd.unprivileged_chroot=1`.\nAdd the setting to /etc/sysctl.conf to persist it."
+    perr "\nRun (as root) `sysctl security.bsd.unprivileged_chroot=1`.\nAdd the setting to /etc/sysctl.conf to persist it."
   end
 
   if requirements.find{|req| req[0] == :umount}
-    STDERR.puts "\nRun (as root) `sysctl vfs.usermount=1`.\nAdd the setting to /etc/sysctl.conf to persist it."
+    perr "\nRun (as root) `sysctl vfs.usermount=1`.\nAdd the setting to /etc/sysctl.conf to persist it."
   end
 
   if requirements.find{|req| req[0] == :nullfs}
-    STDERR.puts "\nRun (as root) `kldload nullfs` and `sysrc kld_list+=nullfs`."
+    perr "\nRun (as root) `kldload nullfs` and `sysrc kld_list+=nullfs`."
   end
 
   exit 1
 end
 
-if not File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
-  STDERR.puts "Can't find steamfix.so"
+if !File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
+  perr "Can't find steamfix.so"
   exit 1
 end
 
-if not File.exist?(STEAM_ROOT_PATH)
-  STDERR.puts "Steam doesn't appear to be installed for user #{ENV['USER']}."
-  STDERR.puts "Perhaps you forgot to run #{File.join(__dir__, 'lsu-bootstrap')}?"
+if !File.exist?(STEAM_ROOT_PATH)
+  perr "Steam doesn't appear to be installed for user #{ENV['USER']}."
+  perr "Perhaps you forgot to run #{File.join(__dir__, 'lsu-bootstrap')}?"
   exit 1
 end
 
 STEAM_RUNTIME_ROOT_PATH = File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam-runtime')
 
-if not File.exist?(STEAM_RUNTIME_ROOT_PATH)
-  STDERR.puts "Can't find steam-runtime"
+if !File.exist?(STEAM_RUNTIME_ROOT_PATH)
+  perr "Can't find steam-runtime"
   exit 1
 end
 
@@ -226,7 +226,7 @@ loop do
   end
 
   if status == 42
-    STDERR.puts "Restarting Steam..."
+    pwarn "Restarting Steam..."
   else
     exit(status)
   end

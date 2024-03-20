@@ -9,7 +9,7 @@ SLR_DIR    = 'SteamLinuxRuntime_sniper'
 def run(args)
   proton_path, steamapp_lib_path = find_steamapp_with_library_path(PROTON_DIR)
   if not proton_path
-    STDERR.puts "Can't find #{PROTON_DIR}."
+    pwarn "Can't find #{PROTON_DIR}"
     exit(1)
   end
 
@@ -39,6 +39,6 @@ case ARGV[0]
   when 'waitforexitandrun'
     run(ARGV[0..-1])
   else
-    puts "Unknown command #{ARGV[0]}"
+    perr "Unknown command #{ARGV[0]}"
     exit(1)
 end

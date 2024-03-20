@@ -2,13 +2,14 @@
 # encoding: UTF-8
 
 require 'json'
+require_relative '.utils'
 
 PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
 
 pid = begin
   File.read(PID_FILE).to_i
 rescue Errno::ENOENT
-  STDERR.puts 'No pid file found.'
+  pwarn 'No pid file found'
   nil
 end
 
@@ -22,7 +23,7 @@ if pid
     end
     File.unlink(PID_FILE)
   rescue Errno::ESRCH
-    STDERR.puts 'Steam is not running.'
+    pwarn 'Steam is not running'
   end
 end
 
@@ -30,7 +31,7 @@ process_list = JSON.parse(`ps auxww -U \`id -u\` --libxo json`)['process-informa
 for process in process_list
   if process['command'].include?('steamwebhelper') && process['state'] != 'Z'
     pid = process['pid'].to_i
-    STDERR.puts "Killing leftover steamwebhelper process: #{pid}."
+    pwarn "Killing leftover steamwebhelper process: #{pid}"
     Process.kill(:KILL, pid)
   end
 end
