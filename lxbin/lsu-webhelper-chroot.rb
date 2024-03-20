@@ -23,12 +23,11 @@ library_path = [
   File.expand_path('../lib64/fakeudev',  __dir__),
   File.expand_path('../lib64/webfix',    __dir__),
   '/lib/x86_64-linux-gnu',
-  '/usr/lib/x86_64-linux-gnu',
-  '/usr/lib/x86_64-linux-gnu/nss',
+  '/lib/x86_64-linux-gnu/nss',
 ].compact.join(':')
 
 ENV['LSU_LINUX_LD_LIBRARY_PATH'] = library_path
-ENV['LSU_LINUX_PATH']            = '/bin:/usr/bin'
+ENV['LSU_LINUX_PATH']            = '/bin'
 
 # I don't know whose sick idea was to enable EGL and Vulkan probing on --disable-gpu, but it's not funny
 args = ARGV.find_all{|arg| arg != '--disable-gpu-compositing' && arg != '--disable-gpu'}

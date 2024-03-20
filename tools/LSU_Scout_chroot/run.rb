@@ -37,9 +37,9 @@ case ARGV[0]
       File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
       '/usr/steam-runtime/pinned_libs_32',
       '/usr/steam-runtime/pinned_libs_64',
-      '/usr/lib/i386-linux-gnu',
-      '/usr/lib/x86_64-linux-gnu',
-      '/usr/lib/x86_64-linux-gnu/nss',
+      '/lib/i386-linux-gnu',
+      '/lib/x86_64-linux-gnu',
+      '/lib/x86_64-linux-gnu/nss',
       steam_runtime_libs,
       ENV['STEAM_COMPAT_INSTALL_PATH'] # ?
     ].compact.join(':')

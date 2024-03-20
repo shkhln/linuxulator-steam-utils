@@ -16,9 +16,9 @@ case ARGV[0]
       File.join(LSU_IN_CHROOT, 'lib64/noepollexcl'),
       File.join(LSU_IN_CHROOT, 'lib32/shmfix'),
       File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
-      '/usr/lib/i386-linux-gnu',
-      '/usr/lib/x86_64-linux-gnu',
-      '/usr/lib/x86_64-linux-gnu/nss',
+      '/lib/i386-linux-gnu',
+      '/lib/x86_64-linux-gnu',
+      '/lib/x86_64-linux-gnu/nss',
       ENV['STEAM_COMPAT_INSTALL_PATH'] # ?
     ].compact.join(':')
 
