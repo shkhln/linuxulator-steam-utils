@@ -98,7 +98,8 @@ if not File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
 end
 
 if not File.exist?(STEAM_ROOT_PATH)
-  STDERR.puts "Steam doesn't appear to be installed for user #{ENV['USER']}. Perhaps you forgot to run steam-install?"
+  STDERR.puts "Steam doesn't appear to be installed for user #{ENV['USER']}."
+  STDERR.puts "Perhaps you forgot to run #{File.join(__dir__, 'lsu-bootstrap')}?"
   exit 1
 end
 

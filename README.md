@@ -23,17 +23,15 @@ Any attempts to run LSU with a custom Ubuntu base will be met with unsympathetic
 ### Dependencies
 
 At least *ca_root_nss*, *linux-c7-dbus-libs*, *linux-c7-devtools*, *linux-c7-nss* and *ruby*.
-See [Makefile](Makefile) for a more extensive list.
-
-You can install these via `sudo make dependencies` from FreeBSD packages
-repository.
+See [Makefile](Makefile) for a more extensive list. You can install these via `sudo make dependencies`
+from FreeBSD packages repository.
 
 ### Steam
 
 Roughly:
 1. `git clone <this repo>`, run `make` and `sudo make install`. The files will be copied to */opt/steam-utils*.
 1. Create a dedicated FreeBSD non-wheel user account for Steam. Switch to it.
-1. Run `/opt/steam-utils/bin/steam-install` to download the Steam bootstrap executable, then `/opt/steam-utils/bin/steam` to download updates and start Steam.
+1. Run `/opt/steam-utils/bin/lsu-bootstrap` to download the Steam bootstrap executable, then `/opt/steam-utils/bin/steam` to download updates and start Steam.
 
 ## Chroots
 

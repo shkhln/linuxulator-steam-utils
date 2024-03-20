@@ -95,7 +95,7 @@ install:
 	install -d `dirname $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}`
 	install $(f) $(PREFIX)/$(PROJECT)/${f:C|$(BUILD_DIR)/(.*)|\1|}
 .endfor
-	install bin/.dpkgs.rb bin/.utils.rb bin/lsu-* bin/steam bin/steam-install $(PREFIX)/$(PROJECT)/bin
+	install bin/.dpkgs.rb bin/.utils.rb bin/lsu-* bin/steam $(PREFIX)/$(PROJECT)/bin
 	install \
  lxbin/curl-config \
  lxbin/dbus-launch \
