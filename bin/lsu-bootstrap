@@ -5,10 +5,10 @@ require 'fileutils'
 
 raise 'Never run this script as root!' if `id -u`.chomp == '0'
 
-STEAM_DIST_NAME = 'steam_1.0.0.75.tar.gz'
+STEAM_DIST_NAME = 'steam_1.0.0.79.tar.gz'
 
 SHA256 = {
-  'steam_1.0.0.75.tar.gz': 'e52565a5e33b9a4184c5bdc222978b7fea958efd32641d5d5967774d751236a7'
+  'steam_1.0.0.79.tar.gz': '3a0012daf5889311c2e1dcf33a587b409019b66d893a52192df6947e18f1ec46'
 }
 
 DUMB_PERSON_FLAG = '--allow-stealing-my-passwords,-browser-history-and-ssh-keys'
@@ -49,7 +49,7 @@ Dir.chdir(steam_root) do
   set_up_file('steam/ubuntu12_32') do
 
     set_up_file(STEAM_DIST_NAME) do
-      puts 'Downloading Steam...'
+      STDERR.puts 'Downloading Steam...'
       system("fetch http://repo.steampowered.com/steam/pool/steam/s/steam/#{STEAM_DIST_NAME} || fetch http://repo.steampowered.com/steam/archive/stable/#{STEAM_DIST_NAME}")
     end
 
@@ -57,7 +57,7 @@ Dir.chdir(steam_root) do
 
     FileUtils.mkdir_p('steam')
 
-    puts 'Extracting bootstrap...'
+    STDERR.puts 'Extracting bootstrap...'
     system("tar -xf #{STEAM_DIST_NAME} --strip-components 1 --to-stdout steam-launcher/bootstraplinux_ubuntu12_32.tar.xz | tar -C steam -xf -")
   end
 
@@ -69,9 +69,11 @@ Dir.chdir(steam_root) do
     'sdk64'   => 'steam/linux64',
   }
     if not File.symlink?(symlink)
-      puts "Creating symlink #{symlink} -> #{target}"
+      STDERR.puts "Creating symlink #{symlink} -> #{target}"
       FileUtils.ln_s(target, symlink)
     end
   end
 
 end # ~/.steam
+
+STDERR.puts "You can run #{File.join(__dir__, 'steam')} now."
