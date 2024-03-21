@@ -171,7 +171,6 @@ freebsd_ld_preload      = ENV['LD_PRELOAD']
 
 ENV['LD_LIBRARY_PATH']                      = client_library_path
 ENV['LD_PRELOAD']                           = preload
-ENV['LSU_BIN_PATH']                         = __dir__
 ENV['LSU_COOKIE']                           = SecureRandom.hex(16)
 ENV['LSU_FBSD_PATH']                        = freebsd_path
 ENV['LSU_FBSD_LD_LIBRARY_PATH']             = freebsd_ld_library_path
@@ -198,6 +197,8 @@ for signal in [:HUP, :INT, :TERM]
   end
 end
 
+PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
+
 loop do
   with_fbsd_env do
     safe_system(File.join(__dir__, 'lsu-patch-steam'))
@@ -207,16 +208,7 @@ loop do
   system([File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam')] * 2, *ARGV)
   status = $?.exitstatus
 
-  PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
-
-  was_main_instance = begin
-    Process.kill(0, File.read(PID_FILE).to_i)
-    false
-  rescue Errno::ESRCH
-    true
-  end
-
-  if was_main_instance
+  if $?.pid == File.read(PID_FILE).to_i
     File.unlink(PID_FILE)
     with_fbsd_env do
       # normal exit still leaves steamwebhelper processes
