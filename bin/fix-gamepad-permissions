@@ -24,7 +24,7 @@ run('sysctl hw.usb.usbhid.enable=1')
 
 evdev_gamepads = []
 for line in `sysctl kern.evdev.input`.lines
-  evdev_gamepads << $1.to_i if line =~ /^kern.evdev.input.(\d+).phys: (hgame|ps4dshock|xb360gp0)$/
+  evdev_gamepads << $1.to_i if line =~ /^kern.evdev.input.(\d+).phys: (hgame|ps4dshock|xb360gp)\d+$/
 end
 
 mountpoints = JSON.parse(`mount --libxo json`)['mount']['mounted']
