@@ -16,7 +16,7 @@ end
 run('kldunload uhid') if system('kldstat -q -n uhid')
 
 run('kldload hgame ')    if !system('kldstat -q -n hgame')
-run('kldload hidraw')    if !system('kldstat -q -n xb360gp')
+run('kldload hidraw')    if !system('kldstat -q -n hidraw')
 run('kldload ps4dshock') if !system('kldstat -q -n ps4dshock')
 run('kldload xb360gp')   if !system('kldstat -q -n xb360gp')
 
