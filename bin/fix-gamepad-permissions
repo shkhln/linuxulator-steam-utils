@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'json'
+
+def run(cmd)
+  if cmd.is_a?(Array)
+    warn cmd.map{|s| s =~ /\s/ ? s.inspect : s}.join(' ')
+    system(*cmd) || raise
+  else
+    warn cmd
+    system(cmd) || raise
+  end
+end
+
+run('kldunload uhid') if system('kldstat -q -n uhid')
+
+run('kldload hgame ')    if !system('kldstat -q -n hgame')
+run('kldload hidraw')    if !system('kldstat -q -n xb360gp')
+run('kldload ps4dshock') if !system('kldstat -q -n ps4dshock')
+run('kldload xb360gp')   if !system('kldstat -q -n xb360gp')
+
+run('sysctl hw.usb.usbhid.enable=1')
+
+evdev_gamepads = []
+for line in `sysctl kern.evdev.input`.lines
+  evdev_gamepads << $1.to_i if line =~ /^kern.evdev.input.(\d+).phys: (hgame|ps4dshock|xb360gp0)$/
+end
+
+mountpoints = JSON.parse(`mount --libxo json`)['mount']['mounted']
+for m in mountpoints
+  if m['fstype'] == 'devfs'
+    for idx in evdev_gamepads
+      path = File.join(m['node'], "input/event#{idx}")
+      run(['chgrp', 'operator', path])
+      run(['chmod', 'g+rw',     path])
+    end
+    for node in Dir[File.join(m['node'], "hidraw*")]
+      run(['chgrp', 'operator', node])
+      run(['chmod', 'g+rw',     node])
+    end
+  end
+end

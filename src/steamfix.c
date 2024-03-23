@@ -371,3 +371,19 @@ void* xcb_connect(const char* displayname, int* screen) {
 
   return orig_xcb_connect(displayname, screen);
 }
+
+int (*orig_XCloseDisplay)(void* display) = NULL;
+
+int XCloseDisplay(void* display) {
+
+  if (!orig_XCloseDisplay) {
+    orig_XCloseDisplay = dlsym(RTLD_NEXT, "XCloseDisplay");
+    assert(orig_XCloseDisplay != NULL);
+  }
+
+  if (display != NULL) {
+    orig_XCloseDisplay(display);
+  }
+
+  return 0;
+}
