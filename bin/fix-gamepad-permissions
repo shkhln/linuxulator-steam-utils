@@ -22,22 +22,57 @@ run('kldload xb360gp')   if !system('kldstat -q -n xb360gp')
 
 run('sysctl hw.usb.usbhid.enable=1')
 
-evdev_gamepads = []
-for line in `sysctl kern.evdev.input`.lines
-  evdev_gamepads << $1.to_i if line =~ /^kern.evdev.input.(\d+).phys: (hgame|ps4dshock|xb360gp)\d+$/
+hidraw_devices = {}
+for line in `sysctl dev.hidraw`.lines
+  if line =~ /^dev.hidraw.(\d+).(%desc|%driver|%location|%parent|%pnpinfo): (.*)$/
+    idx = $1; key = $2; val = $3
+    hidraw_devices[idx] ||= {}
+    if key == '%pnpinfo'
+      hidraw_devices[idx][key] = val.strip.split(' ').map{|kv| kv.split('=')}.to_h
+    else
+      hidraw_devices[idx][key] = val
+    end
+  end
 end
+
+event_devices = {}
+for line in `sysctl kern.evdev.input`.lines
+  if line =~ /^kern.evdev.input.(\d+).(id|name|phys|uniq): (.*)$/
+    idx = $1; key = $2; val = $3
+    event_devices[idx] ||= {}
+    if key == 'id'
+      event_devices[idx][key] = val.delete_prefix('{ ').delete_suffix(' }').split(', ').map{|kv| kv.split(' = ')}.to_h
+    else
+      event_devices[idx][key] = val
+    end
+  end
+end
+
+weird_hid_devs = []
+for idx, props in hidraw_devices
+  weird_hid_devs << idx if !(props['%desc'] =~ /keyboard|mouse|led controller/i)
+end
+
+evdev_gamepads = []
+for idx, props in event_devices
+  evdev_gamepads << idx if props['phys'] =~ /^(hgame|ps4dshock|xb360gp)\d+$/
+end
+
+weird_hid_devs.sort!
+evdev_gamepads.sort!
 
 mountpoints = JSON.parse(`mount --libxo json`)['mount']['mounted']
 for m in mountpoints
   if m['fstype'] == 'devfs'
+    for idx in weird_hid_devs
+      path = File.join(m['node'], "hidraw#{idx}")
+      run(['chgrp', 'operator', path])
+      run(['chmod', 'g+rw',     path])
+    end
     for idx in evdev_gamepads
       path = File.join(m['node'], "input/event#{idx}")
       run(['chgrp', 'operator', path])
       run(['chmod', 'g+rw',     path])
-    end
-    for node in Dir[File.join(m['node'], "hidraw*")]
-      run(['chgrp', 'operator', node])
-      run(['chmod', 'g+rw',     node])
     end
   end
 end
