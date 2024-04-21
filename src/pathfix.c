@@ -160,3 +160,166 @@ int mkdir(const char* path, mode_t mode) {
 
   return err;
 }
+
+/* hidapi */
+
+#include <stdarg.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/syscall.h>
+#include <linux/types.h>
+#include <linux/hidraw.h>
+
+int (*libc_open)(const char* path, int flags,  ...) = NULL;
+int (*libc_open64)(const char* path, int flags,  ...) = NULL;
+
+#ifndef HIDIOCGRAWUNIQ
+#define HIDIOCGRAWUNIQ(len) _IOC(_IOC_READ, 'H', 0x08, len)
+#endif
+
+static int open_impl(const char* path, int flags, va_list args) {
+
+  if (!libc_open) {
+    libc_open = dlsym(RTLD_NEXT, "open");
+  }
+
+  mode_t mode = 0;
+  if (flags & O_CREAT) {
+    mode = va_arg(args, mode_t);
+  }
+
+  int fd = libc_open(path, flags, mode);
+  fprintf(stderr, "%s(%s, %d, %d) -> %d [%d]\n", __func__, path, flags, mode, fd, strncmp(path, "/sys/class/hidraw", sizeof("/sys/class/hidraw") - 1) == 0);
+
+  if (fd == -1 && strncmp(path, "/sys/class/hidraw/hidraw", sizeof("/sys/class/hidraw/hidraw") - 1) == 0) {
+
+    errno = 0;
+    long idx = strtol(&path[sizeof("/sys/class/hidraw/hidraw") - 1], NULL, 10);
+    assert(errno != ERANGE && errno != EINVAL);
+
+    char syspath[PATH_MAX];
+    snprintf(syspath, sizeof(syspath), "/sys/class/hidraw/hidraw%ld/device/uevent", idx);
+    if (strcmp(path, syspath) == 0) {
+
+      fprintf(stderr, "%s: faking uevent\n", __func__);
+
+      char dev_path[PATH_MAX];
+      snprintf(dev_path, sizeof(dev_path), "/dev/hidraw%ld", idx);
+
+      int dev_fd = libc_open(dev_path, O_RDONLY);
+      if (dev_fd == -1) {
+        return -1;
+      }
+
+      fd = syscall(SYS_memfd_create, "uevent shim", 0);
+      assert(fd != -1);
+
+      struct hidraw_devinfo info;
+      memset(&info, 0x0, sizeof(info));
+
+      if (ioctl(dev_fd, HIDIOCGRAWINFO, &info) != -1) {
+        fprintf(stderr, "HID_ID=%04x:%08x:%08x\n", info.bustype, info.vendor, info.product);
+        dprintf(fd, "HID_ID=%04x:%08x:%08x\n", info.bustype, info.vendor, info.product);
+      }
+
+      char buf[256];
+      memset(buf, 0x0, sizeof(buf));
+
+      if (ioctl(dev_fd, HIDIOCGRAWNAME(256), buf) != -1) {
+        fprintf(stderr, "HID_NAME=%s\n", buf);
+        dprintf(fd, "HID_NAME=%s\n", buf);
+      }
+
+      memset(buf, 0x0, sizeof(buf));
+
+      if (ioctl(dev_fd, HIDIOCGRAWUNIQ(256), buf) != -1) {
+        fprintf(stderr, "HID_UNIQ=%s\n", buf);
+        dprintf(fd, "HID_UNIQ=%s\n", buf);
+      }
+
+      close(dev_fd);
+
+      lseek(fd, SEEK_SET, 0);
+
+      return fd;
+    }
+
+    snprintf(syspath, sizeof(syspath), "/sys/class/hidraw/hidraw%ld/device/report_descriptor", idx);
+    if (strcmp(path, syspath) == 0) {
+
+      fprintf(stderr, "%s: faking report_descriptor\n", __func__);
+
+      char dev_path[PATH_MAX];
+      snprintf(dev_path, sizeof(dev_path), "/dev/hidraw%ld", idx);
+
+      int dev_fd = libc_open(dev_path, O_RDONLY);
+      if (dev_fd == -1) {
+        return -1;
+      }
+
+      struct hidraw_report_descriptor desc;
+      memset(&desc, 0x0, sizeof(desc));
+
+      if (ioctl(dev_fd, HIDIOCGRDESCSIZE, &desc.size) == -1) {
+        perror("HIDIOCGRDESCSIZE");
+        goto fail;
+      }
+
+      if (ioctl(dev_fd, HIDIOCGRDESC, &desc) == -1) {
+        perror("HIDIOCGRDESC");
+        goto fail;
+      }
+
+      close(dev_fd);
+
+      fd = syscall(SYS_memfd_create, "report_descriptor shim", 0);
+      assert(fd != -1);
+
+      int nbytes = write(fd, desc.value, desc.size);
+      assert(nbytes == (int)desc.size);
+
+      lseek(fd, SEEK_SET, 0);
+
+      return fd;
+
+fail:
+      close(dev_fd);
+      return -1;
+    }
+  }
+
+  return fd;
+}
+
+static int open64_impl(const char* path, int flags, va_list args) {
+
+  if (!libc_open64) {
+    libc_open64 = dlsym(RTLD_NEXT, "open64");
+  }
+
+  mode_t mode = 0;
+  if (flags & O_CREAT) {
+    mode = va_arg(args, mode_t);
+  }
+
+  fprintf(stderr, "%s(%s, %d, %d)\n", __func__, path, flags, mode);
+
+  return libc_open64(path, flags, mode);
+}
+
+int open(const char* path, int flags,  ...) {
+  va_list _args_;
+  va_start(_args_, flags);
+  int fd = open_impl(path, flags, _args_);
+  va_end(_args_);
+  return fd;
+}
+
+int open64(const char* path, int flags,  ...) {
+  va_list _args_;
+  va_start(_args_, flags);
+  int fd = open64_impl(path, flags, _args_);
+  va_end(_args_);
+  return fd;
+}
