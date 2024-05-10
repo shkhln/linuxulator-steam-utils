@@ -226,7 +226,7 @@ def run(args)
 end
 
 case ARGV[0]
-  when 'waitforexitandrun'
+  when 'run', 'waitforexitandrun'
     set_up()
     run(ARGV[0..-1])
   else
