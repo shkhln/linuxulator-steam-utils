@@ -233,12 +233,24 @@ def set_up()
 
       end # proton_#{PROTON_VERSION}
     end # FreeBSD_Proton
-  end # compatibilitytools.d
+
+    set_up_file('steamclient.so.patched') do |target|
+      safe_system(File.join(__dir__, 'patch-dt_init.rb'), File.join(STEAM_ROOT_PATH, 'linux32/steamclient.so'), target)
+    end
+  end # LSU_TMPDIR_PATH
 
   set_setup_state(:done)
 end
 
 def run(args)
+    ENV['LSU_STEAMCLIENT_PATH']     = File.join(STEAM_ROOT_PATH, 'linux32/steamclient.so')
+    ENV['LSU_STEAMCLIENT_ALT_PATH'] = File.join(LSU_TMPDIR_PATH, 'steamclient.so.patched')
+
+    ENV['LD_32_PRELOAD'] = [
+      File.expand_path('../../lib32/steamclient/dt_init-fix.so', __dir__),
+      ENV['LD_32_PRELOAD']
+    ].compact.join(':')
+
     ENV['LD_32_LIBRARY_PATH'] = [
       File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/files/lib"),
       File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/dist/lib")

@@ -26,7 +26,8 @@ LIBS  = lib32/steamfix/steamfix.so       \
         lib64/protonfix/protonfix.so     \
         lib32/shmfix/shmfix.so           \
         lib64/shmfix/shmfix.so           \
-        lib64/webfix/webfix.so
+        lib64/webfix/webfix.so           \
+        lib32/steamclient/dt_init-fix.so
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 
@@ -75,8 +76,11 @@ $(BUILD_DIR)/lib$(b)/noepollexcl/noepollexcl.so: src/noepollexcl.c
 $(BUILD_DIR)/lib$(b)/shmfix/shmfix.so: src/shmfix.c
 	mkdir -p $(BUILD_DIR)/lib$(b)/shmfix
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/shmfix.c -ldl -lrt
-
 .endfor
+
+$(BUILD_DIR)/lib32/steamclient/dt_init-fix.so: src/dt_init-fix.c
+	mkdir -p $(BUILD_DIR)/lib32/steamclient
+	cc -m32 -mstack-alignment=16 -mstackrealign -std=c99 -Wall -Wextra -fPIC -shared -o $(.TARGET) src/dt_init-fix.c
 
 clean:
 .for f in $(LIBS)
