@@ -116,7 +116,7 @@ install:
 	install -d $(PREFIX)/$(PROJECT)/tools/$(t)
 	install -m 0644 tools/$(t)/compatibilitytool.vdf $(PREFIX)/$(PROJECT)/tools/$(t)
 	install -m 0644 tools/$(t)/toolmanifest.vdf      $(PREFIX)/$(PROJECT)/tools/$(t)
-	install tools/$(t)/run* $(PREFIX)/$(PROJECT)/tools/$(t)
+	install tools/$(t)/run.sh tools/$(t)/*.rb $(PREFIX)/$(PROJECT)/tools/$(t)
 .endfor
 
 deinstall:
