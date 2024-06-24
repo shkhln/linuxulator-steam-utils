@@ -27,7 +27,7 @@ extern char* program_invocation_short_name;
 
 #endif
 
-#define FAKE(name) void name() { fprintf(stderr, "fakeudev: %s\n", #name); exit(1); }
+#define FAKE(name) void name() { fprintf(stderr, "fakeudev: %s is missing\n", #name); exit(1); }
 
 FAKE(udev_device_get_action);
 FAKE(udev_device_get_devnode);
@@ -43,7 +43,6 @@ FAKE(udev_device_get_subsystem);
 FAKE(udev_device_get_sysattr_value);
 FAKE(udev_device_get_sysname);
 FAKE(udev_device_get_syspath);
-FAKE(udev_device_new_from_devnum);
 FAKE(udev_device_new_from_subsystem_sysname);
 FAKE(udev_device_new_from_syspath);
 FAKE(udev_device_ref);
@@ -148,5 +147,10 @@ int udev_enumerate_scan_devices(struct udev_enumerate* udev_enumerate) {
 
 struct udev_enumerate* udev_enumerate_unref(struct udev_enumerate* udev_enumerate) {
   LOG_ENTRY("%p", udev_enumerate);
+  return NULL;
+}
+
+struct udev_device* udev_device_new_from_devnum(struct udev* udev, char type, dev_t devnum) {
+  LOG_ENTRY("%p, %c, %ld", udev, type, devnum);
   return NULL;
 }
