@@ -107,7 +107,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
   begin
     # SteamLinuxRuntime
     FileUtils.mkdir_p(File.join(mroot, 'usr'))
-    system('sh', '-c', 'set -o pipefail && tar --cd "$0" -c @../usr-mtree.txt.gz | tar --cd "$1" -x',
+    system('sh', '-c', 'cd "$0" && zgrep -v x-flatdeb-hardlink= usr-mtree.txt.gz > usr-mtree.txt.patched',
+      '-', platform) || raise
+    system('sh', '-c', 'set -o pipefail && tar --cd "$0" -c @../usr-mtree.txt.patched | tar --cd "$1" -x',
       '-', File.join(platform, 'files'), File.join(mroot, 'usr')) || raise
     system('chmod', '-R', 'u+rwX', mroot) || raise
 
