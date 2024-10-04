@@ -137,7 +137,7 @@ DEPS = ruby                      \
        ca_root_nss               \
        gtar                      \
        liberation-fonts-ttf      \
-       linux_libusb              \
+       linux_libusb-c7           \
        linux-c7-alsa-plugins-oss \
        linux-c7-dbus-libs        \
        linux-c7-devtools         \
