@@ -2,7 +2,7 @@
 
 A set of workarounds for the Linux Steam client targeting FreeBSD 13.2+.
 
-Nvidia GPU is highly recommended, Intel might work and *don't even bother with AMD*.
+Nvidia GPU is highly recommended.
 For the list of tested Linux games see the [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
 
 ## Limitations
