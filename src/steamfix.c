@@ -176,6 +176,21 @@ int execvp(const char* path, char* const argv[]) {
   return libc_execvp(path, argv);
 }
 
+static int (*libc_execvpe)(const char* file, char* const argv[], char* const envp[]) = NULL;
+
+int execvpe(const char* file, char* const argv[], char* const envp[]) {
+
+  if (!libc_execvpe) {
+    libc_execvpe = dlsym(RTLD_NEXT, "execvpe");
+  }
+
+  for (int i = 0; argv[i] != NULL; i++) {
+    purge_reaper(argv[i]);
+  }
+
+  return libc_execvpe(file, argv, envp);
+}
+
 static int (*libc_execv)(const char*, char* const []) = NULL;
 
 int execv(const char* file, char* const argv[]) {
