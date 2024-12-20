@@ -33,8 +33,6 @@ case ARGV[0]
       File.join(LSU_IN_CHROOT, 'lib64/fakeudev'),
       File.join(LSU_IN_CHROOT, 'lib32/noepollexcl'),
       File.join(LSU_IN_CHROOT, 'lib64/noepollexcl'),
-      File.join(LSU_IN_CHROOT, 'lib32/shmfix'),
-      File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
       '/usr/steam-runtime/pinned_libs_32',
       '/usr/steam-runtime/pinned_libs_64',
       '/lib/i386-linux-gnu',

@@ -26,6 +26,11 @@ ENV['LSU_LINUX_PATH'] ||= '/bin:/usr/bin'
 Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do
   if `readelf -s libc.so.6 | grep GLIBC_2.34`.chomp == ''
     pwarn 'Found glibc < 2.34, preloading shmfix.so'
+    ENV['LSU_LINUX_LD_LIBRARY_PATH'] = [
+      File.join(LSU_IN_CHROOT, 'lib32/shmfix'),
+      File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
+      ENV['LSU_LINUX_LD_LIBRARY_PATH']
+    ].compact.join(':')
     ENV['LSU_LINUX_LD_PRELOAD'] = ['shmfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
   end
 end

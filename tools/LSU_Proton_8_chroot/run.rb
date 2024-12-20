@@ -20,8 +20,6 @@ def run(args)
     File.join(LSU_IN_CHROOT, 'lib64/fakeudev'),
     File.join(LSU_IN_CHROOT, 'lib32/protonfix'),
     File.join(LSU_IN_CHROOT, 'lib64/protonfix'),
-    File.join(LSU_IN_CHROOT, 'lib32/shmfix'),
-    File.join(LSU_IN_CHROOT, 'lib64/shmfix'),
   ].compact.join(':')
 
   ENV['LSU_LINUX_LD_PRELOAD']       = ['protonfix.so', ENV['LSU_LINUX_LD_PRELOAD']].compact.join(':')
