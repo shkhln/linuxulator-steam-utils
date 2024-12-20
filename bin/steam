@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
+require 'fileutils'
 require 'securerandom'
+require_relative '.dpkgs'
 require_relative '.utils'
 
 EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
@@ -109,6 +111,10 @@ if !File.exist?(STEAM_RUNTIME_ROOT_PATH)
   perr "Can't find steam-runtime"
   exit 1
 end
+
+# let's download chroot dependencies here, otherwise Steam might think
+# steamwebhelper (which we run in said chroot) has hanged
+download_debs(DPKGS, LSU_DIST_PATH)
 
 if ENV['LSU_COREDUMP'] != '1'
   Process.setrlimit(:CORE, 0)
