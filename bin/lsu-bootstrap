@@ -73,7 +73,6 @@ Dir.chdir(steam_root) do
       FileUtils.ln_s(target, symlink)
     end
   end
-
 end # ~/.steam
 
 STDERR.puts "You can run #{File.join(__dir__, 'steam')} now."

@@ -113,7 +113,7 @@ if !File.exist?(STEAM_RUNTIME_ROOT_PATH)
 end
 
 # let's download chroot dependencies here, otherwise Steam might think
-# steamwebhelper (which we run in said chroot) has hanged
+# steamwebhelper (which we run in said chroot) has stuck
 download_debs(DPKGS, LSU_DIST_PATH)
 
 if ENV['LSU_COREDUMP'] != '1'
