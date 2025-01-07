@@ -94,6 +94,15 @@ if !requirements.empty?
   exit 1
 end
 
+if `sysctl -q hw.nvidia.version` =~ /hw.nvidia.version: NVIDIA UNIX x86_64 Kernel Module\s+(\d+\.\d+\.\d+|\d+\.\d+)/
+  version = $1
+  libgl32 = File.join(EMUL_PATH, "usr/lib/libGLX_nvidia.so.#{version}")
+  if !File.exist?(libgl32)
+    perr "#{libgl32} doesn't exist. You might want to install (or update) linux-nvidia-libs."
+    exit 1
+  end
+end
+
 if !File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
   perr "Can't find steamfix.so"
   exit 1
