@@ -34,8 +34,8 @@ def check_requirements
   shm = mounts[EMUL_PATH + '/dev/shm']
   fd  = mounts[EMUL_PATH + '/dev/fd']
   if dev && shm && fd
-    reqs << [:linux, '#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/shm'] if shm[:line] < dev[:line]
-    reqs << [:linux, '#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/fd' ] if fd [:line] < dev[:line]
+    reqs << [:linux, "#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/shm"] if shm[:line] < dev[:line]
+    reqs << [:linux, "#{EMUL_PATH}/dev mounted before #{EMUL_PATH}/dev/fd" ] if fd [:line] < dev[:line]
   end
 
   reqs << [:linux,   "write access to #{EMUL_PATH}/dev/shm"] if !File.writable?("#{EMUL_PATH}/dev/shm")
