@@ -205,6 +205,8 @@ ENV['STEAM_ZENITY']                         = 'zenity'
 ENV['SYSTEM_LD_LIBRARY_PATH']               = games_library_path
 ENV['SYSTEM_PATH']                          = bin_path
 
+ENV['PRESSURE_VESSEL_BWRAP'] ||= File.expand_path('../lxbin/lsu-bwrap-stub', __dir__)
+
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
     with_fbsd_env do
