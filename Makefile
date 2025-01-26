@@ -7,7 +7,7 @@ PROJECT = steam-utils
 BUILD_DIR ?= .
 PREFIX    ?= /opt
 
-CFLAGS = --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION}
+CFLAGS = -B/compat/linux/bin --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION}
 
 LIBS  = lib32/steamfix/steamfix.so       \
         lib32/fakenm/libnm.so.0          \
