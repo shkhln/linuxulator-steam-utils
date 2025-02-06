@@ -151,6 +151,6 @@ struct udev_enumerate* udev_enumerate_unref(struct udev_enumerate* udev_enumerat
 }
 
 struct udev_device* udev_device_new_from_devnum(struct udev* udev, char type, dev_t devnum) {
-  LOG_ENTRY("%p, %c, %ld", udev, type, devnum);
+  LOG_ENTRY("%p, %c, %ld", udev, type, (unsigned long int)devnum);
   return NULL;
 }

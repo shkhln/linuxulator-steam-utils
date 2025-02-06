@@ -19,9 +19,9 @@ if !slr_sniper_path
 end
 
 library_path = [
-  File.expand_path('../lib64/fakepulse', __dir__),
-  File.expand_path('../lib64/fakeudev',  __dir__),
-  File.expand_path('../lib64/webfix',    __dir__),
+  File.join(LSU_IN_CHROOT, 'lib64/fakepulse'),
+  File.join(LSU_IN_CHROOT, 'lib64/fakeudev'),
+  File.join(LSU_IN_CHROOT, 'lib64/webfix'),
   '/lib/x86_64-linux-gnu',
   '/lib/x86_64-linux-gnu/nss',
 ].compact.join(':')
