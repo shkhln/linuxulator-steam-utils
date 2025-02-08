@@ -132,6 +132,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.ln_s('usr/lib',   File.join(mroot, 'lib'))
     FileUtils.ln_s('usr/lib64', File.join(mroot, 'lib64'))
     FileUtils.ln_s('usr/sbin',  File.join(mroot, 'sbin'))
+    FileUtils.ln_s('var/run',   File.join(mroot, 'run'))
 
     # basic mount point setup
     mounts << mount('linprocfs', 'linprocfs', File.join(mroot, 'proc'))
