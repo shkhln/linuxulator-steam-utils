@@ -1,2 +1,4 @@
 #!/bin/sh
-exit 1
+. lsu-linux-to-freebsd-env.sh
+__dir__="$(dirname "$(realpath "$0")")"
+exec "$__dir__/lsof.rb" "$@"

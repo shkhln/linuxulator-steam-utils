@@ -233,6 +233,23 @@ int execv(const char* file, char* const argv[]) {
   }
 }
 
+/* Let's redirect Steam to our lsof stub */
+
+static FILE* (*libc_popen)(const char*, const char*) = NULL;
+
+FILE* popen(const char* command, const char* type) {
+
+  if (!libc_popen) {
+    libc_popen = dlsym(RTLD_NEXT, "popen");
+  }
+
+  if (strncmp(command, "/usr/sbin/lsof", sizeof("/usr/sbin/lsof") - 1) == 0) {
+    return libc_popen(&command[sizeof("/usr/sbin/") - 1], type);
+  } else {
+    return libc_popen(command, type);
+  }
+}
+
 /* Steam doesn't have the ability to detach anything, but this action must succeed, otherwise Steam won't see any devices */
 
 int libusb_detach_kernel_driver(void* dev, int interface) {

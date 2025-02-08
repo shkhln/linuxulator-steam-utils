@@ -17,6 +17,11 @@ static const char* redirect(const char* path) {
     return "/etc/ssl/cert.pem";
   }
 
+  // Let's pretend this file exists
+  if (strcmp(path, "/usr/sbin/lsof") == 0) {
+    return "/bin/sh";
+  }
+
   // Lie to Steam about /home being a directory.
   // The Steam client skips symlinks in Add Library Folder / Add a (non-Steam) Gamed dialogs and,
   // if it was started from /home/... path, it will get quite confused without this workaround.
@@ -94,6 +99,23 @@ FILE* fopen(const char* path, const char* mode) {
 }
 
 #include <sys/stat.h>
+
+static int (*libc_xstat64) (int, const char*, struct stat64*) = NULL;
+
+int __xstat64(int ver, const char* path, struct stat64* stat_buf) {
+
+  if (!libc_xstat64) {
+    libc_xstat64 = dlsym(RTLD_NEXT, "__xstat64");
+  }
+
+  const char* p = redirect(path);
+  if (p != NULL) {
+    return libc_xstat64(ver, p, stat_buf);
+  } else {
+    errno = EACCES;
+    return -1;
+  }
+}
 
 static int (*libc_lxstat64)(int, const char*, struct stat64*) = NULL;
 
