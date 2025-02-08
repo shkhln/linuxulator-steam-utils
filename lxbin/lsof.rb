@@ -5,7 +5,7 @@ args = ARGV.join(' ')
 
 if !(args =~ /-P -F upnR -i TCP@127\.0\.0\.1:(\d+)/)
   require_relative '../bin/.utils'
-  perr "Unpexted args: #{args.inspect}"
+  perr "Unexpected args: #{args.inspect}"
   exit(1)
 end
 
