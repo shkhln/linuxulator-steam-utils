@@ -104,7 +104,7 @@ install:
  lxbin/curl-config \
  lxbin/dbus-launch \
  lxbin/file* \
- lxbin/lsof \
+ lxbin/lsof* \
  lxbin/lspci \
  lxbin/lsu-* \
  lxbin/tar \

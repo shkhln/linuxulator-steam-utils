@@ -3,7 +3,7 @@
 
 args = ARGV.join(' ')
 
-if !(args =~ /-P -F upnR -i TCP@127\.0\.0\.1:(\d+)/)
+if !(args =~ /^-P -F upnR -i TCP@127\.0\.0\.1:(\d+)$/)
   require_relative '../bin/.utils'
   perr "Unexpected args: #{args.inspect}"
   exit(1)
@@ -26,4 +26,4 @@ end
 
 uid = `id -u`.chomp
 
-puts "p#{pid}\nR0\nu#{uid}\nnlocalhost:0->localhost:#{dest}\np#{pid}\nR0\nu#{uid}\nnlocalhost:#{dest}->localhost:0"
+puts "p#{pid}\nR0\nu#{uid}\nnlocalhost:1->localhost:#{dest}\np#{pid}\nR0\nu#{uid}\nnlocalhost:#{dest}->localhost:1"
