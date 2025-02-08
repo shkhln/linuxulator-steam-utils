@@ -29,8 +29,8 @@ library_path = [
 ENV['LSU_LINUX_LD_LIBRARY_PATH'] = library_path
 ENV['LSU_LINUX_PATH']            = '/bin'
 
-# I don't know whose sick idea was to enable EGL and Vulkan probing on --disable-gpu, but it's not funny
-args = ARGV.find_all{|arg| arg != '--disable-gpu-compositing' && arg != '--disable-gpu'}
-args << '--use-gl=disabled'
+# https://github.com/ValveSoftware/steam-for-linux/issues/11488
+args = ARGV
+args << '--disable-gpu'
 
 exec(File.expand_path('../bin/lsu-run-in-chroot', __dir__), slr_sniper_path, *args)
