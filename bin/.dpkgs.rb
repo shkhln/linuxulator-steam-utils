@@ -1,6 +1,6 @@
 DPKGS = {
-  'libc6_2.35-0ubuntu3.8_amd64.deb'                         => {sha256: '76d582e6b5a7057acd8b239edf102329a5a966303d7d1b7a024b447e057b342e', path: 'pool/main/g/glibc'},
-  'libc6_2.35-0ubuntu3.8_i386.deb'                          => {sha256: '5c21d7d98d928b84e1433fd916ff9704854f930a4468c561b711e7247a220cd7', path: 'pool/main/g/glibc'},
+  'libc6_2.35-0ubuntu3.9_amd64.deb'                         => {sha256: '58b9b9b125fc6ceea07c9deff66172255584be3ff009967ebf23237c0e993701', path: 'pool/main/g/glibc'},
+  'libc6_2.35-0ubuntu3.9_i386.deb'                          => {sha256: 'bf2c797efd2362b7a74918d1e5efa3095d06de2ba86461f314978e1f5d1bd6b8', path: 'pool/main/g/glibc'},
   'libdrm-amdgpu1_2.4.113-2~ubuntu0.22.04.1_amd64.deb'      => {sha256: 'a284d1d55956ed2f5f1ece4e2df9104ff87052a6c27a8150574c30c757ecd4b8', path: 'pool/main/libd/libdrm'},
   'libdrm-amdgpu1_2.4.113-2~ubuntu0.22.04.1_i386.deb'       => {sha256: 'b2ebc5adc8b388d4aaa61b92cad0242be6d8ca1c4314897de944c0dad5cdf29e', path: 'pool/main/libd/libdrm'},
   'libdrm-common_2.4.113-2~ubuntu0.22.04.1_all.deb'         => {sha256: '35a306712d8b15b30c42ecd73ec087813eb01c0b3125dc8f7ca2b5134e133522', path: 'pool/main/libd/libdrm'},
