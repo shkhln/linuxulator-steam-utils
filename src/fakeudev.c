@@ -40,6 +40,7 @@ FAKE(udev_device_get_parent);
 FAKE(udev_device_get_properties_list_entry);
 FAKE(udev_device_get_property_value);
 FAKE(udev_device_get_subsystem);
+FAKE(udev_device_get_sysattr_list_entry);
 FAKE(udev_device_get_sysattr_value);
 FAKE(udev_device_get_sysname);
 FAKE(udev_device_get_syspath);
@@ -49,6 +50,7 @@ FAKE(udev_device_ref);
 FAKE(udev_device_unref);
 FAKE(udev_list_entry_get_name);
 FAKE(udev_list_entry_get_next);
+FAKE(udev_list_entry_get_value);
 FAKE(udev_set_log_fn);
 FAKE(udev_set_log_priority);
 
