@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <sys/epoll.h>
 
+#ifndef EPOLLEXCLUSIVE
 #define EPOLLEXCLUSIVE (1 << 28)
+#endif
 
 static int (*libc_epoll_ctl)(int, int, int, struct epoll_event*) = NULL;
 

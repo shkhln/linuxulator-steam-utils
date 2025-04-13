@@ -17,12 +17,12 @@ For the list of tested Linux games see the [compatibility](https://github.com/sh
 LSU uses unprivileged chroot and mounts to run the Steam's embedded web browser and (optionally) games.
 Set *security.bsd.unprivileged_chroot* and *vfs.usermount* sysctls to 1 to enable those. Add *nullfs* to kld_list.
 
-It's generally expected that you use the linux-c7 packages as they are and leave compat.linux.emul_path sysctl alone.
+It's generally expected that you use the linux-* packages as they are and leave compat.linux.emul_path sysctl alone.
 Any attempts to run LSU with a custom Ubuntu base will be met with unsympathetic "WTF?" and "I told you" replies.
 
 ### Dependencies
 
-At least *ca_root_nss*, *linux-c7-dbus-libs*, *linux-c7-devtools*, *linux-c7-nss* and *ruby*.
+At least *ca_root_nss*, *linux-rl9-dbus-libs*, *linux-rl9-devtools*, *linux-rl9-nss* and *ruby*.
 See [Makefile](Makefile) for a more extensive list. You can install these via `sudo make dependencies`
 from FreeBSD packages repository.
 

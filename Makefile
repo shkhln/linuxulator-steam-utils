@@ -133,17 +133,16 @@ NVIDIA_DEPS != \
 	  *)   echo linux-nvidia-libs;;     \
 	esac
 
-DEPS = ruby                      \
-       ca_root_nss               \
-       gtar                      \
-       liberation-fonts-ttf      \
-       linux_libusb-c7           \
-       linux-c7-alsa-plugins-oss \
-       linux-c7-dbus-libs        \
-       linux-c7-devtools         \
-       linux-c7-dri              \
-       linux-c7-gtk2             \
-       linux-c7-nss              \
+DEPS = ruby                       \
+       ca_root_nss                \
+       gtar                       \
+       liberation-fonts-ttf       \
+       linux-rl9-alsa-plugins-oss \
+       linux-rl9-dbus-libs        \
+       linux-rl9-devtools         \
+       linux-rl9-dri              \
+       linux-rl9-gtk2             \
+       linux-rl9-nss              \
        zenity
 
 dependencies:
