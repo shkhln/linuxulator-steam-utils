@@ -9,7 +9,8 @@ I386_PKG_ROOT = ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(E
 KNOWN_VERSIONS = {
   '7.0' => {appId: 1887720},
   '8.0' => {appId: 2348590},
-  '9.0' => {appId: 2805730}
+  '9.0' => {appId: 2805730},
+ '10.0' => {appId: 3658110}
 }
 
 def safe_system(*args)
