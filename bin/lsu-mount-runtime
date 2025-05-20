@@ -15,8 +15,8 @@ if !(EMUL_PATH =~ /\/compat\/\w[\w\d]*/)
 end
 
 SLR_DIR = File.basename(SLR_NAME_OR_PATH)
-if !(SLR_DIR =~ /SteamLinuxRuntime_\w+/)
-  reqs << "Expected the directory name starting with SteamLinuxRuntime_"
+if !(SLR_DIR =~ /SteamLinuxRuntime_\w+/ || SLR_DIR == "steam-runtime-steamrt")
+  reqs << "Expected either the directory name starting with SteamLinuxRuntime_ or steam-runtime-steamrt"
 end
 
 if `sysctl -nq vfs.usermount`.to_i != 1
@@ -39,7 +39,7 @@ if reqs.size > 0
   exit(1)
 end
 
-platform = Dir[File.join(steam_linux_runtime_path, "#{SLR_DIR.delete_prefix('SteamLinuxRuntime_')}_platform_*")]
+platform = Dir[File.join(steam_linux_runtime_path, "*_platform_*")]
   .sort.find{|dir| File.exist?(File.join(dir, 'metadata'))}
 raise if !platform
 
