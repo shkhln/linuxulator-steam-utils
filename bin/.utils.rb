@@ -131,15 +131,17 @@ class MountError < StandardError
 end
 
 def mount(fs, from, to, options = nil)
-  begin
-    if fs == 'nullfs' && File.file?(from)
-      FileUtils.touch(to)
-    else
-      FileUtils.mkdir_p(to)
-      FileUtils.touch(File.join(to, '.mountpoint'))
+  if !File.exist?(to)
+    begin
+      if fs == 'nullfs' && File.file?(from)
+        FileUtils.touch(to)
+      else
+        FileUtils.mkdir_p(to)
+        FileUtils.touch(File.join(to, '.mountpoint'))
+      end
+    rescue Errno::EACCES, Errno::EROFS
+      # do nothing
     end
-  rescue Errno::EACCES, Errno::EROFS
-    # do nothing
   end
   cmd = ['mount']
   if options
@@ -221,7 +223,7 @@ def extract_debs(dpkgs, dist_path, target_path)
   queue.close
 
   threads = []
-  [`sysctl -nq hw.ncpu`.to_i, 16].min.times do
+  `sysctl -nq hw.ncpu`.to_i.clamp(1..16).times do
     thread = Thread.new do
       while e = queue.deq
         pkg, meta = e
