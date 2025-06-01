@@ -55,9 +55,10 @@ end
 def with_fbsd_env
   if ENV['LSU_FBSD_PATH']
     env = {
-      'PATH'            => ENV['LSU_FBSD_PATH'],
-      'LD_LIBRARY_PATH' => ENV['LSU_FBSD_LD_LIBRARY_PATH'],
-      'LD_PRELOAD'      => ENV['LSU_FBSD_LD_PRELOAD']
+      'PATH'               => ENV['LSU_FBSD_PATH'],
+      'LD_LIBRARY_PATH'    => ENV['LSU_FBSD_LD_LIBRARY_PATH'],
+      'LD_PRELOAD'         => ENV['LSU_FBSD_LD_PRELOAD'],
+      'LIBGL_DRIVERS_PATH' => ENV['LSU_FBSD_LIBGL_DRIVERS_PATH']
     }
     with_env(env) do
       yield

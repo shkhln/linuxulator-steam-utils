@@ -130,23 +130,30 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
           FileUtils.rmdir(File.join(mroot, dir))
         end
       when 'base'
-        FileUtils.ln_s('/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2', File.join(mroot, 'usr/lib64/ld-linux-x86-64.so.2'), force: true) # ?
-        FileUtils.ln_s('/usr/lib/i386-linux-gnu/ld-linux.so.2',          File.join(mroot, 'usr/lib/ld-linux.so.2'),          force: true) # ?
+        FileUtils.ln_s('/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2', File.join(mroot, 'usr/lib64/ld-linux-x86-64.so.2'), force: true)
+        FileUtils.ln_s('/usr/lib/i386-linux-gnu/ld-linux.so.2',          File.join(mroot, 'usr/lib/ld-linux.so.2'),          force: true)
 
         for source_dir, dest_dir in {
           File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
           File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
         }
-          libs = Dir[
+          mounts << mount('nullfs', File.join(source_dir, 'dri'), File.join(dest_dir, 'dri'))
+
+          for source in Dir[
             # glibc
             File.join(source_dir, '{ld-linux.so.2,ld-linux-x86-64.so.2}'),
             File.join(source_dir, 'lib{anl,BrokenLocale,c,dl,m,memusage,mvec,nss_{compat,dns,files},SegFault,pcprofile,pthread,resolv,rt,thread_db,util}.so*'),
             # other dependencies
-            File.join(source_dir, 'lib{edit,ffi,LLVM,stdc++,wayland-{client,cursor}}.so*'),
-            # mesa
-            File.join(source_dir, 'lib{drm,drm_{amdgpu,intel,radeon},EGL_mesa,GLU,GLX_{mesa,system},VkLayer_MESA_*,gbm,glapi,glut,vulkan_{intel,lvp,radeon},xatracker}.so*')
+            File.join(source_dir, 'lib{edit,ffi,LLVM,stdc++}.so*'),
+            # linux-rl9-wayland
+            File.join(source_dir, 'libwayland-{client,cursor,egl,server}.so*'),
+            # linux-rl9-libglvnd
+            File.join(source_dir, 'lib{EGL,GL,GLESv1_CM,GLESv2,GLX,GLdispatch,OpenGL}.so*'),
+            # linux-rl9-libdrm
+            File.join(source_dir, 'lib{drm,drm_{amdgpu,intel,radeon}}.so*'),
+            # linux-rl9-dri
+            File.join(source_dir, 'lib{EGL_mesa,GLU,GLX_{mesa,system},VkLayer_MESA_*,gbm,glapi,glut,vulkan_{intel,lvp,radeon},xatracker}.so*')
           ]
-          for source in libs
             target = File.join(dest_dir, File.basename(source))
             pwarn "#{source} -> #{target}"
             if File.symlink?(source)
@@ -156,20 +163,24 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
               FileUtils.cp(source, target)
             end
           end
-          mounts << mount('nullfs', File.join(source_dir, 'dri'), File.join(dest_dir, 'dri'))
         end
 
-        for config in [
-          'drirc.d/00-mesa-defaults.conf',
-          'drirc.d/00-radv-defaults.conf',
-          'glvnd/egl_vendor.d/50_mesa.json',
-          'vulkan/icd.d/intel_icd.x86_64.json',
-          'vulkan/icd.d/lvp_icd.x86_64.json',
-          'vulkan/icd.d/radeon_icd.x86_64.json',
-          'vulkan/implicit_layer.d/VkLayer_MESA_device_select.json'
+        for source in Dir[
+          File.join(EMUL_PATH, 'usr/share/drirc.d/*-{mesa,radv}-defaults.conf'),
         ]
-          source = File.join(EMUL_PATH, 'usr/share', config)
-          target = File.join(mroot, 'usr/share', config)
+          target = File.join(mroot, source.delete_prefix(EMUL_PATH))
+          #~ pwarn "#{source} -> #{target}"
+          FileUtils.mkdir_p(File.dirname(target))
+          FileUtils.cp(source, target)
+        end
+
+        for source in Dir[
+          File.join(EMUL_PATH, 'usr/share/glvnd/egl_vendor.d/*_mesa.json'),
+          File.join(EMUL_PATH, 'usr/share/vulkan/icd.d/{intel,lvp,radeon}_icd.*.json'),
+          File.join(EMUL_PATH, 'usr/share/vulkan/implicit_layer.d/VkLayer_MESA_*.json')
+        ]
+          target = File.join(mroot, source.delete_prefix(EMUL_PATH))
+          #~ pwarn "#{source} -> #{target}"
           FileUtils.mkdir_p(File.dirname(target))
           File.write(target, File.read(source).gsub('/usr/lib64/', ''))
         end
