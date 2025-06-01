@@ -7,6 +7,8 @@ LSU_DIST_PATH   = File.join(File.realpath(ENV['HOME']), '.steam/dist')
 LSU_TMPDIR_PATH = File.join(File.realpath(ENV['HOME']), '.steam/tmp')
 STEAM_ROOT_PATH = File.join(File.realpath(ENV['HOME']), '.steam/steam')
 
+LSU_MESA_LIBS   = ENV['LSU_MESA_LIBS'] || 'base' # base, ubuntu, none
+
 PWARN_PROGRAM_NAME = if ENV['LSU_COOKIE'] # ?
   name = File.basename($PROGRAM_NAME)
   name.start_with?('lsu-') ? name : $PROGRAM_NAME
