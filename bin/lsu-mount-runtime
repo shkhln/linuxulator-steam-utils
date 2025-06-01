@@ -142,7 +142,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
             File.join(source_dir, '{ld-linux.so.2,ld-linux-x86-64.so.2}'),
             File.join(source_dir, 'lib{anl,BrokenLocale,c,dl,m,memusage,mvec,nss_{compat,dns,files},SegFault,pcprofile,pthread,resolv,rt,thread_db,util}.so*'),
             # other dependencies
-            File.join(source_dir, 'lib{edit,ffi,LLVM,stdc++,wayland-{client,cursor}.so*'),
+            File.join(source_dir, 'lib{edit,ffi,LLVM,stdc++,wayland-{client,cursor}}.so*'),
             # mesa
             File.join(source_dir, 'lib{drm,drm_{amdgpu,intel,radeon},EGL_mesa,GLU,GLX_{mesa,system},VkLayer_MESA_*,gbm,glapi,glut,vulkan_{intel,lvp,radeon},xatracker}.so*')
           ]
