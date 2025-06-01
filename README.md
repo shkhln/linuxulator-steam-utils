@@ -35,27 +35,23 @@ Roughly:
 
 ## Chroots
 
-As an alternative to the Steam's container runtime (which we cannot use) LSU registers a few [custom compatibility tools](https://gitlab.steamos.cloud/steamrt/steam-runtime-tools/-/blob/main/docs/steam-compat-tool-interface.md) allowing us to launch applications in FreeBSD's [unprivileged chroot](https://cgit.freebsd.org/src/commit/?id=a40cf4175c90142442d0c6515f6c83956336699b).
-Note that they have to be explicitly selected in the compatibility tab in the game properties.
+As an alternative to the Steam's container runtime (which we cannot use) LSU registers a few [custom compatibility tools](https://gitlab.steamos.cloud/steamrt/steam-runtime-tools/-/blob/main/docs/steam-compat-tool-interface.md)
+launching applications in FreeBSD's [unprivileged chroot](https://cgit.freebsd.org/src/commit/?id=a40cf4175c90142442d0c6515f6c83956336699b).
 
-At the moment there are 3 such tools: the legacy Steam Runtime chroot, Steam Runtime v3 (aka Sniper) chroot and Proton 8 chroot.
-Legacy is supposed to provide the experience that is similar to running games without chroot, but with up-to-date glibc and Mesa libs. Use this if you own an Intel/AMD GPU.
-Sniper is obviously meant to be used with the games that are built against the corresponding Steam Runtime version.
-Linux Proton is generally not recommended over the native FreeBSD Wine integration, but it might be useful here and there.
-Only 64-bit Windows games are expected to work. Advanced Proton features like fsync or the seccomp-bpf syscall filter don't work.
+At the moment there are 3 such tools: LSU chroot with legacy Steam Runtime, LSU chroot with Steam Runtime 3 (Sniper), LSU chroot with Proton 8.
+They roughly match the corresponding container environments. Note that tools need to be explicitly selected in the compatibility tab in the game properties.
 
-Be warned that the extent of 3D acceleration support for Intel/AMD under Linuxulator is unclear.
-If you want to test it before committing to a full Steam installation, you can use this script: https://gist.github.com/shkhln/99ed7076d981a8eee39801bb6634caed.
+LSU Proton chroot is generally not recommended over the native FreeBSD Wine integration.
+Only 64-bit Windows games are expected to work with it. Advanced Proton features like fsync or the seccomp-bpf syscall filter don't work.
 
 All chroots actively reuse Steam Runtime libs, so they all depend on [Steam Linux Runtime 3.0 (sniper)](https://steamdb.info/app/1628350/).
 In addition to that the Proton 8 chroot depends on [Proton 8](https://steamdb.info/app/2348590/). Steam doesn't allow us to request those dependencies,
 so the task of installing them is left to the user. Since Steam doesn't actually provide up-to-date Mesa libs,
-a few Ubuntu packages are ~hastily slapped~ carefully placed on top of the runtime libs, they will be downloaded automatically.
-The tmpfs mount holding all these libs is expected to consume around 1.2 GiB of RAM.
+they will be copied into chroot from Linux base (/compat/linux).
 
 If you need chroot to access directories outside of $HOME (which is aways mounted) use the STEAM_COMPAT_MOUNTS environment variable, set it before starting Steam.
 
-The other useful environment variable is LSU_DEBUG: setting the launch options to `LSU_DEBUG=ktrace %command%` will tell LSU to run the application though `ktrace`.
+Another useful environment variable is LSU_DEBUG: setting the launch options to `LSU_DEBUG=ktrace %command%` will tell LSU to run the application though `ktrace`.
 ktrace.out will be placed in the game directory.
 
 ## Native Wine integration

@@ -164,7 +164,9 @@ end
 
 # let's download chroot dependencies here, otherwise Steam might think
 # steamwebhelper (which we run in said chroot) has stuck
-download_debs(DPKGS, LSU_DIST_PATH)
+if LSU_MESA_LIBS == 'ubuntu'
+  download_debs(DPKGS, LSU_DIST_PATH)
+end
 
 if ENV['LSU_COREDUMP'] != '1'
   Process.setrlimit(:CORE, 0)

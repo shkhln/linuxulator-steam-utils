@@ -43,7 +43,9 @@ platform = Dir[File.join(steam_linux_runtime_path, "*_platform_*")]
   .sort.find{|dir| File.exist?(File.join(dir, 'metadata'))}
 raise if !platform
 
-download_debs(DPKGS, LSU_DIST_PATH)
+if LSU_MESA_LIBS == 'ubuntu'
+  download_debs(DPKGS, LSU_DIST_PATH)
+end
 
 init_tmp_dir()
 mroot = File.join(LSU_TMPDIR_PATH, SLR_DIR)
@@ -114,16 +116,78 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.mv(File.join(mroot, 'usr/etc'), File.join(mroot, 'etc'))
 
     # additional packages we'd like to have
-    for pkgs in DPKGS.partition{|e| e[0] =~ /i386\.deb$/}
-      extract_debs(pkgs, LSU_DIST_PATH, mroot)
-    end
+    case LSU_MESA_LIBS
+      when 'ubuntu'
+        for pkgs in DPKGS.partition{|e| e[0] =~ /i386\.deb$/}
+          extract_debs(pkgs, LSU_DIST_PATH, mroot)
+        end
 
-    for dir in ['lib/i386-linux-gnu', 'lib/x86_64-linux-gnu', 'lib', 'lib64']
-      for lib in Dir[File.join(mroot, dir, '*')]
-        raise if File.directory?(lib)
-        FileUtils.mv(lib, File.join(mroot, 'usr', dir, '/'))
-      end
-      FileUtils.rmdir(File.join(mroot, dir))
+        for dir in ['lib/i386-linux-gnu', 'lib/x86_64-linux-gnu', 'lib', 'lib64']
+          for lib in Dir[File.join(mroot, dir, '*')]
+            raise if File.directory?(lib)
+            FileUtils.mv(lib, File.join(mroot, 'usr', dir, '/'))
+          end
+          FileUtils.rmdir(File.join(mroot, dir))
+        end
+      when 'base'
+        FileUtils.ln_s('/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2', File.join(mroot, 'usr/lib64/ld-linux-x86-64.so.2'), force: true)
+        FileUtils.ln_s('/usr/lib/i386-linux-gnu/ld-linux.so.2',          File.join(mroot, 'usr/lib/ld-linux.so.2'),          force: true)
+
+        for source_dir, dest_dir in {
+          File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
+          File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
+        }
+          mounts << mount('nullfs', File.join(source_dir, 'dri'), File.join(dest_dir, 'dri'))
+
+          for source in Dir[
+            # glibc
+            File.join(source_dir, '{ld-linux.so.2,ld-linux-x86-64.so.2}'),
+            File.join(source_dir, 'lib{anl,BrokenLocale,c,dl,m,memusage,mvec,nss_{compat,dns,files},SegFault,pcprofile,pthread,resolv,rt,thread_db,util}.so*'),
+            # other dependencies
+            File.join(source_dir, 'lib{edit,ffi,LLVM*,stdc++}.so*'),
+            # linux-rl9-wayland
+            File.join(source_dir, 'libwayland-{client,cursor,egl,server}.so*'),
+            # linux-rl9-libglvnd
+            File.join(source_dir, 'lib{EGL,GL,GLESv1_CM,GLESv2,GLX,GLdispatch,OpenGL}.so*'),
+            # linux-rl9-libdrm
+            File.join(source_dir, 'lib{drm,drm_{amdgpu,intel,radeon}}.so*'),
+            # linux-rl9-dri
+            File.join(source_dir, 'lib{EGL_mesa,GLU,GLX_{mesa,system},VkLayer_*,gbm,glapi,glut,vulkan_{intel,lvp,radeon},xatracker}.so*')
+          ]
+            target = File.join(dest_dir, File.basename(source))
+            #~ pwarn "#{source} -> #{target}"
+            if File.symlink?(source)
+              FileUtils.ln_s(File.readlink(source), target, force: true)
+            else
+              FileUtils.rm(target) if File.symlink?(target)
+              FileUtils.cp(source, target)
+            end
+          end
+        end
+
+        for source in Dir[
+          File.join(EMUL_PATH, 'usr/share/drirc.d/*-{mesa,radv}-defaults.conf'),
+        ]
+          target = File.join(mroot, source.delete_prefix(EMUL_PATH))
+          #~ pwarn "#{source} -> #{target}"
+          FileUtils.mkdir_p(File.dirname(target))
+          FileUtils.cp(source, target)
+        end
+
+        for source in Dir[
+          File.join(EMUL_PATH, 'usr/share/glvnd/egl_vendor.d/*_mesa.json'),
+          File.join(EMUL_PATH, 'usr/share/vulkan/icd.d/{intel,lvp,radeon}_icd.*.json'),
+          File.join(EMUL_PATH, 'usr/share/vulkan/implicit_layer.d/VkLayer_MESA_*.json')
+        ]
+          target = File.join(mroot, source.delete_prefix(EMUL_PATH))
+          #~ pwarn "#{source} -> #{target}"
+          FileUtils.mkdir_p(File.dirname(target))
+          File.write(target, File.read(source).gsub('/usr/lib64/', ''))
+        end
+      when 'none'
+        # do nothing
+      else
+        raise "Invalid value #{LSU_MESA_LIBS} for LSU_MESA_LIBS"
     end
 
     FileUtils.ln_s('usr/bin',   File.join(mroot, 'bin'))
