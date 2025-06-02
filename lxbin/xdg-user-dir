@@ -1,3 +1,2 @@
 #!/bin/sh
-. lsu-linux-to-freebsd-env.sh
-exec xdg-user-dir "$@"
+exec lsu-linux-to-freebsd-env xdg-user-dir "$@"

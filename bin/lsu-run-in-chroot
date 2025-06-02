@@ -42,14 +42,6 @@ wrapper = case ENV['LSU_DEBUG']
     []
 end
 
-command = [
-  '. "$1" && cd "$2" && shift 2 && exec "$@"',
-  '-',
-  File.join(LSU_IN_CHROOT, 'bin/lsu-freebsd-to-linux-env.sh'),
-  ENV['PWD'],
-  *ARGV[1..-1]
-]
-
-# yes, Linux /bin/sh receives FreeBSD LD_* and PATH vars here,
-# fortunately that is mostly benign
-exec(*wrapper, 'chroot', '-n', mroot, '/bin/sh', '-c', *command)
+exec(*wrapper, 'chroot', '-n', mroot,
+  File.join(LSU_IN_CHROOT, 'bin/lsu-freebsd-to-linux-env'),
+    '/bin/sh', '-c', 'cd "$1" && shift 1 && "$@"', '-', ENV['PWD'], *ARGV[1..-1])
