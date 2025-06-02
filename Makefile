@@ -31,7 +31,7 @@ LIBS  = lib32/steamfix/steamfix.so       \
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 
-build: $(LIBS)
+build: $(LIBS) $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env
 
 .for b in 32 64
 
@@ -81,6 +81,14 @@ $(BUILD_DIR)/lib$(b)/shmfix/shmfix.so: src/shmfix.c
 $(BUILD_DIR)/lib32/steamclient/dt_init-fix.so: src/dt_init-fix.c
 	mkdir -p $(BUILD_DIR)/lib32/steamclient
 	cc -m32 -mstack-alignment=16 -mstackrealign -std=c99 -Wall -Wextra -fPIC -shared -o $(.TARGET) src/dt_init-fix.c
+
+$(BUILD_DIR)/bin/lsu-freebsd-to-linux-env: src/swap-env.c
+	mkdir -p $(BUILD_DIR)/bin
+	cc -std=c99 -Wall -Wextra -static -o $(.TARGET) src/swap-env.c -DFBSD_TO_LINUX
+
+$(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env: src/swap-env.c
+	mkdir -p $(BUILD_DIR)/lxbin
+	cc -std=c99 -Wall -Wextra -static -o $(.TARGET) src/swap-env.c
 
 clean:
 .for f in $(LIBS)

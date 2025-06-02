@@ -1,3 +1,2 @@
 #!/bin/sh
-. lsu-linux-to-freebsd-env.sh
-exec dbus-launch "$@"
+exec lsu-linux-to-freebsd-env dbus-launch "$@"

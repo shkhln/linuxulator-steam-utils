@@ -1,3 +1,2 @@
 #!/bin/sh
-. lsu-linux-to-freebsd-env.sh
-exec zenity "$@"
+exec lsu-linux-to-freebsd-env zenity "$@"

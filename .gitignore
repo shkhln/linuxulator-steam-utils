@@ -1,5 +1,7 @@
 /.*
+/_*
+/bin/lsu-freebsd-to-linux-env
 /lib32
 /lib64
-/lxbin/fhelper*
+/lxbin/lsu-linux-to-freebsd-env
 /todo.txt
