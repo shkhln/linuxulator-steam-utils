@@ -24,10 +24,7 @@ mroot = File.join(LSU_TMPDIR_PATH, File.basename(SLR_NAME_OR_PATH))
 
 ENV['LSU_LINUX_LD_LIBRARY_PATH']    ||= '/lib/i386-linux-gnu:/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu/nss'
 ENV['LSU_LINUX_PATH']               ||= '/bin:/usr/bin'
-
-if !ENV['LSU_LINUX_LIBGL_DRIVERS_PATH'] || ENV['LSU_LINUX_LIBGL_DRIVERS_PATH'] == ''
-  ENV['LSU_LINUX_LIBGL_DRIVERS_PATH'] = '/lib/i386-linux-gnu/dri:/lib/x86_64-linux-gnu/dri'
-end
+ENV['LSU_LINUX_LIBGL_DRIVERS_PATH'] ||= '/lib/i386-linux-gnu/dri:/lib/x86_64-linux-gnu/dri'
 
 Dir.chdir(File.join(mroot, 'lib/x86_64-linux-gnu')) do
   if `readelf -s libc.so.6 | grep GLIBC_2.34`.chomp == ''
@@ -44,6 +41,8 @@ end
 wrapper = case ENV['LSU_DEBUG']
   when 'ktrace'
     ['/usr/bin/ktrace', '-i', '-d']
+  when 'truss'
+    ['/usr/bin/truss', '-H', '-f']
   else
     []
 end
