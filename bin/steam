@@ -6,7 +6,10 @@ require 'securerandom'
 require_relative '.dpkgs'
 require_relative '.utils'
 
-EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+EMUL_PATH         = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
+EXPECTED_DISTROS  = ['centos', 'fedora', 'rocky']
+MIN_GLIBC_VERSION = '2.34'
+MIN_ROCKY_RELEASE = 9
 
 def check_requirements
 
@@ -45,6 +48,36 @@ def check_requirements
 
   # without nullfs.ko mount fails with an unhelpful error message: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=274600#c5
   reqs << [:nullfs, 'nullfs.ko must be loaded'] if !system('kldstat -q -m nullfs')
+
+  # we expect EMUL_PATH to point to the RH-style directory structure
+  os = begin
+    File.read("#{EMUL_PATH}/etc/os-release").lines.map{|line| k, v = line.split('='); [k, v.chomp.undump]}.to_h
+  rescue Errno::ENOENT
+    nil
+  end
+
+  if os && (EXPECTED_DISTROS.include?(os['ID']) || EXPECTED_DISTROS.intersect?(os['ID_LIKE'].split(' ')))
+    if os['ID'] == 'rocky'
+      version    = os['VERSION_ID']
+      version_ok = if version =~ /^(\d+)(:?\.\d+)?$/
+        $1.to_i >= MIN_ROCKY_RELEASE
+      else
+        false
+      end
+      if !version_ok
+        reqs << [:base, "binaries from Rocky Linux #{MIN_ROCKY_RELEASE} at #{EMUL_PATH}, got #{os['VERSION_ID']}"]
+      end
+    else
+      # let's check at least the glibc version
+      Dir.chdir(File.join(EMUL_PATH, 'lib64')) do
+        if `readelf -s libc.so.6 | grep GLIBC_#{MIN_GLIBC_VERSION}`.chomp == ''
+          reqs << [:base, "Linux base with glibc >= #{MIN_GLIBC_VERSION} at #{EMUL_PATH}"]
+        end
+      end
+    end
+  else
+    reqs << [:base, "binaries from Rocky Linux or compatible distro at #{EMUL_PATH}"]
+  end
 
   reqs
 end
@@ -89,6 +122,10 @@ if !requirements.empty?
 
   if requirements.find{|req| req[0] == :nullfs}
     perr "\nRun (as root) `kldload nullfs` and `sysrc kld_list+=nullfs`."
+  end
+
+  if requirements.find{|req| req[0] == :base}
+    perr "\nIs compat.linux.emul_path set correctly?"
   end
 
   exit 1
