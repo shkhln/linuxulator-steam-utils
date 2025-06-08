@@ -65,7 +65,7 @@ def check_requirements
         false
       end
       if !version_ok
-        reqs << [:base, "binaries from Rocky Linux #{MIN_ROCKY_RELEASE} at #{EMUL_PATH}, got #{os['VERSION_ID']}"]
+        reqs << [:base, "binaries from Rocky Linux #{MIN_ROCKY_RELEASE} at #{EMUL_PATH}, got #{version}"]
       end
     else
       # let's check at least the glibc version
