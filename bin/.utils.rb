@@ -50,26 +50,9 @@ def with_env(vars)
   value
 end
 
-def with_fbsd_env
-  if ENV['LSU_FBSD_PATH']
-    env = {
-      'PATH'            => ENV['LSU_FBSD_PATH'],
-      'LD_LIBRARY_PATH' => ENV['LSU_FBSD_LD_LIBRARY_PATH'],
-      'LD_PRELOAD'      => ENV['LSU_FBSD_LD_PRELOAD']
-    }
-    with_env(env) do
-      yield
-    end
-  else
-    yield
-  end
-end
-
 def init_tmp_dir
   if ENV['LSU_COOKIE']
-    with_fbsd_env do
-      system(File.join(__dir__, 'lsu-umount'), '--unmount-on-different-cookie') || raise
-    end
+    system(File.join(__dir__, 'lsu-umount'), '--unmount-on-different-cookie') || raise
   end
 
   FileUtils.mkdir_p(LSU_TMPDIR_PATH)

@@ -224,13 +224,10 @@ freebsd_path            = ENV['PATH']
 freebsd_ld_library_path = ENV['LD_LIBRARY_PATH']
 freebsd_ld_preload      = ENV['LD_PRELOAD']
 
-ENV['LD_LIBRARY_PATH']                      = client_library_path
-ENV['LD_PRELOAD']                           = preload
 ENV['LSU_COOKIE']                           = SecureRandom.hex(16)
-ENV['LSU_FBSD_PATH']                        = freebsd_path
-ENV['LSU_FBSD_LD_LIBRARY_PATH']             = freebsd_ld_library_path
-ENV['LSU_FBSD_LD_PRELOAD']                  = freebsd_ld_preload
-ENV['PATH']                                 = bin_path
+ENV['LSU_LINUX_LD_LIBRARY_PATH']            = client_library_path
+ENV['LSU_LINUX_LD_PRELOAD']                 = preload
+ENV['LSU_LINUX_PATH']                       = bin_path
 ENV['SDL_AUDIODRIVER']                      = 'dsp'  # SDL2
 ENV['SDL_AUDIO_DRIVER']                     = 'alsa' # SDL3, see https://github.com/libsdl-org/SDL/commit/ed3fad18808714f9fab3111a45d06264ea6fb0c5
 ENV['SDL_JOYSTICK_DEVICE']                  = [evdev_gamepads.map{|idx| "/dev/input/event#{idx}"}.join(':'), ENV['SDL_JOYSTICK_DEVICE']].compact.join(':')
@@ -246,11 +243,9 @@ ENV['PRESSURE_VESSEL_BWRAP'] ||= File.expand_path('../lxbin/lsu-bwrap-stub', __d
 
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
-    with_fbsd_env do
-      opts = STDOUT.tty? ? {} : {[:err, :out] => '/dev/null'}
-      system(File.join(__dir__, 'lsu-kill'),   opts)
-      system(File.join(__dir__, 'lsu-umount'), opts)
-    end
+    opts = STDOUT.tty? ? {} : {[:err, :out] => '/dev/null'}
+    system(File.join(__dir__, 'lsu-kill'),   opts)
+    system(File.join(__dir__, 'lsu-umount'), opts)
     exit
   end
 end
@@ -258,21 +253,17 @@ end
 PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
 
 loop do
-  with_fbsd_env do
-    safe_system(File.join(__dir__, 'lsu-patch-steam'))
-    safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
-  end
+  safe_system(File.join(__dir__, 'lsu-patch-steam'))
+  safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
 
-  system([File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam')] * 2, *ARGV)
+  system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam'), *ARGV)
   status = $?.exitstatus || 1
 
   if $?.pid == File.read(PID_FILE).to_i
     File.unlink(PID_FILE)
-    with_fbsd_env do
-      # normal exit still leaves steamwebhelper processes
-      system(File.join(__dir__, 'lsu-kill'))
-      system(File.join(__dir__, 'lsu-umount'))
-    end
+    # normal exit still leaves steamwebhelper processes
+    system(File.join(__dir__, 'lsu-kill'))
+    system(File.join(__dir__, 'lsu-umount'))
   end
 
   if status == 42
