@@ -237,11 +237,15 @@ ENV['SYSTEM_PATH']                          = bin_path
 
 ENV['PRESSURE_VESSEL_BWRAP'] ||= File.expand_path('../lxbin/lsu-bwrap-stub', __dir__)
 
+# clean up leftover LSU_TMPDIR_PATH mounts, if any
+# (note that we deliberately keep them if there is no cookie)
+safe_system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
+
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
     opts = STDOUT.tty? ? {} : {[:err, :out] => '/dev/null'}
     system(File.join(__dir__, 'lsu-kill'),   opts)
-    system(File.join(__dir__, 'lsu-umount'), opts)
+    system(File.join(__dir__, 'lsu-umount'), opts) if read_tmp_dir_cookie()
     exit
   end
 end
@@ -259,7 +263,7 @@ loop do
     File.unlink(PID_FILE)
     # normal exit still leaves steamwebhelper processes
     system(File.join(__dir__, 'lsu-kill'))
-    system(File.join(__dir__, 'lsu-umount'))
+    system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
   end
 
   if status == 42

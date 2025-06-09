@@ -51,10 +51,6 @@ def with_env(vars)
 end
 
 def init_tmp_dir
-  if ENV['LSU_COOKIE']
-    system(File.join(__dir__, 'lsu-umount'), '--unmount-on-different-cookie') || raise
-  end
-
   FileUtils.mkdir_p(LSU_TMPDIR_PATH)
   if try_mount('tmpfs', 'tmpfs', LSU_TMPDIR_PATH, 'nocover')
     File.write(File.join(LSU_TMPDIR_PATH, '.cookie'), "#{ENV['LSU_COOKIE']}\n") if ENV['LSU_COOKIE']
@@ -65,8 +61,11 @@ def init_tmp_dir
 end
 
 def read_tmp_dir_cookie
-  cookie_path = File.join(LSU_TMPDIR_PATH, '.cookie')
-  File.exist?(cookie_path) ? File.read(cookie_path).chomp : nil
+  begin
+    File.read(File.join(LSU_TMPDIR_PATH, '.cookie')).chomp
+  rescue Errno::ENOENT
+    nil
+  end
 end
 
 def find_steam_library_folders
