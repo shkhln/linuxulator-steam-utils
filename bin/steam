@@ -50,10 +50,14 @@ def check_requirements
   reqs << [:nullfs, 'nullfs.ko must be loaded'] if !system('kldstat -q -m nullfs')
 
   # we expect EMUL_PATH to point to the RH-style directory structure
-  os = begin
-    File.read("#{EMUL_PATH}/etc/os-release").lines.map{|line| k, v = line.split('='); [k, v.chomp.undump]}.to_h
+  os = {}
+  begin
+    File.read("#{EMUL_PATH}/etc/os-release").each_line(chomp: true) do |line|
+      k, v = line.split('=')
+      os[k] = v.undump if v
+    end
   rescue Errno::ENOENT
-    nil
+    os = nil
   end
 
   if os && (EXPECTED_DISTROS.include?(os['ID']) || EXPECTED_DISTROS.intersect?(os['ID_LIKE'].split(' ')))
