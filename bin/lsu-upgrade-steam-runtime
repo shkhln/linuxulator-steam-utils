@@ -40,7 +40,7 @@ Dir.chdir(File.join(STEAM_ROOT_PATH, 'ubuntu12_32')) do
 
   if not (File.exist?('steam-runtime/pinned_libs_32') && File.exist?('steam-runtime/pinned_libs_64'))
     EMUL_PATH = File.realdirpath(`sysctl -qn compat.linux.emul_path`).chomp
-    safe_system(File.join(EMUL_PATH, 'bin/bash'), '-c', 'PATH="$SYSTEM_PATH" env -u LD_PRELOAD -u LD_LIBRARY_PATH ./steam-runtime/setup.sh')
+    safe_system(File.join(__dir__, 'lsu-freebsd-to-linux-env'), File.join(EMUL_PATH, 'bin/bash'), './steam-runtime/setup.sh')
   end
 
   # keep previous 2 versions just in case

@@ -39,5 +39,5 @@ int main(int argc, char* argv[]) {
 #endif
 
   execvp(argv[1], &argv[1]);
-  err(EXIT_FAILURE, "execvp");
+  err(EXIT_FAILURE, "execvp(%s)", argv[1]);
 }
