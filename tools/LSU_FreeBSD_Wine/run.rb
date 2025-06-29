@@ -7,9 +7,8 @@ require_relative '../../bin/.utils'
 I386_PKG_ROOT = ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
 
 KNOWN_VERSIONS = {
-  '7.0' => {appId: 1887720},
-  '8.0' => {appId: 2348590},
-  '9.0' => {appId: 2805730}
+   '9.0' => {appId: 2805730},
+  '10.0' => {appId: 3658110}
 }
 
 def safe_system(*args)
@@ -136,68 +135,46 @@ def set_up()
           str = File.read("#{target}.bak")
 
           # hijacking stderr/stdout is a bit rude
-          raise if !str.gsub!(', stderr=self.log_file, stdout=self.log_file',      '')
-
-          raise if File.exist?(File.join(PROTON_DIR, 'proton_dist.tar')) && !str.gsub!(/if (self|g_proton)\.need_tarball_extraction\(\)/, 'if False')
+          raise if !str.gsub!(', stderr=self.log_file, stdout=self.log_file', '')
 
           # Proton doesn't know anything about LD_ vs LD_32_ distinction
-          raise if !str.gsub!('ld_path_var = "LD_LIBRARY_PATH"',                   'ld_path_var = "__LD_LIBRARY_PATH"')
+          raise if !str.gsub!('ld_path_var = "LD_LIBRARY_PATH"',              'ld_path_var = "__LD_LIBRARY_PATH"')
 
-          raise if !str.gsub!('self.wine_bin = self.bin_dir + "wine"',             'self.wine_bin = "wine"')
-          raise if !str.gsub!('self.wine64_bin = self.bin_dir + "wine64"',         'self.wine64_bin = "wine64"')
-          raise if !str.gsub!('self.wineserver_bin = self.bin_dir + "wineserver"', 'self.wineserver_bin = "wineserver"')
-
-          raise if !str.gsub!('= find_nvidia_wine_dll_dir()',                      '= None')
+          raise if !str.gsub!('= find_nvidia_wine_dll_dir()',                 '= None')
 
           File.write(target, str)
           File.chmod(0700, target)
         end
 
-        set_up_file(File.exist?(File.join(PROTON_DIR, 'files')) ? 'files' : 'dist') do |target_dir|
+        set_up_file('files') do |target_dir|
 
           set_setup_state(:proton)
           FileUtils.mkdir_p("#{target_dir}.tmp")
 
-          if target_dir == 'files'
-            paths = Dir.chdir(File.join(PROTON_DIR, 'files')) do
-              Dir[
-                'lib*/libopenxr_loader.so.*',
-                'lib*/libsteam_api.so',
-                'lib*/vkd3d',
-                'lib*/wine/*/*steam*',
-                'lib*/wine/*/vrclient*',
-                'lib*/wine/*/wineopenxr.dll*',
-                'lib*/wine/dxvk',
-                'lib*/wine/nvapi',
-                'lib*/wine/vkd3d-proton',
-                'share/default_pfx',
-                'share/fonts',
-                'share/wine/fonts',
-                'share/wine/wine.inf'
-              ]
-            end
-            for path in paths
-              target = File.join("#{target_dir}.tmp", path)
-              if !File.exist?(target)
-                FileUtils.mkdir_p(File.dirname(target))
-                FileUtils.ln_s(File.join(PROTON_DIR, 'files', path), target)
-              end
-            end
-          else
-            safe_system('tar', '-C', "#{target_dir}.tmp", '-xf', File.join(PROTON_DIR, 'proton_dist.tar'),
-              'lib*/libopenxr_loader.so.*',
-              'lib*/libsteam_api.so',
+          paths = Dir.chdir(File.join(PROTON_DIR, 'files')) do
+            Dir[
+              '{lib*,lib/x86_64-linux-gnu}/libopenxr_loader.so.*',
+              'lib*/libsteam_api.so', # < Proton 10
               'lib*/vkd3d',
               'lib*/wine/*/*steam*',
               'lib*/wine/*/vrclient*',
               'lib*/wine/*/wineopenxr.dll*',
+              'lib*/wine/icu',
               'lib*/wine/dxvk',
               'lib*/wine/nvapi',
               'lib*/wine/vkd3d-proton',
               'share/default_pfx',
               'share/fonts',
               'share/wine/fonts',
-              'share/wine/wine.inf')
+              'share/wine/wine.inf'
+            ]
+          end
+          for path in paths
+            target = File.join("#{target_dir}.tmp", path)
+            if !File.exist?(target)
+              FileUtils.mkdir_p(File.dirname(target))
+              FileUtils.ln_s(File.join(PROTON_DIR, 'files', path), target)
+            end
           end
 
           Dir.chdir(File.join("#{target_dir}.tmp", 'lib/wine/i386-windows')) do
@@ -209,7 +186,7 @@ def set_up()
             end
           end
 
-          Dir.chdir(File.join("#{target_dir}.tmp", 'lib64/wine/x86_64-windows')) do
+          Dir.chdir(File.join("#{target_dir}.tmp", "#{PROTON_VERSION.to_i < 10 ? 'lib64' : 'lib'}/wine/x86_64-windows")) do
             for file in Dir['/usr/local/wine-proton/lib/wine/x86_64-windows/*.{cpl,dll,drv,exe,ocx}']
               if !File.exist?(File.basename(file))
                 set_setup_state(:symlinks)
@@ -218,14 +195,26 @@ def set_up()
             end
           end
 
-          set_up_file(File.join("#{target_dir}.tmp", 'lib/gstreamer-1.0')) do |target|
+          set_up_file(File.join("#{target_dir}.tmp", 'bin')) do |target|
             set_setup_state(:symlinks)
-            safe_system('ln', '-sf', '-h', File.join(I386_PKG_ROOT, 'usr/local/lib/gstreamer-1.0'), target)
+            FileUtils.mkdir_p(target)
+            Dir.chdir(target) do
+              for file in Dir['/usr/local/wine-proton/bin/{msidb,wine,wine64,wineserver}']
+                safe_system('ln', '-s', file)
+              end
+            end
           end
 
-          set_up_file(File.join("#{target_dir}.tmp", 'lib64/gstreamer-1.0')) do |target|
-            set_setup_state(:symlinks)
-            safe_system('ln', '-sf', '-h', '/usr/local/lib/gstreamer-1.0', target)
+          if PROTON_VERSION.to_i >= 10
+            set_up_file(File.join("#{target_dir}.tmp", 'bin-wow64')) do |target|
+              set_setup_state(:symlinks)
+              FileUtils.mkdir_p(target)
+              Dir.chdir(target) do
+                for file in Dir['/usr/local/wine-proton/bin-wow64/{msidb,wine,wineserver}']
+                  safe_system('ln', '-s', file)
+                end
+              end
+            end
           end
 
           FileUtils.mv("#{target_dir}.tmp", target_dir)
