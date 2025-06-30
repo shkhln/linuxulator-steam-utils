@@ -241,12 +241,12 @@ def run(args)
     ].compact.join(':')
 
     ENV['LD_32_LIBRARY_PATH'] = [
-      File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/files/lib"),
-      File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/dist/lib")
+      File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/files/lib/i386-linux-gnu"),
+      File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/files/lib")
     ].join(':')
     ENV['LD_LIBRARY_PATH']    = [
+      File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/files/lib/x86_64-linux-gnu"),
       File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/files/lib64"),
-      File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/dist/lib64")
     ].join(':')
 
     ENV['DISABLE_VK_LAYER_VALVE_steam_overlay_1'] = '1' # avoids ubuntu12_32/steamoverlayvulkanlayer.so crash
