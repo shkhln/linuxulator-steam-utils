@@ -117,6 +117,7 @@ install:
  lxbin/lspci \
  lxbin/lsu-* \
  lxbin/tar \
+ lxbin/xdg-open \
  lxbin/xdg-user-dir \
  lxbin/xrandr \
  lxbin/zenity \

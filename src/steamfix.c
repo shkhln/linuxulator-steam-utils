@@ -105,7 +105,6 @@ char* modify_webhelper_command(const char* command) {
 
 static int (*libc_system)(const char*) = NULL;
 
-#define SYSTEM_ENV   "LD_LIBRARY_PATH=\"$SYSTEM_LD_LIBRARY_PATH\" PATH=\"$SYSTEM_PATH\""
 #define XDG_OPEN_CMD "'/usr/bin/xdg-open'"
 
 int system(const char* command) {
@@ -116,19 +115,15 @@ int system(const char* command) {
 
   /* such as xdg-open */
 
-  if (strncmp(command, SYSTEM_ENV, sizeof(SYSTEM_ENV) - 1) == 0 && (
-        strncmp(command + sizeof(SYSTEM_ENV) - 1, " "  XDG_OPEN_CMD " ", sizeof(" "  XDG_OPEN_CMD " ") - 1) == 0 ||
-        strncmp(command + sizeof(SYSTEM_ENV) - 1, "  " XDG_OPEN_CMD " ", sizeof("  " XDG_OPEN_CMD " ") - 1) == 0)
-  ) {
+  if (strstr(command, XDG_OPEN_CMD)) {
 
-    const char* xdg_open_args = strstr(command, XDG_OPEN_CMD " ") + sizeof(XDG_OPEN_CMD " ") - 1;
+    char* buf = strdup(command);
 
-    char* format_str = "LD_LIBRARY_PATH=\"$LSU_FBSD_LD_LIBRARY_PATH\" LD_PRELOAD=\"$LSU_FBSD_LD_PRELOAD\" PATH=\"$LSU_FBSD_PATH\" xdg-open %s";
+    char* xdg_open_cmd = strstr(buf, XDG_OPEN_CMD);
+    memset(xdg_open_cmd, ' ', sizeof(XDG_OPEN_CMD) - 1);
+    memcpy(xdg_open_cmd, "xdg-open", sizeof("xdg-open") - 1);
 
-    int   buf_len = strlen(format_str) + strlen(xdg_open_args) + 1;
-    char* buf     = malloc(buf_len);
-
-    snprintf(buf, buf_len, format_str, xdg_open_args);
+    fprintf(stderr, "[[%s]]\n", buf);
 
     int err = libc_system(buf);
     free(buf);

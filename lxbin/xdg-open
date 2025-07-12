@@ -1,0 +1,2 @@
+#!/bin/sh
+exec lsu-linux-to-freebsd-env xdg-open "$@"
