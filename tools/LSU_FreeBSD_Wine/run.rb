@@ -47,23 +47,23 @@ if !File.exist?(wine32_bin)
   exit(1)
 end
 
-wine64_version = `#{wine64_bin} --version`.chomp.delete_prefix("wine-")
-if !KNOWN_VERSIONS[wine64_version]
-  perr "Found #{wine64_bin} version #{wine64_version}, expected#{KNOWN_VERSIONS.keys.size > 1 ? ':' : ''} #{KNOWN_VERSIONS.keys.join(', ')}."
+PROTON_VERSION = `#{wine64_bin} --version`.chomp.delete_prefix("wine-")
+if !KNOWN_VERSIONS[PROTON_VERSION]
+  perr "Found #{wine64_bin} version #{PROTON_VERSION}, expected#{KNOWN_VERSIONS.keys.size > 1 ? ':' : ''} #{KNOWN_VERSIONS.keys.join(', ')}."
   exit(1)
 end
 
-wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
-if wine64_version != wine32_version
-  perr "#{wine64_bin} (#{wine64_version}) and #{wine32_bin} (#{wine32_version}) versions must match each other."
-  exit(1)
+if PROTON_VERSION.to_i < 10 || ENV['PROTON_USE_WOW64'] != '1'
+  wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
+  if PROTON_VERSION != wine32_version
+    perr "#{wine64_bin} (#{PROTON_VERSION}) and #{wine32_bin} (#{wine32_version}) versions must match each other."
+    exit(1)
+  end
 end
 
 # we expect a PE Wine build
 raise if !File.exist?('/usr/local/wine-proton/lib/wine/x86_64-windows')
 raise if !File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows'))
-
-PROTON_VERSION = wine64_version
 
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}") || find_steamapp_dir("Proton #{PROTON_VERSION} (Beta)")
 if !PROTON_DIR
