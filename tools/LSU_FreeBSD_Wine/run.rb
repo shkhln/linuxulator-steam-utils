@@ -178,7 +178,7 @@ def set_up()
           end
 
           Dir.chdir(File.join("#{target_dir}.tmp", 'lib/wine/i386-windows')) do
-            for file in Dir[File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows/*.{cpl,dll,drv,exe,ocx}')]
+            for file in Dir[File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows/*.{cpl,dll,drv,exe,ocx,sys}')]
               if !File.exist?(File.basename(file))
                 set_setup_state(:symlinks)
                 safe_system('ln', '-s', file)
@@ -187,7 +187,7 @@ def set_up()
           end
 
           Dir.chdir(File.join("#{target_dir}.tmp", "#{PROTON_VERSION.to_i < 10 ? 'lib64' : 'lib'}/wine/x86_64-windows")) do
-            for file in Dir['/usr/local/wine-proton/lib/wine/x86_64-windows/*.{cpl,dll,drv,exe,ocx}']
+            for file in Dir['/usr/local/wine-proton/lib/wine/x86_64-windows/*.{cpl,dll,drv,exe,ocx,sys}']
               if !File.exist?(File.basename(file))
                 set_setup_state(:symlinks)
                 safe_system('ln', '-s', file)
