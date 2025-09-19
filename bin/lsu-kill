@@ -6,18 +6,18 @@ require_relative '.utils'
 
 PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
 
-pid = begin
+steam_pid = begin
   File.read(PID_FILE).to_i
 rescue Errno::ENOENT
   pwarn 'No pid file found'
   nil
 end
 
-if pid
+if steam_pid
   begin
-    Process.kill(:KILL, pid)
+    Process.kill(:KILL, steam_pid)
     begin
-      Process.wait(pid)
+      Process.wait(steam_pid)
     rescue Errno::ECHILD
       # ?
     end
@@ -27,11 +27,27 @@ if pid
   end
 end
 
-process_list = JSON.parse(`ps auxww -U \`id -u\` --libxo json`)['process-information']['process']
-for process in process_list
-  if process['command'].include?('steamwebhelper') && process['state'] != 'Z'
-    pid = process['pid'].to_i
-    pwarn "Killing leftover steamwebhelper process: #{pid}"
-    Process.kill(:KILL, pid)
+leftovers = []
+leftovers << steam_pid if steam_pid
+
+processes = JSON.parse(`ps ww -o pid,ppid,state,command -U $(id -u) --libxo json`)['process-information']['process']
+
+while true
+  k = 0
+  for process in processes
+    cmd  = process['command']
+    ppid = process['ppid'].to_i
+    pid  = process['pid' ].to_i
+    if (leftovers.include?(ppid) || cmd.include?('steamwebhelper')) && !leftovers.include?(pid) && process['state'][0] != 'Z'
+      pwarn "Killing leftover process: #{pid} (#{process['command'][0...60]})"
+      begin
+        Process.kill(:KILL, pid)
+      rescue Errno::ESRCH
+        # meh
+      end
+      leftovers << pid
+      k += 1
+    end
   end
+  break if k == 0
 end
