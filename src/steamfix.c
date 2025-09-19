@@ -414,3 +414,19 @@ int XCloseDisplay(void* display) {
 
   return 0;
 }
+
+/* Drop O_DIRECT that is unimplemented in Linuxulator */
+
+#include <fcntl.h>
+
+static int (*libc_pipe2)(int[2], int) = NULL;
+
+int pipe2(int pipefd[2], int flags) {
+
+  if (!libc_pipe2) {
+    libc_pipe2 = dlsym(RTLD_NEXT, "pipe2");
+    assert(libc_pipe2 != NULL);
+  }
+
+  return libc_pipe2(pipefd, flags & ~O_DIRECT);
+}
