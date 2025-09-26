@@ -208,7 +208,6 @@ FAKE(pa_get_binary_name);
 FAKE(pa_get_fqdn);
 FAKE(pa_get_home_dir);
 FAKE(pa_get_host_name);
-FAKE(pa_get_library_version);
 FAKE(pa_get_user_name);
 FAKE(pa_gettimeofday);
 FAKE(pa_locale_to_utf8);
@@ -468,4 +467,8 @@ void* pa_channel_map_init_extend(void* channel_map, unsigned channels, int def) 
 
 int pa_threaded_mainloop_in_thread(void* m) {
   return 0;
+}
+
+const char* pa_get_library_version() {
+  return "8.0.0";
 }
