@@ -4,7 +4,11 @@
 require 'fileutils'
 require_relative '../../bin/.utils'
 
-I386_PKG_ROOT = ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
+I386_PKG_ROOT = if ENV['PROTON_USE_WOW64'] != '1'
+  ENV['LSU_i386_PKG_ROOT'] || ENV['WINE_i386_ROOT'] || File.join(ENV['HOME'], '.i386-wine-pkg')
+else
+  '/'
+end
 
 KNOWN_VERSIONS = {
    '9.0' => {appId: 2805730},
