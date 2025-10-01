@@ -172,9 +172,6 @@ if ENV['LSU_COREDUMP'] != '1'
   Process.setrlimit(:CORE, 0)
 end
 
-# https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=248225
-Process.setrlimit(:STACK, 8192 * 1024)
-
 steam_runtime_bin_path = get_linux_cmd_output('"$0" --print-bin-path',                    File.join(STEAM_RUNTIME_ROOT_PATH, 'setup.sh'))
 steam_runtime_lib_path = get_linux_cmd_output('"$0" --print-steam-runtime-library-paths', File.join(STEAM_RUNTIME_ROOT_PATH, 'run.sh'))
 
