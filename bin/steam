@@ -256,8 +256,6 @@ for signal in [:HUP, :INT, :TERM]
   end
 end
 
-PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
-
 loop do
   safe_system(File.join(__dir__, 'lsu-patch-steam'))
   safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
@@ -265,12 +263,9 @@ loop do
   system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam'), *ARGV)
   status = $?.exitstatus || 1
 
-  if $?.pid == File.read(PID_FILE).to_i
-    File.unlink(PID_FILE)
-    # normal exit still leaves steamwebhelper processes
-    system(File.join(__dir__, 'lsu-kill'))
-    system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
-  end
+  # even normal exit still leaves steamwebhelper processes
+  system(File.join(__dir__, 'lsu-kill'))
+  system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
 
   if status == 42
     pwarn "Restarting Steam..."
