@@ -133,9 +133,11 @@ struct udev_list_entry* udev_enumerate_get_list_entry(struct udev_enumerate* ude
   return NULL;
 }
 
+// Chrome (and derived projects) expect only 0 as the return value:
+// https://source.chromium.org/chromium/chromium/src/+/main:device/udev_linux/udev_watcher.cc;drc=ec84fc326df161fec278698d6b9cfa48aa67d3eb;l=93
 int udev_enumerate_add_match_subsystem(struct udev_enumerate* udev_enumerate, const char* subsystem) {
   LOG_ENTRY("%p, \"%s\"", udev_enumerate, subsystem);
-  return -1;
+  return 0;
 }
 
 int udev_enumerate_add_match_property(struct udev_enumerate* udev_enumerate, const char* property, const char* value) {
