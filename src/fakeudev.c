@@ -30,30 +30,82 @@ extern char* program_invocation_short_name;
 #define FAKE(name) void name() { fprintf(stderr, "fakeudev: %s is missing\n", #name); exit(1); }
 
 FAKE(udev_device_get_action);
+FAKE(udev_device_get_current_tags_list_entry);
+FAKE(udev_device_get_devlinks_list_entry);
 FAKE(udev_device_get_devnode);
 FAKE(udev_device_get_devnum);
 FAKE(udev_device_get_devpath);
 FAKE(udev_device_get_devtype);
 FAKE(udev_device_get_driver);
-FAKE(udev_device_get_sysnum);
+FAKE(udev_device_get_is_initialized);
 FAKE(udev_device_get_parent_with_subsystem_devtype);
 FAKE(udev_device_get_parent);
 FAKE(udev_device_get_properties_list_entry);
 FAKE(udev_device_get_property_value);
+FAKE(udev_device_get_seqnum);
 FAKE(udev_device_get_subsystem);
 FAKE(udev_device_get_sysattr_list_entry);
 FAKE(udev_device_get_sysattr_value);
 FAKE(udev_device_get_sysname);
+FAKE(udev_device_get_sysnum);
 FAKE(udev_device_get_syspath);
+FAKE(udev_device_get_tags_list_entry);
+FAKE(udev_device_get_udev);
+FAKE(udev_device_get_usec_since_initialized);
+FAKE(udev_device_has_current_tag);
+FAKE(udev_device_has_tag);
+FAKE(udev_device_new_from_device_id);
+FAKE(udev_device_new_from_environment);
 FAKE(udev_device_new_from_subsystem_sysname);
 FAKE(udev_device_new_from_syspath);
 FAKE(udev_device_ref);
+FAKE(udev_device_set_sysattr_value);
 FAKE(udev_device_unref);
+FAKE(udev_enumerate_add_match_is_initialized);
+FAKE(udev_enumerate_add_match_parent);
+FAKE(udev_enumerate_add_match_sysattr);
+FAKE(udev_enumerate_add_match_sysname);
+FAKE(udev_enumerate_add_match_tag);
+FAKE(udev_enumerate_add_nomatch_subsystem);
+FAKE(udev_enumerate_add_nomatch_sysattr);
+FAKE(udev_enumerate_add_syspath);
+FAKE(udev_enumerate_get_udev);
+FAKE(udev_enumerate_ref);
+FAKE(udev_enumerate_scan_subsystems);
+FAKE(udev_get_log_priority);
+FAKE(udev_get_userdata);
+FAKE(udev_hwdb_get_properties_list_entry);
+FAKE(udev_hwdb_new);
+FAKE(udev_hwdb_ref);
+FAKE(udev_hwdb_unref);
+FAKE(udev_list_entry_get_by_name);
 FAKE(udev_list_entry_get_name);
 FAKE(udev_list_entry_get_next);
 FAKE(udev_list_entry_get_value);
+FAKE(udev_monitor_filter_add_match_tag);
+FAKE(udev_monitor_filter_remove);
+FAKE(udev_monitor_filter_update);
+FAKE(udev_monitor_get_udev);
+FAKE(udev_monitor_ref);
+FAKE(udev_monitor_set_receive_buffer_size);
+FAKE(udev_queue_flush);
+FAKE(udev_queue_get_fd);
+FAKE(udev_queue_get_kernel_seqnum);
+FAKE(udev_queue_get_queue_is_empty);
+FAKE(udev_queue_get_queued_list_entry);
+FAKE(udev_queue_get_seqnum_is_finished);
+FAKE(udev_queue_get_seqnum_sequence_is_finished);
+FAKE(udev_queue_get_udev_is_active);
+FAKE(udev_queue_get_udev_seqnum);
+FAKE(udev_queue_get_udev);
+FAKE(udev_queue_new);
+FAKE(udev_queue_ref);
+FAKE(udev_queue_unref);
+FAKE(udev_ref);
 FAKE(udev_set_log_fn);
 FAKE(udev_set_log_priority);
+FAKE(udev_set_userdata);
+FAKE(udev_util_encode_string);
 
 struct udev           {};
 struct udev_monitor   {};
@@ -77,11 +129,6 @@ struct udev* udev_unref(struct udev* udev) {
 struct udev_monitor* udev_monitor_new_from_netlink(void* udev, const char* name) {
   LOG_ENTRY("%p, \"%s\"", udev, name);
   return &monitor;
-}
-
-void* udev_monitor_new_from_netlink_fd(void* udev, const char* name, int fd) {
-  LOG_ENTRY("%p, \"%s\", %d", udev, name, fd);
-  assert(0);
 }
 
 int udev_monitor_enable_receiving(struct udev_monitor* udev_monitor) {
