@@ -258,7 +258,7 @@ def run(args)
     ENV['WINEDEBUG'] ||= 'warn+module,warn+seh'
 
     cmd = [
-      ENV['LSU_SHIM_WRAPPER'] || 'with-glibc-shim',
+      ENV['LSU_SHIM_WRAPPER'] || 'c6-shim-env',
       File.expand_path('../../bin/lsu-wine-env', __dir__),
       File.join(LSU_TMPDIR_PATH, "FreeBSD_Proton/proton_#{PROTON_VERSION}/proton"),
       *args
