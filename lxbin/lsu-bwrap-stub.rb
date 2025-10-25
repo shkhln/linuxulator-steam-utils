@@ -11,7 +11,7 @@ PROTON_APP_IDS = [
 ]
 
 # This is just Steam being stupid (vs the user), so no warning
-exit(1) if PROTON_APP_IDS.include?(ENV['STEAM_COMPAT_APP_ID'])
+exit(1) if !ENV['STEAM_COMPAT_APP_ID'] || PROTON_APP_IDS.include?(ENV['STEAM_COMPAT_APP_ID'])
 
 name = File.basename($PROGRAM_NAME)
 msg  = "Bubblewrap doesn't work on FreeBSD." +
