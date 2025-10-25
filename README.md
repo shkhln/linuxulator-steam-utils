@@ -64,7 +64,7 @@ There are, in fact, a few non-Wine Linux binaries there, they are not being repl
 This kind of hybrid Proton setup is quite different from both official Linux Proton builds and vanilla Wine,
 thus any issues encountered with it can *not* be directly reported to either project's bug tracker.
 
-Known issues include incompatibility with the Steam's overlay and Windows versions of Half-Life and Half-Life 2 engine games.
+Known issues include incompatibility with the Steam overlay.
 
 This tool is generally recommended over Linux Proton (running under Linuxulator) due to working WoW64 and more reliable 3D acceleration on Intel/AMD GPUs.
 
