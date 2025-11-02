@@ -42,7 +42,7 @@ def check_requirements
   end
 
   reqs << [:linux,   "write access to #{EMUL_PATH}/dev/shm"] if !File.writable?("#{EMUL_PATH}/dev/shm")
-  reqs << [:dbus,    '/var/lib/dbus/machine-id existence']   if !File.exist?('/var/lib/dbus/machine-id')
+  reqs << [nil,      '/etc/machine-id must exist']           if !File.exist?('/etc/machine-id')
   reqs << [:uchroot, 'Unprivileged chroot must be enabled']  if `sysctl -nq security.bsd.unprivileged_chroot`.to_i != 1
   reqs << [:umount,  'Unprivileged mounts must be enabled']  if `sysctl -nq vfs.usermount`.to_i != 1
 
@@ -110,10 +110,6 @@ if !requirements.empty?
 
   if requirements.find{|req| req[0] == :linux}
     perr "\nRun (as root) `sysrc linux_enable=YES && service linux start` to enable Linux emulation."
-  end
-
-  if requirements.find{|req| req[0] == :dbus}
-    perr "\nRun (as root) `mkdir -p /var/lib/dbus && /usr/local/bin/dbus-uuidgen --ensure` to generate a machine id."
   end
 
   if requirements.find{|req| req[0] == :uchroot}

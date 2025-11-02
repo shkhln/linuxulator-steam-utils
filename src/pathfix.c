@@ -17,6 +17,11 @@ static const char* redirect(const char* path) {
     return "/etc/ssl/cert.pem";
   }
 
+  // I have no idea what Steam actually does with this
+  if (strcmp(path, "/var/lib/dbus/machine-id") == 0) {
+    return "/etc/machine-id";
+  }
+
   // Let's pretend this file exists
   if (strcmp(path, "/usr/sbin/lsof") == 0) {
     return "/bin/sh";

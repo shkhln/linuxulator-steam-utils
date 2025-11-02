@@ -275,6 +275,10 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     FileUtils.cp('/etc/passwd',      File.join(mroot, 'etc/')) # getpwuid_r()
     FileUtils.cp('/etc/resolv.conf', File.join(mroot, 'etc/')) # dns
 
+    # old machine-id location just in case
+    FileUtils.mkdir_p(File.join(mroot, 'var/lib/dbus'))
+    FileUtils.ln_s('/etc/machine-id', File.join(mroot, 'var/lib/dbus/machine-id'))
+
     # LSU's bin/lib dirs
     lsu_dir = File.expand_path('..', __dir__)
     mounts << mount('nullfs', lsu_dir, File.join(mroot, LSU_IN_CHROOT))
