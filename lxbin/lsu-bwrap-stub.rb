@@ -3,8 +3,10 @@
 
 PROTON_APP_IDS = [
   '1420170', # Proton 5.13
+  '1493710', # Proton Experimental
   '1580130', # Proton 6.3
   '1887720', # Proton 7.0
+  '2180100', # Proton Hotfix
   '2348590', # Proton 8.0
   '2805730', # Proton 9.0
   '3658110'  # Proton 10.0 (Beta)
