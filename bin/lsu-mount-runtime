@@ -288,7 +288,7 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
       File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
     }
-      libs = Dir[File.join(source_dir, 'lib{nvidia-*.so*,EGL_nvidia.so*,GLX_nvidia.so*}')]
+      libs = Dir[File.join(source_dir, 'lib{cuda,nvidia-*,*_nvidia}.so*')]
       if libs.size > 0
         mounts << mount('nullfs', source_dir, File.join(dest_dir, '.nvidia'))
         for path in libs
