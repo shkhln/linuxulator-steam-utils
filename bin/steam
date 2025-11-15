@@ -140,7 +140,7 @@ if `sysctl -q hw.nvidia.version` =~ /hw.nvidia.version: NVIDIA UNIX x86_64 Kerne
   end
 end
 
-if !File.readable?(File.join(__dir__, '../lib32/steamfix/steamfix.so'))
+if !File.readable?(File.join(__dir__, '../lib32/steam/steamfix.so'))
   perr "Can't find steamfix.so"
   exit 1
 end
@@ -178,32 +178,25 @@ bin_path = [
 ].compact.join(':')
 
 client_library_path = [
-  File.expand_path('../lib32/steamfix',  __dir__),
+  File.expand_path('../lib32/steam',     __dir__),
   File.expand_path('../lib32/fakenm',    __dir__),
   File.expand_path('../lib32/fakepulse', __dir__),
   File.expand_path('../lib64/fakepulse', __dir__),
   File.expand_path('../lib32/fakeudev',  __dir__),
   File.expand_path('../lib64/fakeudev',  __dir__),
-  File.expand_path('../lib32/protonfix', __dir__),
-  File.expand_path('../lib64/protonfix', __dir__),
-  File.expand_path('../lib64/webfix',    __dir__),
-  File.join(EMUL_PATH,  '/usr/lib64/nss'),
+  File.join(EMUL_PATH, '/usr/lib64/nss'),
   File.join(STEAM_ROOT_PATH, 'ubuntu12_32'),
   File.join(STEAM_ROOT_PATH, 'ubuntu12_32/panorama'),
   steam_runtime_lib_path
 ].join(':')
 
 games_library_path = [
-  File.expand_path('../lib32/fakepulse',   __dir__),
-  File.expand_path('../lib64/fakepulse',   __dir__),
-  File.expand_path('../lib32/fakeudev',    __dir__),
-  File.expand_path('../lib64/fakeudev',    __dir__),
-  File.expand_path('../lib32/noepollexcl', __dir__),
-  File.expand_path('../lib64/noepollexcl', __dir__),
-  File.expand_path('../lib32/pathfix',     __dir__),
-  File.expand_path('../lib64/pathfix',     __dir__),
-  File.expand_path('../lib32/protonfix',   __dir__),
-  File.expand_path('../lib64/protonfix',   __dir__),
+  File.expand_path('../lib32/fakepulse', __dir__),
+  File.expand_path('../lib64/fakepulse', __dir__),
+  File.expand_path('../lib32/fakeudev',  __dir__),
+  File.expand_path('../lib64/fakeudev',  __dir__),
+  File.expand_path('../lib32',           __dir__),
+  File.expand_path('../lib64',           __dir__),
   File.join(EMUL_PATH, 'usr/lib64/nss'),
   steam_runtime_lib_path
 ].join(':')

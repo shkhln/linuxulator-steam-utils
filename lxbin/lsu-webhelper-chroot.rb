@@ -26,7 +26,7 @@ end
 library_path = [
   File.join(LSU_IN_CHROOT, 'lib64/fakepulse'),
   File.join(LSU_IN_CHROOT, 'lib64/fakeudev'),
-  File.join(LSU_IN_CHROOT, 'lib64/webfix'),
+  File.join(LSU_IN_CHROOT, 'lib64'),
   '/lib/x86_64-linux-gnu',
   '/lib/x86_64-linux-gnu/nss',
 ].compact.join(':')

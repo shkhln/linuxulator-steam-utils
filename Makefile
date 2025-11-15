@@ -9,7 +9,7 @@ PREFIX    ?= /opt
 
 CFLAGS = -B/compat/linux/bin --sysroot=/compat/linux -std=c99 -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION}
 
-LIBS  = lib32/steamfix/steamfix.so       \
+LIBS  = lib32/steam/steamfix.so          \
         lib32/fakenm/libnm.so.0          \
         lib32/fakenm/libnm-glib.so.4     \
         lib32/fakepulse/libpulse.so.0    \
@@ -18,16 +18,16 @@ LIBS  = lib32/steamfix/steamfix.so       \
         lib64/fakeudev/libudev.so.0      \
         lib32/fakeudev/libudev.so.1      \
         lib64/fakeudev/libudev.so.1      \
-        lib32/noepollexcl/noepollexcl.so \
-        lib64/noepollexcl/noepollexcl.so \
-        lib32/pathfix/pathfix.so         \
-        lib64/pathfix/pathfix.so         \
-        lib32/protonfix/protonfix.so     \
-        lib64/protonfix/protonfix.so     \
-        lib32/shmfix/shmfix.so           \
-        lib64/shmfix/shmfix.so           \
-        lib64/webfix/webfix.so           \
-        lib32/steamclient/dt_init-fix.so
+        lib32/noepollexcl.so             \
+        lib64/noepollexcl.so             \
+        lib32/pathfix.so                 \
+        lib64/pathfix.so                 \
+        lib32/protonfix.so               \
+        lib64/protonfix.so               \
+        lib32/shmfix.so                  \
+        lib64/shmfix.so                  \
+        lib64/webfix.so                  \
+        lib32/dt_init-fix.so
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 
@@ -35,8 +35,8 @@ build: $(LIBS) $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env $(BUILD_DIR)/lxbin/lsu-
 
 .for b in 32 64
 
-$(BUILD_DIR)/lib$(b)/steamfix/steamfix.so: src/steamfix.c src/pathfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/steamfix
+$(BUILD_DIR)/lib$(b)/steam/steamfix.so: src/steamfix.c src/pathfix.c
+	mkdir -p $(BUILD_DIR)/lib$(b)/steam
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/steamfix.c src/pathfix.c -pthread -ldl -lm
 
 $(BUILD_DIR)/lib$(b)/fakenm/libnm.so.0: src/fakenm.c
@@ -57,29 +57,26 @@ $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.0: src/fakeudev.c
 $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.1: $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.0
 	ln -s libudev.so.0 $(.TARGET)
 
-$(BUILD_DIR)/lib$(b)/pathfix/pathfix.so: src/pathfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/pathfix
+$(BUILD_DIR)/lib$(b):
+	mkdir -p $(BUILD_DIR)/lib$(b)
+
+$(BUILD_DIR)/lib$(b)/pathfix.so: src/pathfix.c $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/pathfix.c -ldl
 
-$(BUILD_DIR)/lib$(b)/protonfix/protonfix.so: src/protonfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/protonfix
+$(BUILD_DIR)/lib$(b)/protonfix.so: src/protonfix.c $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/protonfix.c -pthread -ldl
 
-$(BUILD_DIR)/lib$(b)/webfix/webfix.so: src/webfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/webfix
+$(BUILD_DIR)/lib$(b)/webfix.so: src/webfix.c $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/webfix.c -pthread -ldl -lm
 
-$(BUILD_DIR)/lib$(b)/noepollexcl/noepollexcl.so: src/noepollexcl.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/noepollexcl
+$(BUILD_DIR)/lib$(b)/noepollexcl.so: src/noepollexcl.c $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/noepollexcl.c -ldl
 
-$(BUILD_DIR)/lib$(b)/shmfix/shmfix.so: src/shmfix.c
-	mkdir -p $(BUILD_DIR)/lib$(b)/shmfix
+$(BUILD_DIR)/lib$(b)/shmfix.so: src/shmfix.c $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/shmfix.c -ldl -lrt
 .endfor
 
-$(BUILD_DIR)/lib32/steamclient/dt_init-fix.so: src/dt_init-fix.c
-	mkdir -p $(BUILD_DIR)/lib32/steamclient
+$(BUILD_DIR)/lib32/dt_init-fix.so: src/dt_init-fix.c $(BUILD_DIR)/lib32
 	cc -m32 -mstack-alignment=16 -mstackrealign -std=c99 -Wall -Wextra -fPIC -shared -o $(.TARGET) src/dt_init-fix.c
 
 # we want to run this as the first command in a Linux chroot, hence -static

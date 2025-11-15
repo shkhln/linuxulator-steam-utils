@@ -240,7 +240,7 @@ def run(args)
     ENV['LSU_STEAMCLIENT_ALT_PATH'] = File.join(LSU_TMPDIR_PATH, 'steamclient.so.patched')
 
     ENV['LD_32_PRELOAD'] = [
-      File.expand_path('../../lib32/steamclient/dt_init-fix.so', __dir__),
+      File.expand_path('../../lib32/dt_init-fix.so', __dir__),
       ENV['LD_32_PRELOAD']
     ].compact.join(':')
 
