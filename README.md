@@ -1,9 +1,16 @@
 # linuxulator-steam-utils
 
-A set of workarounds for the Linux Steam client targeting FreeBSD 13.2+.
+A set of workarounds for the Linux Steam client targeting FreeBSD 14+.
 
-Nvidia GPU is highly recommended.
+Note that FreeBSD means _FreeBSD_, not GhostBSD, not NomadBSD, not whatever else is out there. Nvidia GPU is highly recommended.
 For the list of tested Linux games see the [compatibility](https://github.com/shkhln/linuxulator-steam-utils/wiki/Compatibility) page in the wiki.
+
+Compatibility with Windows games is generally not tracked, but it should be on par with the usual Wine on FreeBSD experience.
+If you suspect that you found a case where LSU is actually worse (than the Windows Steam client running under Wine or the same game from GOG, etc),
+please file an issue for it.
+
+For support questions use [FreeBSD forums](https://forums.freebsd.org/threads/steamuxulation-redux.72140/) or the #gaming channel
+on [FreeBSD Discord](https://wiki.freebsd.org/Discord/DiscordServer). Anything asked on Reddit will be ignored.
 
 ## Limitations
 
