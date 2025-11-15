@@ -219,6 +219,7 @@ for line in `sysctl kern.evdev.input`.lines
   evdev_gamepads << $1.to_i if line =~ /^kern.evdev.input.(\d+).phys: (hgame|ps4dshock|xb360gp)\d+$/
 end
 
+ENV['ALSOFT_DRIVERS']                       = 'oss'
 ENV['LSU_COOKIE']                           = SecureRandom.hex(16)
 ENV['LSU_LINUX_LD_LIBRARY_PATH']            = client_library_path
 ENV['LSU_LINUX_LD_PRELOAD']                 = preload
