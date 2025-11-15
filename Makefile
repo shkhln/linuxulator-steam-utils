@@ -18,6 +18,7 @@ LIBS  = lib32/steam/steamfix.so          \
         lib64/fakeudev/libudev.so.0      \
         lib32/fakeudev/libudev.so.1      \
         lib64/fakeudev/libudev.so.1      \
+        lib64/dummy-uvm.so               \
         lib32/noepollexcl.so             \
         lib64/noepollexcl.so             \
         lib32/pathfix.so                 \
@@ -59,6 +60,9 @@ $(BUILD_DIR)/lib$(b)/fakeudev/libudev.so.1: $(BUILD_DIR)/lib$(b)/fakeudev/libude
 
 $(BUILD_DIR)/lib$(b):
 	mkdir -p $(BUILD_DIR)/lib$(b)
+
+$(BUILD_DIR)/lib$(b)/dummy-uvm.so: src/dummy-uvm.c $(BUILD_DIR)/lib$(b)
+	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/dummy-uvm.c -ldl
 
 $(BUILD_DIR)/lib$(b)/pathfix.so: src/pathfix.c $(BUILD_DIR)/lib$(b)
 	/compat/linux/bin/cc -m$(b) $(CFLAGS) -fPIC -shared -o $(.TARGET) src/pathfix.c -ldl
