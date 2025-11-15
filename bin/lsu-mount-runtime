@@ -251,13 +251,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       end
     end
 
-    # we can't mount fd and shm over devfs from a non-root user, hence the symlink abuse below
+    # we can't mount anything on top of devfs from a non-root user, hence the symlink abuse below
     mounts << mount('devfs', 'devfs', File.join(mroot, 'dev/.dev'))
-
-    # mounting fdescfs at /dev/fd (vs /compat/linux/dev/fd) apparently bothers CEF:
-    # [xxxx/xxxxxx.xxxxxx:FATAL:proc_util.cc(97)] Check failed: . : No such file or directory (2)
-    # mounts << mount('fdescfs', 'fdescfs', File.join(mroot, 'dev/fd'), 'linrdlnk')
-
+    mounts << mount('fdescfs', 'fdescfs', File.join(mroot, 'dev/fd'), 'linrdlnk')
     mounts << mount('nullfs', File.join(EMUL_PATH, 'dev/shm'), File.join(mroot, 'dev/shm'))
 
     Dir.chdir(File.join(mroot, 'dev')) do
