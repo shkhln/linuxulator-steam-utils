@@ -9,8 +9,8 @@ Compatibility with Windows games is generally not tracked, but it should be on p
 If you suspect that you found a case where LSU is actually worse (than the Windows Steam client running under Wine or the same game from GOG, etc),
 please file an issue for it.
 
-For support questions use [FreeBSD forums](https://forums.freebsd.org/threads/steamuxulation-redux.72140/) or the #gaming channel
-on [FreeBSD Discord](https://wiki.freebsd.org/Discord/DiscordServer). Anything asked on Reddit will be ignored.
+For support use [FreeBSD forums](https://forums.freebsd.org/threads/steamuxulation-redux.72140/) or the #gaming channel
+on [FreeBSD Discord](https://wiki.freebsd.org/Discord/DiscordServer). Reddit will be ignored.
 
 ## Limitations
 
