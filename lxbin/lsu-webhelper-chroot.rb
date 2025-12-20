@@ -4,23 +4,13 @@
 require 'fileutils'
 require_relative '../bin/.utils'
 
-slr_sniper_path = File.join(STEAM_ROOT_PATH, 'steamrt64/steam-runtime-steamrt')
+slr_sniper_path = File.join(STEAM_ROOT_PATH, 'steamrt64/pv-runtime/steam-runtime-steamrt')
+slr_sniper_path = File.join(STEAM_ROOT_PATH, 'steamrt64/steam-runtime-steamrt') if !File.exist?(slr_sniper_path)
+slr_sniper_path = (find_steamapp_dir('SteamLinuxRuntime_sniper') rescue nil)    if !File.exist?(slr_sniper_path)
 
-# fallback to the old location
-if !File.exist?(slr_sniper_path)
-  slr_sniper_path = find_steamapp_dir('SteamLinuxRuntime_sniper') rescue nil
-  if !slr_sniper_path
-    # using bootstrap runtime instead
-    slr_sniper_path = File.join(STEAM_ROOT_PATH, 'ubuntu12_64/SteamLinuxRuntime_sniper')
-    #TODO: unpack on version change as well?
-    if !File.exist?(slr_sniper_path)
-      tmp_slr_path = "#{slr_sniper_path}.tmp"
-      FileUtils.mkdir_p(tmp_slr_path)
-      system('tar', '--cd', tmp_slr_path, '-xf', File.join(STEAM_ROOT_PATH, 'ubuntu12_64/steam-runtime-sniper.tar.xz'),
-        '--strip-components', '1', 'SteamLinuxRuntime_sniper') || raise
-      FileUtils.mv(tmp_slr_path, slr_sniper_path)
-    end
-  end
+if !slr_sniper_path
+  perr "Unable to find steam-runtime"
+  exit(1)
 end
 
 library_path = [
