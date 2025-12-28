@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'fileutils'
+
+TARGET_DIR = ARGV[0] || '/compat/linux/sys'
+
+if !Dir.empty?(TARGET_DIR)
+  STDERR.puts "whoops"
+  exit(1)
+end
+
+def create_dir(path, &block)
+  FileUtils.mkdir_p(path)
+  Dir.chdir(path, &block)
+end
+
+Dir.chdir(TARGET_DIR) do
+  for line in `sysctl dev.drm`.lines
+    if line =~ /^dev.drm.(\d+).PCI_ID: (\h+):(\h+)$/
+
+      drm_idx = $1.to_i
+
+      props = {
+        :vendor => $2,
+        :device => $3
+      }
+
+      # we assume dev.drmn.0 corresponds to dev.drm.0, etc
+      drmn_idx = drm_idx >= 128 ? drm_idx - 128 : drm_idx
+
+      raise if !(`sysctl -qn dev.drmn.#{drmn_idx}.%parent` =~ /^vgapci(\d+)$/)
+      vgapci_idx = $1
+
+      `sysctl -qn dev.vgapci.#{vgapci_idx}.%pnpinfo`.split(' ').each do |part|
+        case part
+          when /^vendor=0x(\h+)$/
+            raise if props[:vendor] != $1
+          when /^device=0x(\h+)$/
+            raise if props[:device] != $1
+          when /^subvendor=0x(\h+)$/
+            props[:subvendor] = $1
+          when /^subdevice=0x(\h+)$/
+            props[:subdevice] = $1
+          when /^class=0x0*(\h+)$/
+            props[:class] = $1
+        end
+      end
+
+      `sysctl -qn dev.vgapci.#{vgapci_idx}.%location`.split(' ').each do |part|
+        case part
+          when /^dbsf=pci(\d+):(\d+):(\d+):(\d+)$/
+            props[:domain]   = $1
+            props[:bus]      = $2
+            props[:slot]     = $3
+            props[:function] = $4
+        end
+      end
+
+      create_dir("dev/char/226:#{drm_idx}/device") do
+        FileUtils.mkdir_p('drm')
+        File.write('device', props[:device])
+        File.write('vendor', props[:vendor])
+        File.write('subsystem_vendor', props[:subvendor])
+        File.write('subsystem_device', props[:subdevice])
+        File.symlink('/sys/bus/pci', 'subsystem')
+        uvent = <<~UEVENT
+          DRIVER=whatever
+          PCI_CLASS=#{props[:class]}
+          PCI_ID=#{props[:vendor]}:#{props[:device]}
+          PCI_SUBSYS_ID=#{props[:subvendor]}:#{props[:subdevice]}
+          PCI_SLOT_NAME=#{'%04d:%02d:%02d.%d' % [props[:domain], props[:bus], props[:slot], props[:function]]}
+        UEVENT
+        File.write('uevent', uvent)
+      end
+    end
+  end # sysctl dev.drm
+
+  #~ create_dir('devices/system/cpu') do
+    #~ File.write('online', '0-3')
+  #~ end
+end

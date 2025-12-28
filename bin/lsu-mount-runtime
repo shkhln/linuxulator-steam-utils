@@ -204,52 +204,57 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
     mounts << mount('nullfs',    '/var/run',  File.join(mroot, 'var/run')) # Wayland (?)
 
     # linsysfs + drm workaround
-    mounts << mount('linsysfs', 'linsysfs', File.join(mroot, 'sys/.sys'))
+    if ENV['LSU_SKIP_LINSYSFS'] == '1'
+      FileUtils.mkdir_p(File.join(mroot, 'sys'))
+      system(File.join(__dir__, 'lsu-populate-sys-dir'), File.join(mroot, 'sys')) || raise
+    else
+      mounts << mount('linsysfs', 'linsysfs', File.join(mroot, 'sys/.sys'))
 
-    Dir.chdir(File.join(mroot, 'sys')) do
+      Dir.chdir(File.join(mroot, 'sys')) do
 
-      card_dir_by_pci_id = {}
-      for card_dir in Dir['.sys/class/drm/card*']
-        uevent = File.read(File.join(card_dir, 'device/uevent'))
-        uevent =~ /PCI_ID=(.+)$/
-        pci_id = $1.downcase
-        card_dir_by_pci_id[pci_id] = card_dir
-      end
+        card_dir_by_pci_id = {}
+        for card_dir in Dir['.sys/class/drm/card*']
+          uevent = File.read(File.join(card_dir, 'device/uevent'))
+          uevent =~ /PCI_ID=(.+)$/
+          pci_id = $1.downcase
+          card_dir_by_pci_id[pci_id] = card_dir
+        end
 
-      FileUtils.mkdir_p('class/drm')
-      FileUtils.mkdir_p('dev/char')
+        FileUtils.mkdir_p('class/drm')
+        FileUtils.mkdir_p('dev/char')
 
-      for line in `sysctl dev.drm`.lines
-        if line =~ /^dev.drm.(\d+).PCI_ID: (.*)$/
-          idx      = $1.to_i
-          card_dir = card_dir_by_pci_id[$2]
-          if card_dir
-            FileUtils.ln_s(File.join('../..', card_dir), "class/drm/card#{idx}")
+        for line in `sysctl dev.drm`.lines
+          if line =~ /^dev.drm.(\d+).PCI_ID: (.*)$/
+            idx      = $1.to_i
+            card_dir = card_dir_by_pci_id[$2]
+            if card_dir
+              FileUtils.ln_s(File.join('../..', card_dir), "class/drm/card#{idx}")
 
-            FileUtils.mkdir_p("dev/char/226:#{idx}")
-            FileUtils.ln_s(File.join('../../..', card_dir, 'device'), "dev/char/226:#{idx}/device")
+              FileUtils.mkdir_p("dev/char/226:#{idx}")
+              FileUtils.ln_s(File.join('../../..', card_dir, 'device'), "dev/char/226:#{idx}/device")
 
-            uevent = <<~UEVENT
-              MAJOR=226
-              MINOR=#{idx}
-              DEVNAME=dri/card#{idx}
-              DEVTYPE=dri_minor
-            UEVENT
-            File.write("dev/char/226:#{idx}/uevent", uevent)
+              uevent = <<~UEVENT
+                MAJOR=226
+                MINOR=#{idx}
+                DEVNAME=dri/card#{idx}
+                DEVTYPE=dri_minor
+              UEVENT
+              File.write("dev/char/226:#{idx}/uevent", uevent)
+            end
           end
         end
-      end
 
-      Dir.chdir('class') do
-        for path in Dir['../.sys/class/*']
+        Dir.chdir('class') do
+          for path in Dir['../.sys/class/*']
+            basename = File.basename(path)
+            FileUtils.ln_s(path, basename) if !File.exist?(basename)
+          end
+        end
+
+        for path in Dir['.sys/*']
           basename = File.basename(path)
           FileUtils.ln_s(path, basename) if !File.exist?(basename)
         end
-      end
-
-      for path in Dir['.sys/*']
-        basename = File.basename(path)
-        FileUtils.ln_s(path, basename) if !File.exist?(basename)
       end
     end
 
