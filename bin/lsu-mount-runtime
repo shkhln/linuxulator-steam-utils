@@ -152,7 +152,9 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
             # linux-rl9-libdrm
             File.join(source_dir, 'lib{drm,drm_{amdgpu,intel,radeon}}.so*'),
             # linux-rl9-dri
-            File.join(source_dir, 'lib{EGL_mesa,GLU,GLX_{mesa,system},VkLayer_*,gallium-*,gbm,glapi,glut,vulkan_{intel,lvp,radeon},xatracker}.so*')
+            File.join(source_dir, 'lib{EGL_mesa,GLU,GLX_{mesa,system},VkLayer_*,gallium-*,gbm,glapi,glut,vulkan_{intel,lvp,radeon},xatracker}.so*'),
+            # linux-rl9-spirv-tools
+            File.join(source_dir, 'lib{SPIRV-*}.so*')
           ]
             target = File.join(dest_dir, File.basename(source))
             #~ pwarn "#{source} -> #{target}"
