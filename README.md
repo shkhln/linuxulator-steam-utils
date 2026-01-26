@@ -24,6 +24,8 @@ on [FreeBSD Discord](https://wiki.freebsd.org/Discord/DiscordServer). Reddit wil
 LSU uses unprivileged chroot and mounts to run the Steam's embedded web browser and (optionally) games.
 Set *security.bsd.unprivileged_chroot* and *vfs.usermount* sysctls to 1 to enable those. Add *nullfs* to kld_list.
 
+Set *compat.linux.use_real_ifnames* sysctl to 1.
+
 It's generally expected that you use the linux-* packages as they are and leave compat.linux.emul_path sysctl alone.
 Any attempts to run LSU with a custom Ubuntu base will be met with unsympathetic "WTF?" and "I told you" replies.
 
