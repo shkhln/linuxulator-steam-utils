@@ -12,7 +12,8 @@ end
 
 KNOWN_VERSIONS = {
    '9.0' => {appId: 2805730},
-  '10.0' => {appId: 3658110}
+  '10.0' => {appId: 3658110},
+  '11.0' => {appId: 4628710}
 }
 
 def safe_system(*args)
