@@ -205,8 +205,11 @@ int execv(const char* file, char* const argv[]) {
 
   if (webhelper_str_index != -1) {
 
-    size_t argv_size_in_bytes = sizeof(char*) * (arg_count + 1);
+    size_t n = (size_t)arg_count + 1;
+    if (n == 0 || n > (size_t)-1 / sizeof(char*)) return -1;
+    size_t argv_size_in_bytes = sizeof(char*) * n;
     char** argv2 = malloc(argv_size_in_bytes);
+    if (!argv2) return -1;
     memcpy(argv2, argv, argv_size_in_bytes);
 
     argv2[webhelper_str_index] = modify_webhelper_command(argv[webhelper_str_index]);
