@@ -29,6 +29,27 @@ static void clear_ld_preload() {
   }
 }
 
+/* We want to be able to set some env vars, but we don't want them to leak to the games */
+static char* (*libc_getenv)(const char*) = NULL;
+
+char* getenv(const char* name) {
+
+  if (!libc_getenv) {
+    libc_getenv = dlsym(RTLD_NEXT, "getenv");
+  }
+
+  char buf[1024];
+  int n = snprintf(buf, sizeof(buf), "LSU_CLIENT_ENV_OVERRIDE_%s", name);
+  assert(n >= 0 && n < (int)sizeof(buf));
+
+  char* value = libc_getenv(buf);
+  if (value != NULL) {
+    return value;
+  }
+
+  return libc_getenv(name);
+}
+
 /* Do not allow Breakpad to override libSegFault handlers */
 
 #include <execinfo.h>
@@ -97,7 +118,9 @@ char* modify_webhelper_command(const char* command) {
   assert(webhelper_args[-2] == '\'');
   webhelper_args[-2] = '\0';
 
-  snprintf(buf, buf_len, format_str, webhelper_path, webhelper_args);
+  int n = snprintf(buf, buf_len, format_str, webhelper_path, webhelper_args);
+  assert(n >= 0 && n < buf_len);
+
   free(webhelper_path);
 
   return buf;

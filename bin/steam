@@ -235,6 +235,11 @@ ENV['SYSTEM_PATH']                          = bin_path
 
 ENV['PRESSURE_VESSEL_BWRAP'] ||= File.expand_path('../lxbin/lsu-bwrap-stub', __dir__)
 
+# https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=278363
+if ENV['LSU_DONT_FORCE_SOFTWARE_RENDERING_FOR_STEAM'] != '1'
+  ENV['LSU_CLIENT_ENV_OVERRIDE_LIBGL_ALWAYS_SOFTWARE'] = '1'
+end
+
 # clean up leftover LSU_TMPDIR_PATH mounts, if any
 # (note that we deliberately keep them if there is no cookie)
 safe_system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
