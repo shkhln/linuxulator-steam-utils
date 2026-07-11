@@ -4,9 +4,11 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <err.h>
 #include <errno.h>
 #include <libgen.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -345,15 +347,43 @@ static void init_xlib_pointers() {
 
 pthread_once_t xlib_pointer_init = PTHREAD_ONCE_INIT;
 
-static __thread void* default_display = NULL;
+#define DISPLAY_POOL_SIZE 50
+
+static void* displays[DISPLAY_POOL_SIZE] = { 0 };
+static bool  borrowed[DISPLAY_POOL_SIZE] = { false };
+
+static pthread_mutex_t display_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void* XOpenDisplayImpl(char* display_name) {
+
   pthread_once(&xlib_pointer_init, init_xlib_pointers);
+
   if (display_name == NULL) {
-    if (default_display == NULL) {
-      default_display = orig_XOpenDisplay(NULL);
+
+    if (pthread_mutex_lock(&display_pool_mutex) != 0) {
+      err(1, "pthread_mutex_lock");
     }
-    return default_display;
+
+    for (int i = 0; i < DISPLAY_POOL_SIZE; i++) {
+      if (!borrowed[i]) {
+        //~ fprintf(stderr, "[%d:%d] borrowing display %d\n", getpid(), gettid(), i);
+        if (displays[i] == NULL) {
+          displays[i] = orig_XOpenDisplay(NULL);
+        }
+        borrowed[i] = true;
+        if (pthread_mutex_unlock(&display_pool_mutex) != 0) {
+          err(1, "pthread_mutex_unlock");
+        }
+        return displays[i];
+      }
+    }
+
+    if (pthread_mutex_unlock(&display_pool_mutex) != 0) {
+      err(1, "pthread_mutex_unlock");
+    }
+
+    return NULL;
+
   } else {
     return orig_XOpenDisplay(display_name);
   }
@@ -367,13 +397,31 @@ void* XOpenDisplay(char* display_name) {
 }
 
 int XCloseDisplay(void* display) {
+
   //~ fprintf(stderr, "[%d:%d] %s(%p)\n", getpid(), gettid(), __func__, display);
+
   pthread_once(&xlib_pointer_init, init_xlib_pointers);
-  if (display != default_display) {
-    return orig_XCloseDisplay(display);
-  } else {
-    return 0;
+
+  if (pthread_mutex_lock(&display_pool_mutex) != 0) {
+    err(1, "pthread_mutex_lock");
   }
+
+  for (int i = 0; i < DISPLAY_POOL_SIZE; i++) {
+    if (displays[i] == display) {
+      //~ fprintf(stderr, "[%d:%d] returning display %d\n", getpid(), gettid(), i);
+      borrowed[i] = false;
+      if (pthread_mutex_unlock(&display_pool_mutex) != 0) {
+        err(1, "pthread_mutex_unlock");
+      }
+      return 0;
+    }
+  }
+
+  if (pthread_mutex_unlock(&display_pool_mutex) != 0) {
+    err(1, "pthread_mutex_unlock");
+  }
+
+  return orig_XCloseDisplay(display);
 }
 
 /* Drop O_DIRECT that is unimplemented in Linuxulator */
