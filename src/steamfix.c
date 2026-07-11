@@ -6,6 +6,7 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <libgen.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -334,42 +335,45 @@ done:
 
 /* XOpenDisplay spam */
 
-void* (*orig_xcb_connect)(const char*, int*) = NULL;
+static void* (*orig_XOpenDisplay )(char*) = NULL;
+static int   (*orig_XCloseDisplay)(void*) = NULL;
 
-void* xcb_connect(const char* displayname, int* screen) {
-
-  if (!orig_xcb_connect) {
-    orig_xcb_connect = dlsym(RTLD_NEXT, "xcb_connect");
-    assert(orig_xcb_connect != NULL);
-  }
-
-  static int attempts = 0;
-  static __thread void* fail = NULL;
-
-  if (__atomic_fetch_add(&attempts, 1, __ATOMIC_SEQ_CST) > 50) {
-    if (fail == NULL) {
-      fail = orig_xcb_connect("nope", NULL);
-    }
-    return fail;
-  }
-
-  return orig_xcb_connect(displayname, screen);
+static void init_xlib_pointers() {
+  orig_XOpenDisplay  = dlsym(RTLD_NEXT, "XOpenDisplay");
+  orig_XCloseDisplay = dlsym(RTLD_NEXT, "XCloseDisplay");
 }
 
-int (*orig_XCloseDisplay)(void* display) = NULL;
+pthread_once_t xlib_pointer_init = PTHREAD_ONCE_INIT;
+
+static __thread void* default_display = NULL;
+
+static void* XOpenDisplayImpl(char* display_name) {
+  pthread_once(&xlib_pointer_init, init_xlib_pointers);
+  if (display_name == NULL) {
+    if (default_display == NULL) {
+      default_display = orig_XOpenDisplay(NULL);
+    }
+    return default_display;
+  } else {
+    return orig_XOpenDisplay(display_name);
+  }
+}
+
+void* XOpenDisplay(char* display_name) {
+  //~ fprintf(stderr, "[%d:%d] %s(%s)\n", getpid(), gettid(), __func__, display_name);
+  void* display = XOpenDisplayImpl(display_name);
+  //~ fprintf(stderr, "[%d:%d] %s -> %p\n", getpid(), gettid(), __func__, display);
+  return display;
+}
 
 int XCloseDisplay(void* display) {
-
-  if (!orig_XCloseDisplay) {
-    orig_XCloseDisplay = dlsym(RTLD_NEXT, "XCloseDisplay");
-    assert(orig_XCloseDisplay != NULL);
+  //~ fprintf(stderr, "[%d:%d] %s(%p)\n", getpid(), gettid(), __func__, display);
+  pthread_once(&xlib_pointer_init, init_xlib_pointers);
+  if (display != default_display) {
+    return orig_XCloseDisplay(display);
+  } else {
+    return 0;
   }
-
-  if (display != NULL) {
-    orig_XCloseDisplay(display);
-  }
-
-  return 0;
 }
 
 /* Drop O_DIRECT that is unimplemented in Linuxulator */
