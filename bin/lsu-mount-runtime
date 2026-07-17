@@ -371,6 +371,10 @@ if try_mount('tmpfs', 'tmpfs', mroot, 'nocover')
       File.join(EMUL_PATH, 'usr/lib64') => File.join(mroot, 'usr/lib/x86_64-linux-gnu'),
       File.join(EMUL_PATH, 'usr/lib')   => File.join(mroot, 'usr/lib/i386-linux-gnu')
     }
+      FileUtils.cp(File.join(source_dir, 'libasound.so.2.0.0'), dest_dir)
+      FileUtils.ln_s('libasound.so.2.0.0', File.join(dest_dir, 'libasound.so'), force: true)
+      FileUtils.ln_s('libasound.so.2.0.0', File.join(dest_dir, 'libasound.so.2'), force: true)
+
       FileUtils.cp(File.join(source_dir, 'alsa-lib/libasound_module_ctl_oss.so'), File.join(dest_dir, 'alsa-lib/'))
       FileUtils.cp(File.join(source_dir, 'alsa-lib/libasound_module_pcm_oss.so'), File.join(dest_dir, 'alsa-lib/'))
     end
