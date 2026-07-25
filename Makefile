@@ -162,4 +162,4 @@ DEPS = ruby                       \
        zenity
 
 dependencies:
-	pkg install -r FreeBSD ${DEPS} ${NVIDIA_DEPS}
+	pkg install -r FreeBSD-ports ${DEPS} ${NVIDIA_DEPS}
