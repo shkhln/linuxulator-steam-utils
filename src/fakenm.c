@@ -83,8 +83,6 @@ FAKE(nm_client_load_connections_finish);
 FAKE(nm_client_load_connections);
 FAKE(nm_client_networking_get_enabled);
 FAKE(nm_client_networking_set_enabled);
-FAKE(nm_client_new_async);
-FAKE(nm_client_new_finish);
 FAKE(nm_client_permission_get_type);
 FAKE(nm_client_permission_result_get_type);
 FAKE(nm_client_reload_connections_async);
@@ -1129,5 +1127,13 @@ int nm_client_get_type() {
 }
 
 void* nm_client_new() {
+  return NULL;
+}
+
+void nm_client_new_async(void* cancellable, void (*callback)(void*, void*, void*), void* user_data) {
+  callback(NULL, NULL, user_data);
+}
+
+void* nm_client_new_finish(void* result, void** error) {
   return NULL;
 }
