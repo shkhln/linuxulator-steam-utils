@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <dlfcn.h>
 #include <stdio.h>
 
 #define FAKE(name) void name() { fprintf(stderr, "fakenm: %s\n", #name); assert(0); }
@@ -67,7 +68,6 @@ FAKE(nm_client_get_connections);
 FAKE(nm_client_get_connectivity);
 FAKE(nm_client_get_device_by_iface);
 FAKE(nm_client_get_device_by_path);
-FAKE(nm_client_get_devices);
 FAKE(nm_client_get_dns_configuration);
 FAKE(nm_client_get_dns_mode);
 FAKE(nm_client_get_dns_rc_manager);
@@ -1122,12 +1122,29 @@ FAKE(nm_wimax_nsp_get_signal_quality);
 FAKE(nm_wimax_nsp_get_type);
 FAKE(nm_wimax_nsp_network_type_get_type);
 
+typedef size_t (*g_object_get_type_fn)(void);
+typedef void*  (*g_object_new_fn)(size_t object_type, ...);
+
+static void* fake_client = NULL;
+
+__attribute__((constructor))
+static void init() {
+  void* handle = dlopen("libgobject-2.0.so.0", RTLD_LAZY);
+  assert(handle != NULL);
+
+  g_object_get_type_fn g_object_get_type = dlsym(handle, "g_object_get_type");
+  g_object_new_fn      g_object_new      = dlsym(handle, "g_object_new");
+
+  fake_client = g_object_new(g_object_get_type(), NULL);
+  assert(fake_client != NULL);
+}
+
 int nm_client_get_type() {
   return 0;
 }
 
 void* nm_client_new() {
-  return NULL;
+  return fake_client;
 }
 
 void nm_client_new_async(void* cancellable, void (*callback)(void*, void*, void*), void* user_data) {
@@ -1135,5 +1152,9 @@ void nm_client_new_async(void* cancellable, void (*callback)(void*, void*, void*
 }
 
 void* nm_client_new_finish(void* result, void** error) {
+  return fake_client;
+}
+
+const void* nm_client_get_devices(void* client) {
   return NULL;
 }
