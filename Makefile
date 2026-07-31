@@ -146,6 +146,7 @@ NVIDIA_DEPS != \
 	  340) echo linux-nvidia-libs-340;; \
 	  390) echo linux-nvidia-libs-390;; \
 	  470) echo linux-nvidia-libs-470;; \
+	  580) echo linux-nvidia-libs-580;; \
 	  *)   echo linux-nvidia-libs;;     \
 	esac
 
