@@ -254,7 +254,7 @@ def run(args)
     ].join(':')
 
     ENV['DISABLE_VK_LAYER_VALVE_steam_overlay_1'] = '1' # avoids ubuntu12_32/steamoverlayvulkanlayer.so crash
-    ENV['DXVK_HUD']  ||= 'frametimes,version,devinfo,fps'
+    #~ ENV['DXVK_HUD']  ||= 'frametimes,version,devinfo,fps'
     ENV['WINEDEBUG'] ||= 'warn+module,warn+seh'
 
     cmd = [
