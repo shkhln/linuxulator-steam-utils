@@ -12,7 +12,8 @@ end
 
 KNOWN_VERSIONS = {
    '9.0' => {appId: 2805730},
-  '10.0' => {appId: 3658110}
+  '10.0' => {appId: 3658110},
+  '11.0' => {appId: 4628710}
 }
 
 def safe_system(*args)
@@ -37,27 +38,32 @@ def set_up_files(*paths)
   end
 end
 
+wine_bin = '/usr/local/wine-proton/bin/wine'
 wine64_bin = '/usr/local/wine-proton/bin/wine64'
 wine32_bin = File.join(I386_PKG_ROOT, 'usr/local/wine-proton/bin/wine')
 
 if !File.exist?(wine64_bin)
-  perr "#{wine64_bin} doesn't exist!"
-  perr "Install emulators/wine-proton first."
-  exit(1)
-end
-
-if !File.exist?(wine32_bin)
+  if !File.exist?(wine_bin)
+    perr "#{wine_bin} doesn't exist!"
+    perr "Install emulators/wine-proton first."
+    exit(1)
+  end
+elsif !File.exist?(wine32_bin)
   perr "#{wine32_bin} doesn't exist!"
   exit(1)
 end
 
-PROTON_VERSION = `#{wine64_bin} --version`.chomp.delete_prefix("wine-")
+PROTON_VERSION = if File.exist?(wine64_bin)
+  `#{wine64_bin} --version`.chomp.delete_prefix("wine-")
+else
+  `#{wine_bin} --version`.chomp.delete_prefix("wine-")
+end
 if !KNOWN_VERSIONS[PROTON_VERSION]
   perr "Found #{wine64_bin} version #{PROTON_VERSION}, expected#{KNOWN_VERSIONS.keys.size > 1 ? ':' : ''} #{KNOWN_VERSIONS.keys.join(', ')}."
   exit(1)
 end
 
-if PROTON_VERSION.to_i < 10 || ENV['PROTON_USE_WOW64'] != '1'
+if PROTON_VERSION.to_i < 10 || (ENV['PROTON_USE_WOW64'] != '1' && PROTON_VERSION.to_i == 10)
   wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
   if PROTON_VERSION != wine32_version
     perr "#{wine64_bin} (#{PROTON_VERSION}) and #{wine32_bin} (#{wine32_version}) versions must match each other."
@@ -67,7 +73,11 @@ end
 
 # we expect a PE Wine build
 raise if !File.exist?('/usr/local/wine-proton/lib/wine/x86_64-windows')
-raise if !File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows'))
+if PROTON_VERSION.to_i < 11
+  raise if !File.exist?(File.join(I386_PKG_ROOT, 'usr/local/wine-proton/lib/wine/i386-windows'))
+else
+  raise if !File.exist?('/usr/local/wine-proton/lib/wine/i386-windows')
+end
 
 PROTON_DIR = find_steamapp_dir("Proton #{PROTON_VERSION}") || find_steamapp_dir("Proton #{PROTON_VERSION} (Beta)")
 if !PROTON_DIR
@@ -146,6 +156,10 @@ def set_up()
 
           raise if !str.gsub!('= find_nvidia_wine_dll_dir()',                 '= None')
 
+          if (PROTON_VERSION.to_i > 10)
+            raise if !str.gsub!('g_proton.host_pe_arch == "x86_64-windows"', 'False')
+          end
+
           File.write(target, str)
           File.chmod(0700, target)
         end
@@ -172,6 +186,9 @@ def set_up()
               'share/wine/fonts',
               'share/wine/wine.inf'
             ]
+          end
+          if PROTON_VERSION.to_i > 10
+            paths.append('share/openxr/wineopenxr64.json')
           end
           for path in paths
             target = File.join("#{target_dir}.tmp", path)
@@ -209,7 +226,7 @@ def set_up()
             end
           end
 
-          if PROTON_VERSION.to_i >= 10
+          if PROTON_VERSION.to_i == 10
             set_up_file(File.join("#{target_dir}.tmp", 'bin-wow64')) do |target|
               set_setup_state(:symlinks)
               FileUtils.mkdir_p(target)
