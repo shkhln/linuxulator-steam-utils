@@ -63,6 +63,10 @@ if !KNOWN_VERSIONS[PROTON_VERSION]
   exit(1)
 end
 
+if PROTON_VERSION.to_i > 10
+  ENV['WINEDLLOVERRIDES'] = 'vrclient,vrclient_x64='
+end
+
 if PROTON_VERSION.to_i < 10 || (ENV['PROTON_USE_WOW64'] != '1' && PROTON_VERSION.to_i == 10)
   wine32_version = `#{wine32_bin} --version`.chomp.delete_prefix("wine-")
   if PROTON_VERSION != wine32_version
