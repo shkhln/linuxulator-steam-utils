@@ -37,7 +37,13 @@ if File.exist?(File.join(steam_root, 'ubuntu12_64/steamwebhelper.sh'))
   if !(File.exist?(out_path) && is_older(__FILE__, out_path))
     script = <<~SCRIPT
     #!/bin/sh
-    cd "$(dirname "$(realpath "$0")")" && exec lsu-webhelper-chroot ./steamwebhelper_sniper_wrap.sh "$@" # &>> "${STEAM_BASE_FOLDER}/logs/steamwebhelper.log"
+    cd "$(dirname "$(realpath "$0")")"
+    if [ -f libcef.so ]; then
+      exec lsu-webhelper-chroot ./steamwebhelper_sniper_wrap.sh "$@" # &>> "${STEAM_BASE_FOLDER}/logs/steamwebhelper.log"
+    else
+      cd ../steamrt64
+      exec lsu-webhelper-chroot ./steamwebhelper "$@"
+    fi
     SCRIPT
     File.write(out_path, script)
     File.chmod(0700, out_path)
