@@ -241,6 +241,11 @@ ENV['SYSTEM_PATH']                          = bin_path
 
 ENV['PRESSURE_VESSEL_BWRAP'] ||= File.expand_path('../lxbin/lsu-bwrap-stub', __dir__)
 
+ENV['_LSU_LINUX_LD_LIBRARY_PATH'] = ENV['LSU_LINUX_LD_LIBRARY_PATH']
+ENV['_LSU_LINUX_PATH']            = ENV['LSU_LINUX_PATH']
+ENV['_LD_LIBRARY_PATH']           = ENV['LD_LIBRARY_PATH']
+ENV['_PATH']                      = ENV['PATH']
+
 # clean up leftover LSU_TMPDIR_PATH mounts, if any
 # (note that we deliberately keep them if there is no cookie)
 safe_system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()

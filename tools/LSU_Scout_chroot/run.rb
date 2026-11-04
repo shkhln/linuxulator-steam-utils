@@ -10,8 +10,8 @@ case ARGV[0]
   when 'waitforexitandrun'
     mroot = File.join(LSU_TMPDIR_PATH, File.basename(SLR_DIR))
 
-    FileUtils.mkdir_p(File.join(mroot, 'usr/steam-runtime/pinned_libs_64/'))
-    FileUtils.mkdir_p(File.join(mroot, 'usr/steam-runtime/pinned_libs_32/'))
+    FileUtils.mkdir_p(File.join(mroot, 'usr/steam-runtime/pinned_libs_64'))
+    FileUtils.mkdir_p(File.join(mroot, 'usr/steam-runtime/pinned_libs_32'))
 
     # let's repeat scout-on-soldier's pins
     system('ln', '-fhs', File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam-runtime/usr/lib/x86_64-linux-gnu/libcurl.so.4'),
@@ -23,7 +23,7 @@ case ARGV[0]
     system('ln', '-fhs', File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libcurl.so.3'),
       File.join(mroot, 'usr/steam-runtime/pinned_libs_32/')) || raise
 
-    steam_runtime_libs = ENV['LSU_LINUX_LD_LIBRARY_PATH'].split(':')
+    steam_runtime_libs = ENV['SYSTEM_LD_LIBRARY_PATH'].split(':')
       .find_all{|path| path =~ /\/steam-runtime\/(?!pinned_libs_(32|64)\/?)/}
 
     library_path = [

@@ -1,0 +1,202 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require 'fiddle'
+require 'fiddle/import'
+require 'fileutils'
+require 'socket'
+
+require_relative '.utils'
+
+module LibNV
+  extend Fiddle::Importer
+
+  dlload 'libnv.so'
+
+  typealias 'nvlist_t', 'void'
+
+  extern 'void               FreeBSD_nvlist_add_number(nvlist_t*, const char*, uint64_t)'
+  extern 'nvlist_t*          FreeBSD_nvlist_create(int)'
+  extern 'void               FreeBSD_nvlist_destroy(nvlist_t*)'
+  extern 'const int*         FreeBSD_nvlist_get_descriptor_array(const nvlist_t*, const char*, size_t*)'
+  extern 'int                FreeBSD_nvlist_get_descriptor(const nvlist_t*, const char*)'
+  extern 'const uint64_t*    FreeBSD_nvlist_get_number_array(const nvlist_t*, const char*, size_t*)'
+  extern 'const char* const* FreeBSD_nvlist_get_string_array(const nvlist_t*, const char*, size_t*)'
+  extern 'const char*        FreeBSD_nvlist_get_string(nvlist_t*, const char*)'
+  extern 'nvlist_t*          FreeBSD_nvlist_recv(int, int)'
+  extern 'int                FreeBSD_nvlist_send(int, const nvlist_t*)'
+  extern 'int                FreeBSD_nvlist_take_descriptor(nvlist_t*, const char*)'
+  extern 'char*              FreeBSD_nvlist_take_string(nvlist_t*, const char*)'
+
+  class << self
+    alias_method :nvlist_add_number,           :FreeBSD_nvlist_add_number
+    alias_method :nvlist_create,               :FreeBSD_nvlist_create
+    alias_method :nvlist_destroy,              :FreeBSD_nvlist_destroy
+    alias_method :nvlist_get_descriptor_array, :FreeBSD_nvlist_get_descriptor_array
+    alias_method :nvlist_get_descriptor,       :FreeBSD_nvlist_get_descriptor
+    alias_method :nvlist_get_number_array,     :FreeBSD_nvlist_get_number_array
+    alias_method :nvlist_get_string_array,     :FreeBSD_nvlist_get_string_array
+    alias_method :nvlist_get_string,           :FreeBSD_nvlist_get_string
+    alias_method :nvlist_recv,                 :FreeBSD_nvlist_recv
+    alias_method :nvlist_send,                 :FreeBSD_nvlist_send
+    alias_method :nvlist_take_descriptor,      :FreeBSD_nvlist_take_descriptor
+    alias_method :nvlist_take_string,          :FreeBSD_nvlist_take_string
+  end
+end
+
+class NVList
+
+  def initialize(nvlist_ptr)
+    @underlying = nvlist_ptr
+  end
+
+  def add_number(field_name, value)
+    LibNV.nvlist_add_number(@underlying, field_name, value)
+  end
+
+  def get_descriptor(field_name)
+    LibNV.nvlist_get_descriptor(@underlying, field_name)
+  end
+
+  def get_descriptor_array(field_name)
+    out = []
+    Fiddle::Pointer.malloc(Fiddle::SIZEOF_SIZE_T, Fiddle::RUBY_FREE) do |nitems_ptr|
+      array_ptr = LibNV.nvlist_get_descriptor_array(@underlying, field_name, nitems_ptr)
+      nitems = Fiddle::Pointer.read(nitems_ptr, 8).unpack('Q').first
+      nitems.times do |i|
+        out << Fiddle::Pointer.read(array_ptr + (i * Fiddle::SIZEOF_INT), Fiddle::SIZEOF_INT).unpack('L').first
+      end
+    end
+    out
+  end
+
+  def get_number_array(field_name)
+    out = []
+    Fiddle::Pointer.malloc(Fiddle::SIZEOF_SIZE_T, Fiddle::RUBY_FREE) do |nitems_ptr|
+      array_ptr = LibNV.nvlist_get_number_array(@underlying, field_name, nitems_ptr)
+      nitems = Fiddle::Pointer.read(nitems_ptr, 8).unpack('Q').first
+      nitems.times do |i|
+        out << Fiddle::Pointer.read(array_ptr + (i * Fiddle::SIZEOF_UINT64_T), Fiddle::SIZEOF_UINT64_T).unpack('Q').first
+      end
+    end
+    out
+  end
+
+  def get_string(field_name)
+    LibNV.nvlist_get_string(@underlying, field_name).to_s
+  end
+
+  def get_string_array(field_name)
+    out = []
+    Fiddle::Pointer.malloc(Fiddle::SIZEOF_SIZE_T, Fiddle::RUBY_FREE) do |nitems_ptr|
+      array_ptr = LibNV.nvlist_get_string_array(@underlying, field_name, nitems_ptr)
+      nitems = Fiddle::Pointer.read(nitems_ptr, 8).unpack('Q').first
+      nitems.times do |i|
+        out << (array_ptr + (i * Fiddle::SIZEOF_VOIDP)).ptr.to_s
+      end
+    end
+    out
+  end
+
+  def send(socket)
+    raise if LibNV.nvlist_send(socket.fileno, @underlying) != 0
+  end
+
+  def destroy
+    LibNV.nvlist_destroy(@underlying)
+    @underlying = nil
+  end
+
+  def self.create(flags = 0)
+    NVList.new(LibNV.nvlist_create(flags))
+  end
+
+  def self.receive(socket, flags = 0)
+    ptr = LibNV.nvlist_recv(socket.fileno, flags)
+    !ptr.null? ? NVList.new(ptr) : nil
+  end
+end
+
+socket_path = File.join(LSU_TMPDIR_PATH, 'steam-runtime-steamrt/lsu-launcher-socket')
+FileUtils.rm_f(socket_path)
+
+server = UNIXServer.new(socket_path)
+begin
+  loop do
+    client = server.accept
+    begin
+      request = NVList.receive(client)
+      next if !request
+      begin
+        forwarded_fds = request.get_number_array('forward-fd-orig')
+          .zip(request.get_descriptor_array('forward-fd'))
+          .to_h
+        pp [:forwarded, forwarded_fds]
+
+        args = request.get_string_array('args')
+        p [:args, args]
+
+        if args.first =~ /steam-runtime-supervisor$/
+          args.shift
+          loop do
+            arg = args.shift
+            case arg
+              when '--'
+                break
+              when '--terminate-when-signaled'
+                # we don't care
+              when /--edit-env-fd=(\d+)/
+                p [:fd, $1.to_i]
+                p IO.open(forwarded_fds[$1.to_i]).read # ?
+              else
+                p [:arg, arg]
+            end
+          end
+        end
+
+        args.each do |arg|
+          arg.gsub!(LSU_IN_CHROOT, File.expand_path('..', __dir__))
+        end
+
+        fd0 = request.get_descriptor('fd0')
+        fd1 = request.get_descriptor('fd1')
+        fd2 = request.get_descriptor('fd2')
+
+        env = request.get_string_array('env')
+        pp [:env, env]
+
+        env.each do |pair|
+          key, value = pair.split('=')
+          ENV[key] = value
+        end
+
+        # ?
+        ENV['LSU_LINUX_LD_PRELOAD']      = ''
+        ENV['LD_PRELOAD']                = ''
+        ENV['LSU_LINUX_LD_LIBRARY_PATH'] = ENV['_LSU_LINUX_LD_LIBRARY_PATH']
+        ENV['LSU_LINUX_PATH']            = ENV['_LSU_LINUX_PATH']
+        ENV['LD_LIBRARY_PATH']           = ENV['_LD_LIBRARY_PATH']
+        ENV['PATH']                      = ENV['_PATH']
+
+        response = NVList.create
+        begin
+          if system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, *args, {in: fd0, out: fd1, err: fd2})
+            response.add_number('exit-code', 0)
+          else
+            response.add_number('exit-code', 1)
+          end
+          response.send(client)
+        ensure
+          response.destroy
+        end
+      ensure
+        request.destroy
+      end
+    ensure
+      client.close
+    end
+  end
+ensure
+  server.close
+  FileUtils.rm_f(socket_path)
+end

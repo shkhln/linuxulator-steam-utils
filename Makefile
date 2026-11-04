@@ -103,7 +103,7 @@ $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env: src/swap-env.c
 
 $(BUILD_DIR)/lxbin-chroot/steam-runtime-launch-client: src/srt-launch.c
 	mkdir -p $(BUILD_DIR)/bin
-	cc -std=c99 -Wall -Wextra -static -o $(.TARGET) src/srt-launch.c
+	cc -std=c99 -Wall -Wextra -static -o $(.TARGET) src/srt-launch.c -lnv
 
 clean:
 .for f in $(LIBS) $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env
