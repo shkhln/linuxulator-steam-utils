@@ -18,6 +18,7 @@ module LibNV
   extern 'void               FreeBSD_nvlist_add_number(nvlist_t*, const char*, uint64_t)'
   extern 'nvlist_t*          FreeBSD_nvlist_create(int)'
   extern 'void               FreeBSD_nvlist_destroy(nvlist_t*)'
+  extern 'bool               FreeBSD_nvlist_exists(const nvlist_t*, const char*)'
   extern 'const int*         FreeBSD_nvlist_get_descriptor_array(const nvlist_t*, const char*, size_t*)'
   extern 'int                FreeBSD_nvlist_get_descriptor(const nvlist_t*, const char*)'
   extern 'const uint64_t*    FreeBSD_nvlist_get_number_array(const nvlist_t*, const char*, size_t*)'
@@ -32,6 +33,7 @@ module LibNV
     alias_method :nvlist_add_number,           :FreeBSD_nvlist_add_number
     alias_method :nvlist_create,               :FreeBSD_nvlist_create
     alias_method :nvlist_destroy,              :FreeBSD_nvlist_destroy
+    alias_method :nvlist_exists,               :FreeBSD_nvlist_exists
     alias_method :nvlist_get_descriptor_array, :FreeBSD_nvlist_get_descriptor_array
     alias_method :nvlist_get_descriptor,       :FreeBSD_nvlist_get_descriptor
     alias_method :nvlist_get_number_array,     :FreeBSD_nvlist_get_number_array
@@ -48,6 +50,10 @@ class NVList
 
   def initialize(nvlist_ptr)
     @underlying = nvlist_ptr
+  end
+
+  def exists?(field_name)
+    LibNV.nvlist_exists(@underlying, field_name)
   end
 
   def add_number(field_name, value)
@@ -99,7 +105,7 @@ class NVList
   end
 
   def send(socket)
-    raise if LibNV.nvlist_send(socket.fileno, @underlying) != 0
+    LibNV.nvlist_send(socket.fileno, @underlying) == 0
   end
 
   def destroy
@@ -128,9 +134,13 @@ begin
       request = NVList.receive(client)
       next if !request
       begin
-        forwarded_fds = request.get_number_array('forward-fd-orig')
-          .zip(request.get_descriptor_array('forward-fd'))
-          .to_h
+        forwarded_fds = if request.exists?('forward-fd')
+          request.get_number_array('forward-fd-orig')
+            .zip(request.get_descriptor_array('forward-fd'))
+            .to_h
+        else
+          {}
+        end
         pp [:forwarded, forwarded_fds]
 
         args = request.get_string_array('args')
@@ -162,6 +172,8 @@ begin
         fd1 = request.get_descriptor('fd1')
         fd2 = request.get_descriptor('fd2')
 
+        Dir.chdir(request.get_string('cwd'))
+
         env = request.get_string_array('env')
         pp [:env, env]
 
@@ -185,7 +197,7 @@ begin
           else
             response.add_number('exit-code', 1)
           end
-          response.send(client)
+          response.send(client) # we ignore any errors there
         ensure
           response.destroy
         end

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/nv.h>
 #include <sys/socket.h>
@@ -63,6 +64,11 @@ int main(int argc, char* argv[], char* envp[]) {
   nvlist_add_descriptor(request, "fd0", 0);
   nvlist_add_descriptor(request, "fd1", 1);
   nvlist_add_descriptor(request, "fd2", 2);
+
+  char cwd[PATH_MAX];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    nvlist_add_string(request, "cwd", cwd);
+  }
 
   int envc = 0;
   for (; envp[envc] != NULL; envc++);
