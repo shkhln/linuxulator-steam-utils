@@ -1,0 +1,3 @@
+#!/bin/sh
+__dir__="$(dirname "$(realpath "$0")")"
+exec lsu-linux-to-freebsd-env "$__dir__/lsu-steam-client-chroot.rb" "$@"

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# we don't care about returning correct information to Steam,
+# we just need it to fuck off
+
+args="$*"
+
+if [[ ! "$args" =~ ^-P\ -F\ upnR\ -i\ TCP@127\.0\.0\.1:([0-9]+)$ ]]; then
+  echo "Unexpected args: \"$args\"" >&2
+  exit 1
+fi
+
+dest="${BASH_REMATCH[1]}"
+
+PID_FILE="$HOME/.steam/steam.pid"
+
+if [ -f "$PID_FILE" ]; then
+  pid=$(cat "$PID_FILE")
+  pid=${pid//[!0-9]/}
+else
+  echo "No pid file found" >&2
+  pid=0
+fi
+
+uid=$(id -u)
+
+printf "p%s\nR0\nu%s\nnlocalhost:1->localhost:%s\np%s\nR0\nu%s\nnlocalhost:%s->localhost:1\n" \
+    "$pid" "$uid" "$dest" "$pid" "$uid" "$dest"

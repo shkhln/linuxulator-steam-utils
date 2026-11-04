@@ -27,7 +27,8 @@ static void clear_ld_preload() {
     return;
   }
 
-  if (getenv("LD_PRELOAD") != NULL) {
+  extern char* program_invocation_short_name;
+  if (strcmp(program_invocation_short_name, "steam") == 0 && getenv("LD_PRELOAD") != NULL) {
     unsetenv("LD_PRELOAD");
   }
 }
@@ -178,6 +179,10 @@ int execvpe(const char* file, char* const argv[], char* const envp[]) {
 
   if (!libc_execvpe) {
     libc_execvpe = dlsym(RTLD_NEXT, "execvpe");
+  }
+
+  if (strstr(file, "/steamrt64/pv-run.sh") != NULL) {
+    return libc_execvpe("lsu-steam-client-chroot", argv, envp);
   }
 
   for (int i = 0; argv[i] != NULL; i++) {

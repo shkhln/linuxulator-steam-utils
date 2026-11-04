@@ -11,8 +11,11 @@ CFLAGS = -B/compat/linux/bin --sysroot=/compat/linux -std=c99 \
  -Wall -Wextra -Wno-unused-parameter -D__FreeBSD_version=${OSVERSION} -O2
 
 LIBS  = lib32/steam/steamfix.so          \
+        lib64/steam/steamfix.so          \
         lib32/fakenm/libnm.so.0          \
+        lib64/fakenm/libnm.so.0          \
         lib32/fakenm/libnm-glib.so.4     \
+        lib64/fakenm/libnm-glib.so.4     \
         lib32/fakepulse/libpulse.so.0    \
         lib64/fakepulse/libpulse.so.0    \
         lib32/fakeudev/libudev.so.0      \
@@ -33,7 +36,8 @@ LIBS  = lib32/steam/steamfix.so          \
 
 LIBS := ${LIBS:C|(.*)|$(BUILD_DIR)/\1|}
 
-build: $(LIBS) $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env
+build: $(LIBS) $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env \
+       $(BUILD_DIR)/lxbin-chroot/steam-runtime-launch-client
 
 .for b in 32 64
 
@@ -96,6 +100,10 @@ $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env: src/swap-env.c
 $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env: src/swap-env.c
 	mkdir -p $(BUILD_DIR)/lxbin
 	/compat/linux/bin/cc $(CFLAGS) -o $(.TARGET) src/swap-env.c -D_GNU_SOURCE
+
+$(BUILD_DIR)/lxbin-chroot/steam-runtime-launch-client: src/srt-launch.c
+	mkdir -p $(BUILD_DIR)/bin
+	cc -std=c99 -Wall -Wextra -static -o $(.TARGET) src/srt-launch.c
 
 clean:
 .for f in $(LIBS) $(BUILD_DIR)/bin/lsu-freebsd-to-linux-env $(BUILD_DIR)/lxbin/lsu-linux-to-freebsd-env

@@ -3,22 +3,30 @@
 #include <assert.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+static bool in_chroot;
+
+__attribute__((constructor))
+static void check_for_linux_chroot() {
+  in_chroot = access("/libexec/ld-elf.so.1", F_OK) == -1 && errno == ENOENT;
+}
 
 /* Let's rewrite some paths... */
 
 static const char* redirect(const char* path) {
 
   // Point Steam to a proper root certificate bundle
-  if (strcmp(path, "/etc/ssl/certs/ca-certificates.crt") == 0) {
+  if (!in_chroot && strcmp(path, "/etc/ssl/certs/ca-certificates.crt") == 0) {
     return "/etc/ssl/cert.pem";
   }
 
   // I have no idea what Steam actually does with this
-  if (strcmp(path, "/var/lib/dbus/machine-id") == 0) {
+  if (!in_chroot && strcmp(path, "/var/lib/dbus/machine-id") == 0) {
     return "/etc/machine-id";
   }
 
@@ -30,12 +38,12 @@ static const char* redirect(const char* path) {
   // Lie to Steam about /home being a directory.
   // The Steam client skips symlinks in Add Library Folder / Add a (non-Steam) Gamed dialogs and,
   // if it was started from /home/... path, it will get quite confused without this workaround.
-  if (strcmp(path, "//home") == 0) {
+  if (!in_chroot && strcmp(path, "//home") == 0) {
     return "/usr/home";
   }
 
   // Also trick Linuxulator into listing actual /usr contents instead of /compat/linux/usr
-  if (strcmp(path, "/usr") == 0) {
+  if (!in_chroot && strcmp(path, "/usr") == 0) {
     return "/usr/local/..";
   }
 

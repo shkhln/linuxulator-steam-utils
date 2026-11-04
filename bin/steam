@@ -188,7 +188,9 @@ bin_path = [
 
 client_library_path = [
   File.expand_path('../lib32/steam',     __dir__),
+  File.expand_path('../lib64/steam',     __dir__),
   File.expand_path('../lib32/fakenm',    __dir__),
+  File.expand_path('../lib64/fakenm',    __dir__),
   File.expand_path('../lib32/fakepulse', __dir__),
   File.expand_path('../lib64/fakepulse', __dir__),
   File.expand_path('../lib32/fakeudev',  __dir__),
@@ -256,7 +258,11 @@ loop do
   safe_system(File.join(__dir__, 'lsu-patch-steam'))
   safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
 
-  system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam'), *ARGV)
+  if File.exist?(File.join(STEAM_ROOT_PATH, '.steam-disable-steamrt64-client'))
+    system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam'), *ARGV)
+  else
+    system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'steamrt64/steam'), *ARGV)
+  end
   status = $?.exitstatus || 1
 
   # even normal exit still leaves steamwebhelper processes
