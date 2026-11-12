@@ -55,7 +55,12 @@ def check_requirements
   begin
     File.read("#{EMUL_PATH}/etc/os-release").each_line(chomp: true) do |line|
       k, v = line.split('=')
-      os[k] = v.undump if v
+      case v
+        when /^[\w\d]+$/
+          os[k] = v
+        when /^".+"$/
+          os[k] = v.undump
+      end
     end
   rescue Errno::ENOENT
     os = nil
