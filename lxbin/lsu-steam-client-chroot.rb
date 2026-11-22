@@ -19,9 +19,9 @@ bin_path = [
 
 library_path = [
   File.join(LSU_IN_CHROOT, 'lib64/steam'),
-  File.join(LSU_IN_CHROOT, 'lib64/fakenm',    __dir__), # ?
-  File.join(LSU_IN_CHROOT, 'lib64/fakepulse', __dir__),
-  File.join(LSU_IN_CHROOT, 'lib64/fakeudev',  __dir__),
+  File.join(LSU_IN_CHROOT, 'lib64/fakenm'), # ?
+  File.join(LSU_IN_CHROOT, 'lib64/fakepulse'),
+  File.join(LSU_IN_CHROOT, 'lib64/fakeudev'),
   File.join(LSU_IN_CHROOT, 'lib64'),
   File.join(STEAM_ROOT_PATH, 'steamrt64'),
   '/lib/x86_64-linux-gnu',
