@@ -55,17 +55,23 @@ HIER_HOME_PATH = /^(\/usr|)\/home\/[^\/]+/
 RESERVED_PATHS = /^\/((app|bin|boot|compat|dev|etc|lib(32|64|exec|)|proc|rescue|root|run|sbin|sys|tmp|usr|var|zroot)(\/|$)|$)/
 
 def try_mount_user_dir(mroot, path)
-  if path.start_with?('/')
-    path = File.realpath(path)
-    if path =~ HIER_HOME_PATH || !(path =~ RESERVED_PATHS)
-      target = File.join(mroot, path.gsub(/^\/usr\/home\//, '/home/'))
-      try_mount('nullfs', path, target, 'nocover')
-    else
-      pwarn "Skipping #{path.inspect}, path is not allowed"
-      nil
-    end
-  else
+  if !path.start_with?('/')
     pwarn "Skipping #{path.inspect}, expected an absolute path"
+    return nil
+  end
+
+  path = begin
+    File.realpath(path)
+  rescue Errno::ENOENT
+    pwarn "Skipping #{path.inspect}, path doesn't exist"
+    return nil
+  end
+
+  if path =~ HIER_HOME_PATH || !(path =~ RESERVED_PATHS)
+    target = File.join(mroot, path.gsub(/^\/usr\/home\//, '/home/'))
+    try_mount('nullfs', path, target, 'nocover')
+  else
+    pwarn "Skipping #{path.inspect}, path is not allowed"
     nil
   end
 end
