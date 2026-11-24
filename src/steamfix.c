@@ -153,6 +153,12 @@ int system(const char* command) {
     }
   }
 
+  /* "Steam now requires user namespaces to be enabled" and whatever nonsense */
+
+  if (strstr(command, "steam-runtime-check-requirements") != NULL) {
+    return 0;
+  }
+
   purge_reaper(command);
 
   return libc_system(command);
