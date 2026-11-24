@@ -41,4 +41,8 @@ ENV['LSU_LINUX_PATH']            = bin_path
 ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS'] =
   [File.join(LSU_IN_CHROOT, 'tools'), ENV['STEAM_EXTRA_COMPAT_TOOLS_PATHS']].compact.join(':')
 
+# ?
+PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
+File.unlink(PID_FILE) rescue nil
+
 exec(File.expand_path('../bin/lsu-run-in-chroot', __dir__), slr_sniper_path, *ARGV[1..-1])
