@@ -206,6 +206,10 @@ int execv(const char* file, char* const argv[]) {
     libc_execv = dlsym(RTLD_NEXT, "execv");
   }
 
+  if (strstr(file, "srt-logger") != NULL) {
+    return -1;
+  }
+
   int arg_count = 0;
   int webhelper_str_index = -1;
 
