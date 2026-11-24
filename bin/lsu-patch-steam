@@ -49,3 +49,7 @@ if File.exist?(File.join(steam_root, 'ubuntu12_64/steamwebhelper.sh'))
     File.chmod(0700, out_path)
   end
 end
+
+if !File.exist?(File.join(steam_root, 'steamrt64/steamwebhelper.sh.patched'))
+  system('ln', '-s', 'steamwebhelper.sh', File.join(steam_root, 'steamrt64/steamwebhelper.sh.patched'))
+end
