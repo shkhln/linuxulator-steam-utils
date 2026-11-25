@@ -263,7 +263,7 @@ loop do
   safe_system(File.join(__dir__, 'lsu-patch-steam'))
   safe_system(File.join(__dir__, 'lsu-upgrade-steam-runtime'))
 
-  if File.exist?(File.join(STEAM_ROOT_PATH, '.steam-disable-steamrt64-client'))
+  if !File.exist?(File.join(STEAM_ROOT_PATH, 'steamrt64/steam')) || File.exist?(File.join(STEAM_ROOT_PATH, '.steam-disable-steamrt64-client'))
     system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'ubuntu12_32/steam'), *ARGV)
   else
     system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'steamrt64/steam'), *ARGV)
