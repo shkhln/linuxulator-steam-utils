@@ -2,10 +2,13 @@ require 'json'
 
 raise '$HOME is undefined.' if !ENV['HOME']
 
+HOME_DIR_PATH   = File.realpath(ENV['HOME'])
+
 LSU_IN_CHROOT   = '/usr/steam-utils'
-LSU_DIST_PATH   = File.join(File.realpath(ENV['HOME']), '.steam/dist')
-LSU_TMPDIR_PATH = File.join(File.realpath(ENV['HOME']), '.steam/tmp')
-STEAM_ROOT_PATH = File.join(File.realpath(ENV['HOME']), '.steam/steam')
+LSU_DIST_PATH   = File.join(HOME_DIR_PATH, '.steam/dist')
+LSU_TMPDIR_PATH = File.join(HOME_DIR_PATH, '.steam/tmp')
+PID_FILE_PATH   = File.join(HOME_DIR_PATH, '.steam/steam.pid')
+STEAM_ROOT_PATH = File.join(HOME_DIR_PATH, '.steam/steam')
 
 LSU_MESA_LIBS   = ENV['LSU_MESA_LIBS'] || 'base' # base, ubuntu, none
 
@@ -60,6 +63,15 @@ def init_tmp_dir
   end
 
   raise if !File.exist?(File.join(LSU_TMPDIR_PATH, '.setup-done'))
+end
+
+def read_steam_pid
+  begin
+    File.read(PID_FILE_PATH).to_i
+  rescue Errno::ENOENT
+    pwarn 'No pid file found'
+    nil
+  end
 end
 
 def read_tmp_dir_cookie

@@ -4,14 +4,7 @@
 require 'json'
 require_relative '.utils'
 
-PID_FILE = File.join(ENV['HOME'], '.steam/steam.pid')
-
-steam_pid = begin
-  File.read(PID_FILE).to_i
-rescue Errno::ENOENT
-  pwarn 'No pid file found'
-  nil
-end
+steam_pid = read_steam_pid()
 
 if steam_pid
   begin

@@ -248,7 +248,12 @@ ENV['_PATH']                      = ENV['PATH']
 
 # clean up leftover LSU_TMPDIR_PATH mounts, if any
 # (note that we deliberately keep them if there is no cookie)
-safe_system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
+begin
+  Process.kill(0, read_steam_pid())
+  # something is already running, better to skip lsu-umount
+rescue Errno::ESRCH
+  safe_system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
+end
 
 for signal in [:HUP, :INT, :TERM]
   Signal.trap(signal) do
@@ -268,15 +273,18 @@ loop do
   else
     system([File.join(__dir__, 'lsu-freebsd-to-linux-env')] * 2, File.join(STEAM_ROOT_PATH, 'steamrt64/steam'), *ARGV)
   end
-  status = $?.exitstatus || 1
+  steam = $?
 
-  # even normal exit still leaves steamwebhelper processes
-  system(File.join(__dir__, 'lsu-kill'))
-  system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
+  # we only do cleanup for the main Steam client instance
+  if steam.pid == read_steam_pid()
+    # even normal exit still leaves steamwebhelper processes
+    system(File.join(__dir__, 'lsu-kill'))
+    system(File.join(__dir__, 'lsu-umount')) if read_tmp_dir_cookie()
+  end
 
-  if status == 42
+  if steam.exitstatus == 42
     pwarn "Restarting Steam..."
   else
-    exit(status)
+    exit(steam.exitstatus || 1)
   end
 end
